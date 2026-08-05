@@ -171,7 +171,8 @@ footer {
   bottom: 0;
   z-index: var(--z-popup);
 
-  background-color: #111;
+  background-color: #eee;
+  border: 1px solid #111;
   border-top-left-radius: var(--radius-xl);
   border-top-right-radius: var(--radius-xl);
   padding: 20px;
@@ -217,7 +218,6 @@ li strong {
 }
 
 .settings-option img {
-  filter: invert(100%) opacity(0.4);
   width: 64px;
   height: 64px;
   transition:
@@ -226,11 +226,12 @@ li strong {
     opacity 0.3s ease;
   transform: scale(1);
   object-fit: contain;
+  opacity: .95;
 }
 
 .settings-option img[active] {
-  filter: invert(100%) opacity(1);
   transform: scale(1.5);
+  opacity: 1;
 }
 
 rangeslider {
