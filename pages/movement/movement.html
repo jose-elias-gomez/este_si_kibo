@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control 3D de Robot - KiboSimplified</title>
+  <!-- El CSS va primero para que @view-transition esté disponible de
+       inmediato y no dependa de que las libs pesadas de abajo terminen
+       de cargar (eso rompía la transición de salida hacia home.html) -->
+  <link rel="stylesheet" href="movement.css"></link>
+
+  <!-- Three.js, GLTFLoader, OrbitControls y GSAP via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <script src="../../shared/js/inputController.js" type="module"></script>
+  <script src="../../shared/components/sliderbar.js" type="module"></script>
+    <script src="js/movement.js" type="module" defer></script>
+</head>
+<body>
+
+  <div class="app-grid">
+    
+    <!-- Barra Izquierda -->
+    <aside class="panel sidebar">
+      <header>
+        <h2>Componentes</h2>      
+      </header>
+
+      <button class="btn-part" data-node="Head" data-view="front">Cabeza</button>
+
+      <label>Brazo</label>
+      <button class="btn-part" data-node="LeftArm" data-view="left">Izquierdo</button>
+      <button class="btn-part" data-node="RightArm" data-view="right">Derecho</button>
+
+      <label>Rueda</label>
+      <button class="btn-part" data-node="LeftWheel" data-view="left">Izquierda</button>
+      <button class="btn-part" data-node="RightWheel" data-view="right">Derecha</button>
+
+      <button class="btn-reset" onclick="resetPositions()">Reiniciar</button>
+    </aside>
+
+    <!-- Espacio Central para Modelo 3D -->
+    <main class="panel viewport-3d">
+      <div id="canvas-container"></div>
+    </main>
+
+    <!-- Control Inferior -->
+    <footer class="panel controls-bottom">
+      <div class="slider-container">
+        <label for="angle-slider">Ángulo de Pivot:</label>
+        <input 
+          type="range" 
+          id="angle-slider" 
+          min="-45" 
+          max="45" 
+          value="0" 
+          disabled
+        >
+        <span id="angle-val" class="angle-value">0°</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
