@@ -44,8 +44,8 @@
     helvetica, arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
 
   /* ---- Neutros (fondos, superficies, bordes, texto) ---- */
-  --color-bg: #1E1E1E; /* fondo general de la app */
-  --color-text: #FFFFFF; /* texto general */ 
+  --color-bg: #e1e1e1; /* fondo general de la app */
+  --color-text: #111; /* texto general */ 
   --color-h1: rgba(255, 255, 255, 0.6); /* títulos grandes */
   --color-h2: rgba(255, 255, 255, 0.4); /* títulos grandes */
 
