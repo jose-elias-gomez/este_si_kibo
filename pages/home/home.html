@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="../../shared/css/global.css">
+  <link rel="stylesheet" href="home.css">
+  <script src="../../shared/js/inputController.js" type="module"></script>
+  <script src="../../shared/components/sliderbar.js" type="module"></script>
+  <script src="js/appSelector.js" type="module" defer></script>
+  <script src="js/footerOptions.js" type="module" defer></script>
+</head>
+
+<body>
+  <header>
+    <div class="bg-layer layer-a"></div>
+    <div class="bg-layer layer-b"></div>
+  </header>
+
+  <main>
+    <aside class="left-panel">
+      <div class="selected-img">
+        <div class="bg-layer layer-a"></div>
+        <div class="bg-layer layer-b"></div>
+      </div>
+      <strong>App name</strong>
+    </aside>
+
+    <section class="app-selector">
+      <div class="group"></div>
+    </section>
+
+    <section class="bottom-panel"></section>
+  </main>
+
+  <footer>
+    <ul>
+      <li>
+        <img src="assets/battery.svg" alt="battery level">
+        <strong>32%</strong>
+      </li>
+      <li class="uppercase-text"><strong>KIBO</strong></li>
+      <li><strong>15:32</strong></li>
+    </ul>
+
+    <ul class="settings-options" hidden>
+      <li class="settings-option">
+        <img src="assets/volume.svg" data-option="volume" active>
+      </li>
+      <li class="settings-option">
+        <img src="assets/brightness.svg" data-option="brightness">
+      </li>
+      <li class="settings-option">
+        <img src="assets/wifi.svg" data-option="wifi">
+      </li>
+      <li class="settings-option">
+        <img src="assets/power.svg" data-option="power">
+      </li>
+    </ul>
+  </footer>
+</body>
+
+</html>
