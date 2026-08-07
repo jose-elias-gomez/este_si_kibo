@@ -45,7 +45,9 @@
 
   /* ---- Neutros (fondos, superficies, bordes, texto) ---- */
   --color-bg: #1E1E1E; /* fondo general de la app */
+  --color-bg-light: #e1e1e1; /* fondo general de la app */
   --color-text: #FFFFFF; /* texto general */ 
+  --color-text-light: #111;
   --color-h1: rgba(255, 255, 255, 0.6); /* títulos grandes */
   --color-h2: rgba(255, 255, 255, 0.4); /* títulos grandes */
 
@@ -124,7 +126,6 @@ body {
   /* Disable overscroll behavior */
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-
   background-color: var(--color-bg);
 }
 

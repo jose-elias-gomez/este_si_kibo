@@ -4,7 +4,8 @@
 }
 
 body {
-  background-color: var(--color-bg-inverted);
+  background-color: var(--color-bg-light);
+  color: var(--color-text-light);
 }
 
 /* Transición por defecto: fade suave para el resto de la página */
@@ -103,7 +104,6 @@ header {
   padding: var(--space-sm) var(--space-md) var(--space-md);
   font-weight: 500;
   font-size: 3.5rem;
-  color: var(--color-text-inverted);
   text-align: center;
 }
 
@@ -171,8 +171,7 @@ footer {
   bottom: 0;
   z-index: var(--z-popup);
 
-  background-color: #eee;
-  border: 1px solid #111;
+  background-color: #d7d7d7;
   border-top-left-radius: var(--radius-xl);
   border-top-right-radius: var(--radius-xl);
   padding: 20px;
@@ -210,7 +209,7 @@ li {
 }
 li strong {
   font-weight: 400;
-  color: var(--color-text);
+  color: var(--color-text-light);
 }
 
 .settings-options {
