@@ -44,15 +44,23 @@ template.innerHTML = `
 
       --capslock-color: rgba(0, 0, 0, 0.2);
 
+      /* Estado base: siempre arranca corrido fuera de pantalla.
+         Esto es lo que se ve mientras el host no tiene "hidden" pero
+         tampoco tiene la clase "open" (por ejemplo, justo al abrir,
+         durante un frame, antes de animar hacia arriba). */
+      transform: translateY(100%);
+
       /* Transición para la animación de abrir y cerrar */
       transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
     }
 
-    /* Estado Oculto */
-    :host(.closed) {
-      transform: translateY(100%);
-      /* Al estar fuera de pantalla no debe poder recibir foco ni clics. */
-      pointer-events: none;
+    /* Estado realmente oculto: ni se pinta, ni ocupa layout, ni anima.
+       Esto es lo que evita el "flash" al cargar la página: mientras
+       este atributo esté presente, el <style> de arriba (incluido el
+       transform base) ni siquiera se aplica visualmente, porque el
+       elemento no se renderiza. */
+    :host([hidden]) {
+      display: none;
     }
 
     /* Estado Visible */
@@ -110,6 +118,27 @@ template.innerHTML = `
       color: #444444;
       transform: translateY(-4px);
       z-index: 10;
+    }
+
+    /* Animación de presión: se dispara al agregar la clase "pressed"
+       (ver flashKey en el JS) y se saca sola por timeout. A propósito
+       NO usa @keyframes/animation: reutiliza la misma "transition" que
+       ya tiene .key (transform, background-color, box-shadow), así el
+       "pop" y su regreso quedan a cargo del mismo mecanismo que ya
+       anima ".selected", en vez de competir con él (mezclar animation
+       + transition sobre la misma propiedad es lo que producía el
+       flicker al cambiar de tecla/página). */
+    .key.pressed {
+      transform: scale(0.8);
+      background-color: rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Si la tecla presionada también está "seleccionada" (navegación
+       por mando), combinamos su desplazamiento hacia arriba con el
+       escalado, en vez de que uno pise al otro. */
+    .key.selected.pressed {
+      transform: translateY(-4px) scale(0.8);
     }
 
     .space {
@@ -174,7 +203,11 @@ export class VirtualKeyboard extends HTMLElement {
     // cubra todo el teclado.
     this.keyMatrix = [];
 
-    this.classList.add("closed");
+    // Estado inicial: completamente oculto y fuera del árbol de render.
+    // No usamos clases (.closed / .open) para el estado de visibilidad
+    // real, sino el atributo "hidden", que evita el flash al cargar la
+    // página (display: none no anima ni se pinta).
+    this.hidden = true;
 
     // Bindings usados como listeners de input
     this._onLeft = () => this.moveSelection(0, -1);
@@ -183,6 +216,10 @@ export class VirtualKeyboard extends HTMLElement {
     this._onDown = () => this.moveSelection(1, 0);
     this._onConfirm = () => this.activateSelection();
     this._onBack = () => this.close();
+
+    // Handler de transición usado por close() para saber cuándo terminó
+    // la animación de bajada y recién ahí aplicar "hidden".
+    this._onTransitionEnd = null;
   }
 
   clamp(value, min, max) {
@@ -199,6 +236,29 @@ export class VirtualKeyboard extends HTMLElement {
     if (!row) return;
     const el = row[this.selectedCol];
     if (el) el.classList.add("selected");
+  }
+
+  // Dispara el efecto de "presionado" (scale + color) sobre una tecla.
+  // Se apoya en la clase CSS "pressed", que reutiliza la misma
+  // "transition" que ya tiene .key/.key.selected (en vez de una
+  // @keyframes animation aparte, que competía con esas transitions y
+  // provocaba flicker). Un timeout se encarga de sacar la clase; si
+  // llega un nuevo press mientras el anterior seguía activo, reiniciamos
+  // el timeout sin tocar la clase (ya está puesta), evitando cualquier
+  // salto visual.
+  flashKey(el) {
+    if (!el) return;
+
+    if (el._pressTimeout) {
+      clearTimeout(el._pressTimeout);
+    } else {
+      el.classList.add("pressed");
+    }
+
+    el._pressTimeout = setTimeout(() => {
+      el.classList.remove("pressed");
+      el._pressTimeout = null;
+    }, 100);
   }
 
   // Dado un índice de columna en la fila actual, calcula la columna
@@ -257,8 +317,18 @@ export class VirtualKeyboard extends HTMLElement {
 
   open(textContainer) {
     this.textContainer = textContainer;
-    if (this.classList.contains("open")) {
+
+    // Si ya está abierto (visible y con la clase "open"), no hacemos nada.
+    if (!this.hidden && this.classList.contains("open")) {
       return;
+    }
+
+    // Si había una animación de cierre en curso, la cancelamos: no
+    // queremos que un transitionend viejo vuelva a ocultar el teclado
+    // después de que lo acabamos de abrir.
+    if (this._onTransitionEnd) {
+      this.removeEventListener("transitionend", this._onTransitionEnd);
+      this._onTransitionEnd = null;
     }
 
     if (this.textContainer?.showCursor) {
@@ -267,8 +337,20 @@ export class VirtualKeyboard extends HTMLElement {
 
     this.renderPage(0);
 
-    this.classList.remove("closed");
-    this.classList.add("open");
+    // Sacamos "hidden" para que el elemento vuelva a estar en el árbol
+    // de render. En este momento sigue corrido hacia abajo por el
+    // transform base (translateY(100%)) definido en :host.
+    this.hidden = false;
+
+    // Forzamos reflow para que el navegador "registre" esa posición
+    // inicial ANTES de agregar la clase que dispara la animación.
+    // Sin este paso, agregar "open" en el mismo frame podría no animarse
+    // (el navegador podría fusionar ambos cambios de estilo).
+    this.getBoundingClientRect();
+
+    requestAnimationFrame(() => {
+      this.classList.add("open");
+    });
 
     input.pushContext(CONTEXT);
 
@@ -281,18 +363,37 @@ export class VirtualKeyboard extends HTMLElement {
   }
 
   close() {
+    const wasOpen = !this.hidden && this.classList.contains("open");
+
     this.classList.remove("open");
-    this.classList.add("closed");
     this.clearSelection();
     this.keyMatrix = [];
     this.selectedRow = 0;
     this.selectedCol = 0;
 
-    if (this.textContainer?.hideCursor) {
-      this.textContainer.hideCursor();
+    if (this.textContainer?.onCloseKeyboard) {
+      this.textContainer.onCloseKeyboard();
     }
 
     input.popContext();
+
+    if (!wasOpen) {
+      // Ya estaba oculto (o nunca llegó a animarse la apertura): no hay
+      // nada que animar, lo ocultamos directamente.
+      this.hidden = true;
+      return;
+    }
+
+    // Esperamos a que termine la animación de bajada (transform) antes
+    // de aplicar "hidden". Si lo hiciéramos de inmediato, "display: none"
+    // cortaría la transición a mitad de camino y se vería un salto.
+    this._onTransitionEnd = (event) => {
+      if (event.target !== this || event.propertyName !== "transform") return;
+      this.removeEventListener("transitionend", this._onTransitionEnd);
+      this._onTransitionEnd = null;
+      this.hidden = true;
+    };
+    this.addEventListener("transitionend", this._onTransitionEnd);
   }
 
   // Renderiza la página indicada (0 = letras, 1 = números/símbolos).
@@ -323,6 +424,7 @@ export class VirtualKeyboard extends HTMLElement {
         key.textContent = isLetter && this.isCapsLockOn ? rawChar.toUpperCase() : rawChar;
 
         key.addEventListener("click", () => {
+          this.flashKey(key);
           this.insertText(key.textContent);
         });
 
@@ -354,6 +456,7 @@ export class VirtualKeyboard extends HTMLElement {
       bottomRow.appendChild(capslockKey);
       bottomRowKeys.push(capslockKey);
       capslockKey.addEventListener("click", () => {
+        this.flashKey(capslockKey);
         this.isCapsLockOn = !this.isCapsLockOn;
         capslockKey.style.setProperty("--capslock-color", this.isCapsLockOn ? "#5decaa" : "rgba(0, 0, 0, 0.2)");
 
@@ -371,7 +474,10 @@ export class VirtualKeyboard extends HTMLElement {
       symbolsKey.textContent = "!#1";
       bottomRow.appendChild(symbolsKey);
       bottomRowKeys.push(symbolsKey);
-      symbolsKey.addEventListener("click", () => this.renderPage(1));
+      symbolsKey.addEventListener("click", () => {
+        this.flashKey(symbolsKey);
+        this.renderPage(1);
+      });
     } else {
       this.selectedCol = 0; // Que aparezca en ABC
       this.selectedRow = 4;
@@ -381,7 +487,10 @@ export class VirtualKeyboard extends HTMLElement {
       lettersKey.textContent = "ABC";
       bottomRow.appendChild(lettersKey);
       bottomRowKeys.push(lettersKey);
-      lettersKey.addEventListener("click", () => this.renderPage(0));
+      lettersKey.addEventListener("click", () => {
+        this.flashKey(lettersKey);
+        this.renderPage(0);
+      });
     }
 
     const spaceKey = document.createElement("div");
@@ -390,6 +499,7 @@ export class VirtualKeyboard extends HTMLElement {
     bottomRow.appendChild(spaceKey);
     bottomRowKeys.push(spaceKey);
     spaceKey.addEventListener("click", () => {
+      this.flashKey(spaceKey);
       this.insertText(" ");
     });
 
@@ -398,14 +508,20 @@ export class VirtualKeyboard extends HTMLElement {
     enterKey.textContent = "Confirmar";
     bottomRow.appendChild(enterKey);
     bottomRowKeys.push(enterKey);
-    enterKey.addEventListener("click", () => this.close());
+    enterKey.addEventListener("click", () => {
+      this.flashKey(enterKey);
+      this.close();
+    });
 
     const deleteKey = document.createElement("div");
     deleteKey.classList.add("key", "delete");
     deleteKey.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" viewBox="0 0 612 612" style="width:25px;height:25px;fill:#707070;"><path d="M561,76.5H178.5c-17.85,0-30.6,7.65-40.8,22.95L0,306l137.7,206.55c10.2,12.75,22.95,22.95,40.8,22.95H561c28.05,0,51-22.95,51-51v-357C612,99.45,589.05,76.5,561,76.5z M484.5,397.8l-35.7,35.7L357,341.7l-91.8,91.8l-35.7-35.7l91.8-91.8l-91.8-91.8l35.7-35.7l91.8,91.8l91.8-91.8l35.7,35.7L392.7,306L484.5,397.8z"></path></svg>`;
     bottomRow.appendChild(deleteKey);
     bottomRowKeys.push(deleteKey);
-    deleteKey.addEventListener("click", () => this.deleteChar());
+    deleteKey.addEventListener("click", () => {
+      this.flashKey(deleteKey);
+      this.deleteChar();
+    });
 
     this.container.appendChild(bottomRow);
     this.keyMatrix.push(bottomRowKeys);

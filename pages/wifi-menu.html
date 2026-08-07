@@ -5,159 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wi-Fi Menu</title>
   <link href="../shared/css/global.css" rel="stylesheet">
+  <script type="module" src="../shared/js/inputController.js"></script>
   <script type="module" src="../shared/components/switch-toggle.js"></script>
   <script type="module" src="../shared/components/keyboard.js"></script>
   <script type="module" src="../shared/components/textcontainer.js"></script>
-  <script type="module" src="./wifi-menu.js"></script>
-
+  <script type="module" src="../shared/components/wifi-menu.js"></script>
   <style>
-
-.wifi-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-}
-
-/* Lista de redes */
-.wifi-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Card de cada red */
-.wifi-card {
-  border-radius: var(--radius-xl);
-  background-color: var(--color-highlight);
-  transition: background-color var(--duration-fast);
-  position: relative;
-  display: flex;
-  flex-direction: row;
-
-  padding: 32px;
-}
-
-.active {
-  margin-bottom: 32px;
-}
-
-.wifi-password {
-  width: 100%;
-}
-
-.btn-connect {
-  align-self: flex-end;
-  background-color: var(--color-highlight);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 6px 20px;
-  font-size: var(--font-size-lg);
-  font-family: var(--font-ui);
-  cursor: pointer;
-  transition: background-color var(--duration-fast);
-}
-
-/* LÓGICA DE SUPERPOSICIÓN DE LOGOS / ÍCONOS */
-.wifi-icon-wrapper {
-  position: relative;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 16px;
-}
-
-/* El SVG 'full' va de fondo como base deshabilitada/opaca */
-.wifi-icon-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.25; /* Opacidad para simular las barras inactivas */
-}
-
-/* El SVG de la señal actual (0, 1, 2, etc.) sobrepasa arriba */
-.wifi-icon-bars {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-
-/* Información de red */
-.wifi-info {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-}
-
-.wifi-info .ssid {
-  font-size: var(--font-size-xl, 1rem);
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--color-text);
-}
-
-.wifi-info .status {
-  font-size: var(--font-size-lg, 0.75rem);
-  color: var(--color-enabled);
-  opacity: 0.7;
-  margin-top: 2px;
-  font-weight: 400;
-}
-
-.btn-disconnect {
-  background-color: var(--color-highlight);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 6px 20px;
-  font-size: var(--font-size-lg);
-  font-family: var(--font-ui);
-  cursor: pointer;
-  transition: background-color var(--duration-fast);
-}
-
   </style>
 </head>
 <body>
   <virtual-keyboard id="virtual-keyboard"></virtual-keyboard>
-
   <div class="popup">
-    <header class="wifi-header">
-      <h1>Wi-Fi</h1>
-      <switch-toggle id="autoConnectToggle" checked></switch-toggle> 
-    </header>
-
-    <h2>Red actual</h2>
-    <div class="wifi-card active">
-      <div class="wifi-icon-wrapper" data-signal="full">
-        <img class="wifi-icon-bg" src="../shared/assets/wifi/full.svg" alt="Señal base">
-        <img class="wifi-icon-bars" src="../shared/assets/wifi/full.svg" alt="Barras de señal">
-      </div>
-      
-      <div class="wifi-info">
-        <span class="ssid">GLC_alpha_ac2-5G_E381F</span>
-        <span class="status">Conectada, segura</span>
-      </div>
-
-      <button class="btn-disconnect">Desconectar</button>
-    </div>
-
-    <h2>Redes disponibles</h2>
-    <div class="wifi-list">
-
-    </div>
+    <wifi-menu></wifi-menu>
   </div>
-
 </body>
 </html>

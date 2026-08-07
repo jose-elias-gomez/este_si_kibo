@@ -9,8 +9,9 @@ template.innerHTML = `
       position: relative;
       height: 100%;
       width: 100%;
-      background: var(--color-bg);
+      background: transparent;
       border-radius: var(--radius-xl);
+      border: 2px solid var(--color-border);
       outline: none;
 
       padding: 0.75rem 1rem 2.25rem 1rem;
@@ -22,17 +23,22 @@ template.innerHTML = `
       font-size: var(--font-size-lg);
       font-weight: 400;
 
+      transition:
+        background-color var(--duration-fast, 0.3s) ease;    
+        border-color var(--duration-fast, 0.3s) ease;    
+
       overflow: hidden;
       caret-color: transparent;
     }
 
-    /* Resalte cuando el elemento está "enfocado" por navegación de
-       input/mando (no por :focus real del navegador, sino porque un
-       controlador externo -como wifi-menu.js- lo marcó como seleccionado). */
-    :host(.focused) {
-      box-shadow: 0 0 0 2px var(--accent-triangle, #3ee6a8);
+    :host(.hovered) {
+      background-color: rgba(255, 255, 255, 0.03);
     }
 
+    :host(.selected) {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+      
     .label-text {
       font-size: var(--font-size-lg);
       font-weight: 600;
@@ -75,7 +81,7 @@ template.innerHTML = `
       bottom: 0.5rem;
       pointer-events: none;
       font-size: 0.9rem;
-      color: rgba(35, 35, 35, 0.6);
+      color: var(--color-text);
       box-sizing: border-box;
       font-family: var(--font-body);
     }
@@ -106,14 +112,38 @@ export class TextContainer extends HTMLElement {
 
     this.hideCursor();
 
-    this.addEventListener("click", () => {
-      document.getElementById("virtual-keyboard")?.open(this);
-      this.showCursor();
-    });
-
-    this.addEventListener("focusout", () => this.hideCursor());
+    this.addEventListener("click", this.select);
+    this.addEventListener("focusout", this.unselect);
 
     this._maxLength = DEFAULT_MAX_LENGTH;
+  }
+
+  hover() {
+    console.log("HOVERED");
+    this.classList.add("hovered");
+  }
+
+  select() {
+    document.getElementById("virtual-keyboard")?.open(this);
+    this.classList.add("selected");
+    this.classList.remove("hovered");
+    this.showCursor();
+  }
+
+  unselect() {
+    this.classList.remove("selected");
+    this.classList.remove("hovered");
+    this.hideCursor();
+  }
+
+  onCloseKeyboard() {
+    this.unselect();
+    this.hover();
+    console.log("BODY");
+  }
+
+  unhover() {
+    this.classList.remove("hovered");
   }
 
   connectedCallback() {

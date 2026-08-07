@@ -49,6 +49,7 @@ input.on(InputAction.UP, () => {
     const app = items[focusIndex];
     const optionType = app.getAttribute("data-option");
     console.log(optionType);
+    
   }, CONTEXT);
 
   function hideFooter() {
