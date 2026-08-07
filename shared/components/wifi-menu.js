@@ -198,22 +198,6 @@ template.innerHTML = `
       margin: 16px 0 8px 0;
     }
 
-    .wifi-btn {
-      background-color: transparent;
-      color: var(--color-text, #ffffff);
-      border: 1px solid var(--color-border, rgba(255, 255, 255, 0.2));
-      border-radius: var(--radius-xl, 16px);
-      padding: 8px 24px;
-      font-size: var(--font-size-lg, 0.9rem);
-      font-family: var(--font-ui, inherit);
-      cursor: pointer;
-      transition: background-color var(--duration-fast, 0.15s);
-    }
-
-    .wifi-btn:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-
     .connect-btn {
       align-self: flex-end;
       margin-top: 16px;
@@ -272,7 +256,7 @@ template.innerHTML = `
               <span class="status">Conectada, segura</span>
             </div>
 
-            <button class="wifi-btn disconnect-btn">Desconectar</button>
+            <generic-btn class="disconnect-btn">Desconectar</generic-btn>
           </header>
         </article>
 
@@ -294,7 +278,7 @@ template.innerHTML = `
             <div class="wifi-options" hidden>
               <div class="wifi-options-inner">
                 <text-container class="wifi-password" label="Contraseña" max-length="128"></text-container>
-                <button class="wifi-btn connect-btn">Conectar</button>
+                <generic-btn class="connect-btn">Conectar</generic-btn>
               </div>
             </div>
           </li>
@@ -403,6 +387,76 @@ export class WifiMenu extends HTMLElement {
     }
   }
 
+  _setupInputForActiveWifi(card, context) {
+    const disconnectBtn = card.querySelector(".disconnect-btn");
+    
+    input.on(InputAction.CONFIRM, () => {
+      if (disconnectBtn.isHovered) {
+        disconnectBtn.click();
+      }
+    }, context);
+    
+    input.on(InputAction.LEFT, () => disconnectBtn.unhover(), context);
+    input.on(InputAction.RIGHT, () => disconnectBtn.hover(), context);
+
+    input.on(InputAction.BACK, () => disconnectBtn.unhover(), context);
+  }
+
+  _setupInputForAvailableWifi(card, context) {
+    const connectBtn = card.querySelector(".connect-btn");
+    const passwordContainer = card.querySelector(".wifi-password");
+
+    function connectToWifi() {
+      const ssidEl = card.querySelector(".ssid");
+      const ssid = ssidEl ? ssidEl.textContent.trim() : "";
+      const password = passwordContainer ? passwordContainer.text : "";
+      const eventDetail = { ssid, password };
+
+      console.log("Conectar a red:", eventDetail);
+      if (passwordContainer) {
+        passwordContainer.text = "";
+      }
+    };
+    
+    input.on(InputAction.CONFIRM, () => {
+      if (passwordContainer !== null && passwordContainer.isHovered) {
+        passwordContainer.select();
+        return;
+      }
+
+      if (connectBtn !== null && connectBtn.isHovered) {
+        connectToWifi();
+      }
+    }, context);
+
+    input.on(InputAction.BACK, () => {
+      passwordContainer?.unselect();
+      connectBtn?.unhover();
+    }, context);
+
+    input.on(InputAction.DOWN, () => {
+      if (passwordContainer === null) {
+        connectBtn?.hover();
+        return;
+      }
+      
+      if (passwordContainer.isHovered) {
+        passwordContainer.unhover();
+        connectBtn?.hover();
+      } else if (!connectBtn.isHovered) {
+        passwordContainer.hover();
+      }
+
+    }, context);
+
+    input.on(InputAction.UP, () => {
+      if (connectBtn.isHovered) {
+        connectBtn.unhover();
+        passwordContainer?.hover();
+      }
+    }, context);
+  }
+
   _setupInputController() {
     if (!input || !InputAction) return;
 
@@ -444,67 +498,32 @@ export class WifiMenu extends HTMLElement {
       const contextID = this.contextFromSSID(ssid);
       input.pushContext(contextID);
 
-      const optionsEl = currentCard.querySelector(".wifi-options");
-      const passwordContainer = currentCard.querySelector(".wifi-password");
-
       input.on(
         InputAction.BACK,
         () => {
           currentCard.classList.remove("selected");
           currentCard.classList.add("hovered");
-
-          if (passwordContainer && typeof passwordContainer.unselect === "function") {
-            passwordContainer.unselect();
-          }
-
-          if (optionsEl) {
-            this.setOptionsExpanded(optionsEl, false);
-          }
-          currentCard.scrollIntoView({ block: "nearest", behavior: "smooth" });
-
           input.popContext();
         },
         contextID
       );
 
-      input.on(
-        InputAction.DOWN,
-        () => {
-          if (passwordContainer && typeof passwordContainer.hover === "function") {
-            passwordContainer.hover();
-          }
-        },
-        contextID
-      );
-
-      input.on(
-        InputAction.CONFIRM,
-        () => {
-          if (passwordContainer && typeof passwordContainer.select === "function") {
-            passwordContainer.select();
-          }
-        },
-        contextID
-      );
-
-      if (optionsEl) {
-        this.setOptionsExpanded(optionsEl, true);
+      if (this.selectedIndex == 0) {
+        this._setupInputForActiveWifi(currentCard, contextID);
+        return;
       }
+
+      const options = currentCard.querySelector(".wifi-options");
+      this.setOptionsExpanded(options, true);
       currentCard.scrollIntoView({ block: "nearest", behavior: "smooth" });
 
-      console.log("Conectando a red SSID:", ssid);
-      this.dispatchEvent(
-        new CustomEvent("wifi-connect", {
-          detail: { ssid },
-          bubbles: true,
-          composed: true
-        })
-      );
-    });
-  }
+      this._setupInputForAvailableWifi(currentCard, contextID);
 
-  _removeInputController() {
-    // Método para limpiar manejadores de eventos si la app requiere remoción explícita
+      input.on(InputAction.BACK, () => {
+        this.setOptionsExpanded(options, false);
+        currentCard.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }, contextID);
+    });
   }
 }
 
