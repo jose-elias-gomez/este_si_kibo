@@ -22,27 +22,7 @@ template.innerHTML = `
     *, *::before, *::after {
       box-sizing: border-box;
     }
-
-    .popup {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .wifi-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-    }
-
-    .wifi-header h1 {
-      margin: 0;
-      font-size: var(--font-size-2xl, 1.5rem);
-      font-weight: 600;
-    }
-
+      
     main {
       flex: 1;
       height: calc(100% - 72px);
