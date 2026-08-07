@@ -32,11 +32,13 @@ template.innerHTML = `
     }
 
     :host(.hovered) {
-      background-color: rgba(255, 255, 255, 0.03);
+      background-color: rgba(255, 255, 255, 0.1);
+      border-color: transparent;
     }
 
     :host(.selected) {
       background-color: rgba(255, 255, 255, 0.05);
+      border-color: transparent;
     }
       
     .label-text {
@@ -112,14 +114,23 @@ export class TextContainer extends HTMLElement {
 
     this.hideCursor();
 
-    this.addEventListener("click", this.select);
-    this.addEventListener("focusout", this.unselect);
-
     this._maxLength = DEFAULT_MAX_LENGTH;
   }
 
+  get isHovered() {
+    return this.classList.contains("hovered");
+  }
+
+  get text() {
+    return this.textSpan.textContent;
+  }
+
+  set text(value) {
+    this.textSpan.textContent = value.slice(0, this._maxLength);
+    this.updateCounter();
+  }
+
   hover() {
-    console.log("HOVERED");
     this.classList.add("hovered");
   }
 
@@ -139,7 +150,6 @@ export class TextContainer extends HTMLElement {
   onCloseKeyboard() {
     this.unselect();
     this.hover();
-    console.log("BODY");
   }
 
   unhover() {

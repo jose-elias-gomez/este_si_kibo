@@ -100,6 +100,9 @@ class InputManager {
   _initKeyboard() {
     window.addEventListener("keydown", (e) => {
       const action = KEY_BINDINGS[e.code];
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        e.preventDefault();
+      }
       if (action) {
         this._emit(action);
       }
