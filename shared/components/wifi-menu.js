@@ -9,6 +9,7 @@ import { input, InputAction } from "../js/inputController.js";
 const template = document.createElement("template");
 template.innerHTML = `
   <style>
+
     :host {
       display: block;
       width: 100%;
@@ -46,6 +47,15 @@ template.innerHTML = `
       flex: 1;
       height: calc(100% - 72px);
       overflow-y: auto;
+
+      /* Ocultar scrollbar en Firefox, IE y Edge */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    /* Ocultar scrollbar en Chrome, Safari y Edge Chromium dentro del Shadow DOM */
+    main::-webkit-scrollbar {
+      display: none;
     }
 
     /* Lista de redes */
