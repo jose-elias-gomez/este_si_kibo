@@ -44,8 +44,8 @@
     helvetica, arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
 
   /* ---- Neutros (fondos, superficies, bordes, texto) ---- */
-  --color-bg: #e1e1e1; /* fondo general de la app */
-  --color-text: #111; /* texto general */ 
+  --color-bg: #1E1E1E; /* fondo general de la app */
+  --color-text: #FFFFFF; /* texto general */ 
   --color-h1: rgba(255, 255, 255, 0.6); /* títulos grandes */
   --color-h2: rgba(255, 255, 255, 0.4); /* títulos grandes */
 
@@ -98,6 +98,7 @@
     1
   ); /* deslizamientos (carrusel, escalas) */
   --duration-fast: 0.15s;
+  --duration-medium: 0.2s;
   --duration-base: 0.35s;
   --duration-panel: 0.7s;
   --duration-carousel: 500ms;
@@ -177,7 +178,7 @@ html {
   border-radius: var(--radius-xl);
   padding: 24px;
   width: min(1100px, 85vw);
-  height: min(80vh, 900px);
+  height: min(85vh, 900px);
 
   margin: 0;
   position: fixed;
