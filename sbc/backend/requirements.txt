@@ -1,0 +1,4 @@
+piper-tts
+sounddevice
+numpy
+piper

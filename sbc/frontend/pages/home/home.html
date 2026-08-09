@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home</title>
+
+  <link rel="stylesheet" href="../../shared/css/global.css">
+  <link rel="stylesheet" href="home.css" />
+
+  <script type="module" src="../../shared/js/inputController.js"></script>
+  <script type="module" src="../../shared/components/switch-toggle.js"></script>
+  <script type="module" src="../../shared/components/keyboard.js"></script>
+  <script type="module" src="../../shared/components/textcontainer.js"></script>
+  <script type="module" src="../../shared/components/generic-btn.js"></script>
+  <script type="module" src="../../shared/components/wifi-menu.js"></script>
+
+  <script src="./js/script.js" defer></script>
+  <script src="./js/options.js" defer></script>
+</head>
+<body>
+
+<main class="console" id="console">
+
+  <!-- Marca de agua central -->
+  <div class="watermark" aria-hidden="true">
+    <!-- Reemplazar por tu logo real, ej: <img src="logo.svg" alt=""> -->
+    <svg class="watermark-svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="currentColor" opacity=".5"/><circle cx="100" cy="100" r="50" fill="none" stroke="currentColor" stroke-width="8"/></svg>
+  </div>
+
+  <header class="topbar">
+    <div class="status">
+      <span class="time">12:18 <span class="ampm">PM</span></span>
+      <span class="icon icon-wifi">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="icon icon-tabler icons-tabler-outline icon-tabler-wifi" viewBox="0 0 24 24"><path fill="none" stroke="none" d="M0 0h24v24H0z"/><path d="M12 18h.01m-2.838-2.828a4 4 0 0 1 5.656 0m-8.485-2.829a8 8 0 0 1 11.314 0"/><path d="M3.515 9.515c4.686-4.687 12.284-4.687 17 0"/></svg>
+      </span>
+      <span class="icon icon-battery">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-battery"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M6 7h11a2 2 0 0 1 2 2v.5a.5 .5 0 0 0 .5 .5a.5 .5 0 0 1 .5 .5v3a.5 .5 0 0 1 -.5 .5a.5 .5 0 0 0 -.5 .5v.5a2 2 0 0 1 -2 2h-11a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2" /></svg>  
+      </span>
+    </div>
+  </header>
+
+  <virtual-keyboard id="virtual-keyboard"></virtual-keyboard>
+  <div class="popup-container">
+    <div id="brightness" class="popup">
+      <header class="popup-header">
+        <h1>Brillo</h1>
+      </header>
+      <range-slider min="0" max="100" value="50" step="1">Luminosidad</range-slider>
+    </div>
+  </div>
+
+  <!-- Flecha arriba (solo visible en modo sistema) -->
+  <div class="arrow-row">
+    <button id="btnUp" class="arrow-btn" aria-label="Volver a las aplicaciones" hidden>
+      <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" class="arrow-bounce" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg>
+    </button>
+  </div>
+
+  <section class="slider-wrap">
+    <div id="scrollContainer" class="scroll-container scrollbar-hide">
+      <div class="spacer" aria-hidden="true"></div>
+      <div id="itemsTrack" class="items-track"></div>
+      <div class="spacer" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <div class="arrow-row">
+    <button id="btnDown" class="arrow-btn" aria-label="Abrir opciones del sistema">
+      <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" class="arrow-bounce" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-left">
+      <span class="icon icon-gamepad">
+        <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M6 11h4M8 9v4m7-1h.01M18 10h.01m-.69-5H6.68a4 4 0 0 0-3.978 3.59l-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258q-.01-.075-.017-.151A4 4 0 0 0 17.32 5"/></svg>
+      </span>
+      <span id="dots" class="dots"></span>
+    </div>
+  </footer>
+</main>
+</body>
+</html>
