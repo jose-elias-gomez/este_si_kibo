@@ -182,16 +182,12 @@ html {
   letter-spacing: 0.4rem;
 }
 
-.popup {
-  visibility: hidden;
-}
-
 .popup:not([hidden]) {
   border: none;
   border-radius: var(--radius-xl);
   padding: 24px;
-  width: min(1100px, 85vw);
-  height: min(85vh, 200px);
+  width: 90vw;
+  height: 90vh;
 
   margin: 0;
   position: fixed;
@@ -199,7 +195,8 @@ html {
   top: 50%;
   left: 50%;
 
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.92);
+  opacity: 0;
   background-color: var(--overlay-first);
   font-family: var(--font-ui);
   overflow-y: hidden;
@@ -208,6 +205,15 @@ html {
 
   display: flex;
   flex-direction: column;
+
+  transition:
+    transform var(--duration-medium, 0.2s) var(--ease-panel, ease),
+    opacity var(--duration-medium, 0.2s) var(--ease-panel, ease);
+}
+
+.popup:not([hidden]).visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 
 .popup-header {

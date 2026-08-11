@@ -4,7 +4,7 @@
  * animaciones de expansión de opciones y control mediante teclado/controlador.
  */
 
-import { input, InputAction } from "../js/inputController.js";
+import { input, InputAction } from "../../../shared/js/inputController.js";
 
 const template = document.createElement("template");
 template.innerHTML = `
@@ -22,11 +22,14 @@ template.innerHTML = `
     *, *::before, *::after {
       box-sizing: border-box;
     }
+    
+    .wifi-header {
+      display: flex;
+      justify-content: space-between;
+    }
       
     main {
       flex: 1;
-      height: calc(100% - 72px);
-      overflow-y: auto;
 
       /* Ocultar scrollbar en Firefox, IE y Edge */
       scrollbar-width: none;
@@ -115,7 +118,6 @@ template.innerHTML = `
       width: 100%;
     }
 
-    /* LÓGICA DE SUPERPOSICIÓN DE LOGOS / ÍCONOS */
     .wifi-icon-wrapper {
       position: relative;
       width: 48px;
@@ -127,7 +129,6 @@ template.innerHTML = `
       flex-shrink: 0;
     }
 
-    /* El SVG 'full' va de fondo como base deshabilitada/opaca */
     .wifi-icon-bg {
       position: absolute;
       top: 0;
@@ -208,67 +209,69 @@ template.innerHTML = `
       width: 256px;
       height: 256px;
     }
+    #disable-wifi-content h2 {
+      font-size: 3rem;
+    }
   </style>
 
-  <div class="popup">
-    <header class="wifi-header">
-      <h1>Wi-Fi</h1>
-      <switch-toggle id="autoConnectToggle" checked></switch-toggle> 
-    </header>
+  <header class="wifi-header">
+    <h1>Wi-Fi</h1>
+    <switch-toggle id="autoConnectToggle" checked></switch-toggle> 
+  </header>
 
-    <main>
-      <div id="disable-wifi-content" hidden>
-        <img src="../shared/assets/wifi/off.svg" alt="Wi-Fi desactivado">
-        <h2>Wi-Fi desactivado</h2>
-      </div>
+  <main>
+    <div id="disable-wifi-content" hidden>
+      <img src="../../shared/assets/wifi/off.svg" alt="Wi-Fi desactivado">
+      <h2>Wi-Fi desactivado</h2>
+    </div>
 
-      <section id="content">
-        <h2>Red actual</h2>
-        <article class="wifi-card active">
+    <section id="content">
+      <h2>Red actual</h2>
+      <article class="wifi-card active">
+        <header>
+          <div class="wifi-icon-wrapper" data-signal="full">
+            <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
+            <img class="wifi-icon-bars" src="../../shared/assets/wifi/full.svg" alt="Barras de señal">
+          </div>
+
+          <div class="wifi-info">
+            <span class="ssid">GLC_alpha_ac2-5G_E381F</span>
+            <span class="status">Conectada, segura</span>
+          </div>
+
+          <generic-btn class="disconnect-btn">Desconectar</generic-btn>
+        </header>
+      </article>
+
+      <h2>Redes disponibles</h2>
+      <ul class="wifi-list">
+        <li class="wifi-card">
           <header>
             <div class="wifi-icon-wrapper" data-signal="full">
-              <img class="wifi-icon-bg" src="../shared/assets/wifi/full.svg" alt="Señal base">
-              <img class="wifi-icon-bars" src="../shared/assets/wifi/full.svg" alt="Barras de señal">
+              <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
+              <img class="wifi-icon-bars" src="../../shared/assets/wifi/full.svg" alt="Barras de señal">
             </div>
 
             <div class="wifi-info">
               <span class="ssid">GLC_alpha_ac2-5G_E381F</span>
-              <span class="status">Conectada, segura</span>
+              <span class="status">Requiere contraseña</span>
             </div>
-
-            <generic-btn class="disconnect-btn">Desconectar</generic-btn>
           </header>
-        </article>
 
-        <h2>Redes disponibles</h2>
-        <ul class="wifi-list">
-          <li class="wifi-card">
-            <header>
-              <div class="wifi-icon-wrapper" data-signal="full">
-                <img class="wifi-icon-bg" src="../shared/assets/wifi/full.svg" alt="Señal base">
-                <img class="wifi-icon-bars" src="../shared/assets/wifi/full.svg" alt="Barras de señal">
-              </div>
-
-              <div class="wifi-info">
-                <span class="ssid">GLC_alpha_ac2-5G_E381F</span>
-                <span class="status">Requiere contraseña</span>
-              </div>
-            </header>
-
-            <div class="wifi-options" hidden>
-              <div class="wifi-options-inner">
-                <text-container class="wifi-password" label="Contraseña" max-length="128"></text-container>
-                <generic-btn class="connect-btn">Conectar</generic-btn>
-              </div>
+          <div class="wifi-options" hidden>
+            <div class="wifi-options-inner">
+              <text-container class="wifi-password" label="Contraseña" max-length="128"></text-container>
+              <generic-btn class="connect-btn">Conectar</generic-btn>
             </div>
-          </li>
-        </ul>
-      </section>
-    </main>
-  </div>
+          </div>
+        </li>
+      </ul>
+    </section>
+  </main>
 `;
 
 export class WifiMenu extends HTMLElement {
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -277,13 +280,16 @@ export class WifiMenu extends HTMLElement {
     this.selectedIndex = -1;
   }
 
+  get context() {
+    return "wifi-menu";
+  }
+
   connectedCallback() {
     this._disableWifiContent = this.shadowRoot.getElementById("disable-wifi-content");
     this._enableWifiContent = this.shadowRoot.getElementById("content");
     this._wifiToggleSwitch = this.shadowRoot.getElementById("autoConnectToggle");
 
     this._setupToggleListener();
-    this._setupInputController();
   }
 
   disconnectedCallback() {
@@ -347,7 +353,7 @@ export class WifiMenu extends HTMLElement {
   }
 
   contextFromSSID(ssid) {
-    return "wifi-" + ssid;
+    return this.context + "-" + ssid;
   }
 
   setOptionsExpanded(optionsEl, expand) {
@@ -437,32 +443,33 @@ export class WifiMenu extends HTMLElement {
     }, context);
   }
 
-  _setupInputController() {
+  setupInputController() {
     if (!input || !InputAction) return;
+    const globalContext = this.context;
 
     input.on(InputAction.LEFT, () => {
       if (this._wifiToggleSwitch) {
         this._wifiToggleSwitch.checked = false;
       }
       this.updateWifiContent(false);
-    });
+    }, globalContext);
 
     input.on(InputAction.RIGHT, () => {
       if (this._wifiToggleSwitch) {
         this._wifiToggleSwitch.checked = true;
       }
       this.updateWifiContent(true);
-    });
+    }, globalContext);
 
     input.on(InputAction.DOWN, () => {
       if (this._enableWifiContent.hidden) return;
       this.selectCard(this.selectedIndex + 1);
-    });
+    }, globalContext);
 
     input.on(InputAction.UP, () => {
       if (this._enableWifiContent.hidden) return;
       this.selectCard(this.selectedIndex - 1);
-    });
+    }, globalContext);
 
     input.on(InputAction.CONFIRM, () => {
       const cards = this.getWifiCards();
@@ -503,7 +510,7 @@ export class WifiMenu extends HTMLElement {
         this.setOptionsExpanded(options, false);
         currentCard.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }, contextID);
-    });
+    }, globalContext);
   }
 }
 

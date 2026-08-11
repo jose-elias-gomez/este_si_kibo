@@ -2,3 +2,8 @@ piper-tts
 sounddevice
 numpy
 piper
+
+fastapi
+uvicorn
+websockets
+pyserial

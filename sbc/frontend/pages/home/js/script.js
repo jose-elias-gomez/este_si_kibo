@@ -1,3 +1,5 @@
+import { input, InputAction } from "../../../shared/js/inputController.js";
+
 const ICONS = {
   volume2: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="icon icon-tabler icons-tabler-outline icon-tabler-volume" viewBox="0 0 24 24"><path fill="none" stroke="none" d="M0 0h24v24H0z"/><path d="M15 8a5 5 0 0 1 0 8m2.7-11a9 9 0 0 1 0 14M6 15H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h2l3.5-4.5A.8.8 0 0 1 11 5v14a.8.8 0 0 1-1.5.5z"/></svg>`,
   sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
@@ -49,6 +51,47 @@ function currentItems() {
 function openItem(id) {
   window.location.href = `/pages/${id}/${id}.html`
 }
+
+function openOption(id) {
+  switch(id) {
+    case "wifi":
+      const wifiPopup = document.getElementById("wifiPopup");
+      const wifiComponent = wifiPopup.firstElementChild;
+      const context = wifiComponent.context;
+      input.pushContext(context);
+      wifiComponent.setupInputController();
+
+      input.on(InputAction.BACK, () => {
+        closePopup(wifiPopup);
+        input.popContext();
+      }, context);
+
+      openPopup(wifiPopup);
+      break;
+  }
+}
+
+function openPopup(popupEl) {
+  popupEl.hidden = false;
+  // Doble rAF para asegurar que el navegador pinte el estado inicial
+  // (scale 0.92 / opacity 0) antes de agregar la clase que anima al estado final.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      popupEl.classList.add("visible");
+    });
+  });
+}
+
+function closePopup(popupEl) {
+  popupEl.classList.remove("visible");
+  const onEnd = (e) => {
+    if (e.propertyName !== "transform") return;
+    popupEl.hidden = true;
+    popupEl.removeEventListener("transitionend", onEnd);
+  };
+  popupEl.addEventListener("transitionend", onEnd);
+}
+
 
 // ============================================================
 // Render de las tarjetas del modo actual
@@ -194,29 +237,27 @@ function renderDots() {
   })
 }
 
-window.addEventListener("keydown", (e) => {
-  const items = currentItems()
-  if (e.key === "ArrowRight") {
-    e.preventDefault()
-    navigate(Math.min(index + 1, items.length - 1))
+const brightness = document.getElementById("brightness");
+
+input.on(InputAction.RIGHT, () => navigate(Math.min(index + 1, currentItems().length - 1)));
+input.on(InputAction.LEFT, () => navigate(Math.max(index - 1, 0)));
+input.on(InputAction.DOWN, () => {
+  if (mode === "apps") {
+    goToSystem();
   }
-  if (e.key === "ArrowLeft") {
-    e.preventDefault()
-    navigate(Math.max(index - 1, 0))
+});
+input.on(InputAction.UP, () => {
+  if (mode === "system") {
+    goToApps();
   }
-  if (e.key === "ArrowDown" && mode === "apps") {
-    e.preventDefault()
-    goToSystem()
+});
+input.on(InputAction.CONFIRM, () => {
+  if (mode === "apps") {
+    openItem(currentItems()[index].id);
+    return;
   }
-  if (e.key === "ArrowUp" && mode === "system") {
-    e.preventDefault()
-    goToApps()
-  }
-  if (e.key === "Enter" || e.key === "x" || e.key === "X") {
-    e.preventDefault()
-    openItem(items[index].id)
-  }
-})
+  openOption(currentItems()[index].id);
+});
 
 window.addEventListener("resize", () => updateFocusStyles())
 
