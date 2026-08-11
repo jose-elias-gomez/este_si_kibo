@@ -13,10 +13,9 @@
   <script type="module" src="../../shared/components/keyboard.js"></script>
   <script type="module" src="../../shared/components/textcontainer.js"></script>
   <script type="module" src="../../shared/components/generic-btn.js"></script>
-  <script type="module" src="../../shared/components/wifi-menu.js"></script>
+  <script type="module" src="options/wifi-menu.js"></script>
 
-  <script src="./js/script.js" defer></script>
-  <script src="./js/options.js" defer></script>
+  <script type="module" src="./js/script.js" defer></script>
 </head>
 <body>
 
@@ -42,11 +41,8 @@
 
   <virtual-keyboard id="virtual-keyboard"></virtual-keyboard>
   <div class="popup-container">
-    <div id="brightness" class="popup">
-      <header class="popup-header">
-        <h1>Brillo</h1>
-      </header>
-      <range-slider min="0" max="100" value="50" step="1">Luminosidad</range-slider>
+    <div class="popup" id="wifiPopup" hidden>
+      <wifi-menu id="wifi-menu"></wifi-menu>
     </div>
   </div>
 
