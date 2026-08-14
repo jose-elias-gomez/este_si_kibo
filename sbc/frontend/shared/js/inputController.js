@@ -60,6 +60,15 @@ class InputManager {
   }
 
   /**
+   * Elimina todos los listeners de un contexto puntual, sin tocar la pila.
+   * Pensado para limpiar handlers de un contexto que ya no está en el
+   * stack (ej: un componente se desconecta del DOM sin pasar por close()).
+   */
+  off(context) {
+    this.eventhandlers.delete(context);
+  }
+
+  /**
    * Suscribe un callback a una acción del sistema, dentro de un contexto.
    * @param {string} action - Una constante de `InputAction`
    * @param {Function} callback
@@ -88,10 +97,8 @@ class InputManager {
     if (eventhandler) {
       let listeners = eventhandler.get(action);
       if (listeners) {
-        let executed = 0;
         for (const listener of listeners) {
           listener();
-          executed++;
         }
       }
     }
@@ -100,10 +107,14 @@ class InputManager {
   _initKeyboard() {
     window.addEventListener("keydown", (e) => {
       const action = KEY_BINDINGS[e.code];
-      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-        e.preventDefault();
-      }
       if (action) {
+        // Evita que el navegador dispare su propio comportamiento por
+        // default para estas teclas (ej: cerrar un <dialog> nativo con
+        // Escape, o hacer scroll con las flechas) por fuera de nuestro
+        // sistema de contextos. Sin esto, Escape puede cerrar el <dialog>
+        // "por izquierda" sin pasar por popContext()/close(), dejando el
+        // contextStack desincronizado del estado visual.
+        e.preventDefault();
         this._emit(action);
       }
     });

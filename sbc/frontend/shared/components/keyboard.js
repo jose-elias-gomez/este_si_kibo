@@ -21,7 +21,19 @@ const pages = [firstPage, secondPage];
 const template = document.createElement("template");
 template.innerHTML = `
   <style>
+    /* :host actúa además como [popover]: usamos el popover API nativo
+       ("manual", controlado a mano vía showPopover()/hidePopover()) para
+       que el navegador promueva el elemento al top layer del documento.
+       Eso lo saca de cualquier stacking context local y garantiza que
+       quede por encima de <dialog> (incluso <dialog> modales), sin
+       tener que pelear con z-index. */
     :host {
+      /* Reseteamos los estilos que el UA aplica por default a
+         [popover] (margin: auto, position: fixed centrado, border,
+         etc.) para no pisar nuestro propio layout. */
+      margin: 0;
+      border: none;
+      inset: auto;
       position: fixed;
       bottom: 0;
       left: 0;
@@ -30,7 +42,6 @@ template.innerHTML = `
       justify-content: space-between;
       height: 60vh;
       width: 100%;
-      z-index: 10000;
       background-color: #d7d7d7;
       border-top-left-radius: 3rem;
       border-top-right-radius: 3rem;
@@ -54,11 +65,14 @@ template.innerHTML = `
       transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
     }
 
-    /* Estado realmente oculto: ni se pinta, ni ocupa layout, ni anima.
-       Esto es lo que evita el "flash" al cargar la página: mientras
-       este atributo esté presente, el <style> de arriba (incluido el
-       transform base) ni siquiera se aplica visualmente, porque el
-       elemento no se renderiza. */
+    /* Nota: ya NO dependemos de [hidden] para el estado oculto. El
+       Popover API se encarga de eso: mientras el popover no esté
+       mostrado (antes del primer showPopover(), o después de un
+       hidePopover()), el UA le aplica "display: none" automáticamente
+       por su cuenta. Dejamos igual la regla de abajo por compatibilidad
+       (fallback en navegadores sin soporte de Popover API), pero el
+       JS ahora tiene cuidado de sacar "hidden" al abrir para que no
+       quede compitiendo con la promoción a top layer (ver open()). */
     :host([hidden]) {
       display: none;
     }
@@ -99,15 +113,15 @@ template.innerHTML = `
       align-items: flex-start;
       background-color: #fafafa;
       color: #707070;
-      padding-top: 12px;
+      padding-top: 4px;
       padding-left: 12px;
-      border-radius: 24px;
+      border-radius: 1rem;
       text-align: left;
       user-select: none;
       box-shadow: 0px 4px 0px rgba(0, 0, 0, 0.1);
       box-sizing: border-box;
       position: relative;
-      font-size: 2rem;
+      font-size: 1.5rem;
       cursor: pointer;
 
       transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
@@ -190,6 +204,15 @@ export class VirtualKeyboard extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     this.container = this.shadowRoot.getElementById("container");
+
+    // popover="manual": promueve el host al top layer del documento,
+    // controlado 100% a mano (showPopover()/hidePopover()), sin el
+    // comportamiento automático de "light dismiss" que trae
+    // popover="auto" (que lo cerraría solo con un click afuera o con
+    // Esc, algo que acá ya manejamos nosotros con input.on(BACK)).
+    // Al estar en el top layer, el teclado queda por encima de
+    // cualquier <dialog>, incluso uno mostrado con showModal().
+    this.setAttribute("popover", "manual");
 
     // Posición actual del cursor de navegación: { row, col }
     this.selectedRow = 0;
@@ -318,8 +341,12 @@ export class VirtualKeyboard extends HTMLElement {
   open(textContainer) {
     this.textContainer = textContainer;
 
-    // Si ya está abierto (visible y con la clase "open"), no hacemos nada.
-    if (!this.hidden && this.classList.contains("open")) {
+    // Si ya está abierto (visible como popover y con la clase "open"),
+    // no hacemos nada. matches(":popover-open") es el selector estándar
+    // para saber si un elemento popover está actualmente mostrado; si
+    // el navegador no lo soporta, caemos de vuelta a chequear "hidden".
+    const isVisible = this.matches?.(":popover-open") ?? !this.hidden;
+    if (isVisible && this.classList.contains("open")) {
       return;
     }
 
@@ -337,10 +364,30 @@ export class VirtualKeyboard extends HTMLElement {
 
     this.renderPage(0);
 
-    // Sacamos "hidden" para que el elemento vuelva a estar en el árbol
-    // de render. En este momento sigue corrido hacia abajo por el
-    // transform base (translateY(100%)) definido en :host.
+    // IMPORTANTE: sacamos "hidden" siempre, sin importar el método de
+    // apertura. El constructor arranca con this.hidden = true (para
+    // evitar el flash inicial antes del primer open()), y ese atributo
+    // tiene "display: none !important" en el UA stylesheet — le gana a
+    // CUALQUIER otro mecanismo de visibilidad, incluida la promoción a
+    // top layer de showPopover(). Si no lo sacamos acá, el teclado
+    // queda con input funcionando (los listeners sí se registran) pero
+    // invisible, porque [hidden] lo sigue tapando por debajo.
     this.hidden = false;
+
+    // showPopover() promueve el elemento al top layer (por encima de
+    // cualquier <dialog>, modal o no).
+    //
+    // Guardamos en try/catch por si open() se llama mientras el
+    // popover ya está mostrándose (por ejemplo, doble click rápido):
+    // showPopover() tira si ya está abierto, y no queremos que eso
+    // rompa el resto del flujo (bindings de input, etc.).
+    if (typeof this.showPopover === "function") {
+      try {
+        this.showPopover();
+      } catch (err) {
+        // Ya estaba mostrado: no es un error real, seguimos.
+      }
+    }
 
     // Forzamos reflow para que el navegador "registre" esa posición
     // inicial ANTES de agregar la clase que dispara la animación.
@@ -363,7 +410,11 @@ export class VirtualKeyboard extends HTMLElement {
   }
 
   close() {
-    const wasOpen = !this.hidden && this.classList.contains("open");
+    // Mismo criterio que en open(): nos apoyamos en :popover-open para
+    // saber si el elemento está realmente visible en el top layer (con
+    // fallback a "hidden" si el navegador no soporta el Popover API).
+    const isVisible = this.matches?.(":popover-open") ?? !this.hidden;
+    const wasOpen = isVisible && this.classList.contains("open");
 
     this.classList.remove("open");
     this.clearSelection();
@@ -380,20 +431,39 @@ export class VirtualKeyboard extends HTMLElement {
     if (!wasOpen) {
       // Ya estaba oculto (o nunca llegó a animarse la apertura): no hay
       // nada que animar, lo ocultamos directamente.
-      this.hidden = true;
+      this.hidePopoverSafe();
       return;
     }
 
     // Esperamos a que termine la animación de bajada (transform) antes
-    // de aplicar "hidden". Si lo hiciéramos de inmediato, "display: none"
-    // cortaría la transición a mitad de camino y se vería un salto.
+    // de esconder el popover. Si lo hiciéramos de inmediato,
+    // hidePopover() (que equivale a "display: none") cortaría la
+    // transición a mitad de camino y se vería un salto.
     this._onTransitionEnd = (event) => {
       if (event.target !== this || event.propertyName !== "transform") return;
       this.removeEventListener("transitionend", this._onTransitionEnd);
       this._onTransitionEnd = null;
-      this.hidden = true;
+      this.hidePopoverSafe();
     };
     this.addEventListener("transitionend", this._onTransitionEnd);
+  }
+
+  // Wrapper de hidePopover() a prueba de errores: hidePopover() tira si
+  // el popover ya estaba oculto (por ejemplo si close() se llama dos
+  // veces seguidas, o si algo externo ya lo cerró). Además, siempre
+  // reponemos "hidden": lo sacamos en open() para que no tape al
+  // popover, así que acá lo volvemos a poner para que, si el
+  // navegador no soporta el Popover API (showPopover/hidePopover no
+  // existen), el fallback a [hidden] siga funcionando como antes.
+  hidePopoverSafe() {
+    if (typeof this.hidePopover === "function") {
+      try {
+        this.hidePopover();
+      } catch (err) {
+        // Ya estaba oculto: no es un error real.
+      }
+    }
+    this.hidden = true;
   }
 
   // Renderiza la página indicada (0 = letras, 1 = números/símbolos).

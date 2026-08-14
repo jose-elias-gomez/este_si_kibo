@@ -1,5 +1,3 @@
-import { InputAction, input } from "../js/inputController.js";
-
 export class RangeSlider extends HTMLElement {
   constructor() {
     super();
@@ -25,12 +23,14 @@ export class RangeSlider extends HTMLElement {
           position: relative;
           padding-top: 35px;
           box-sizing: border-box;
+          overflow: hidden;
+          min-height: calc(64px + 35px + 40px);
         }
         .slider {
           -webkit-appearance: none;
           appearance: none;
           width: 100%;
-          height: 48px;
+          height: 64px;
           border-radius: 2rem;
           background: #2D86DC;
           padding: 0 16px;
@@ -41,30 +41,37 @@ export class RangeSlider extends HTMLElement {
         .slider::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 32px;
-          height: 32px;
+          width: 48px;
+          height: 48px;
           border-radius: 50%;
           background: #fff;
           cursor: pointer;
         }
         .slider::-moz-range-thumb {
-          width: 32px;
-          height: 32px;
+          width: 48px;
+          height: 48px;
           border-radius: 50%;
           background: #fff;
           cursor: pointer;
           border: none;
         }
-        /* Valor flotante centrado sobre el círculo */
+        /* Valor flotante centrado sobre la esfera */
         .thumb-value {
           position: absolute;
-          top: 59px; /* Centrado verticalmente respecto a la barra (35px padding-top + 24px mitad de la barra) */
+          top: 67px;
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           transform: translate(-50%, -50%);
           pointer-events: none;
-          color: #2D86DC; /* Color contrastante con el círculo blanco */
+          color: #2D86DC;
           font-family: inherit;
-          font-size: 0.75rem;
+          font-size: 1.4rem;
           font-weight: bold;
+          letter-spacing: normal; /* Se elimina el spacing para no descentrar */
+          line-height: 1;
           z-index: 2;
           user-select: none;
         }
@@ -107,32 +114,7 @@ export class RangeSlider extends HTMLElement {
     // Listeners nativos del <input type="range">
     this.slider.addEventListener("input", () => this.updateSlider());
 
-    // Recalcular si cambia el tamaño de la ventana
-    this._onResize = () => this.updateSlider();
-    window.addEventListener("resize", this._onResize);
-
-    // Inicializar
     this.updateSlider();
-
-    // Entrar al contexto de input propio de este slider
-    input.pushContext(this.context);
-
-    // Suscripciones al InputManager (todas dentro del mismo contexto)
-    this._unsubscribers = [
-      input.on(InputAction.LEFT, () => this.step(-1), this.context),
-      input.on(InputAction.RIGHT, () => this.step(1), this.context),
-      input.on(InputAction.CONFIRM, () => this.confirm(), this.context),
-      input.on(InputAction.BACK, () => this.back(), this.context),
-    ];
-  }
-
-  disconnectedCallback() {
-    window.removeEventListener("resize", this._onResize);
-    if (this._unsubscribers) {
-      this._unsubscribers.forEach((unsubscribe) => unsubscribe());
-      this._unsubscribers = null;
-    }
-    input.popContext();
   }
 
   step(direction) {
@@ -143,21 +125,8 @@ export class RangeSlider extends HTMLElement {
     newValue = Math.min(max, Math.max(min, newValue));
     this.slider.value = newValue;
     this.updateSlider();
+
     this.slider.dispatchEvent(new Event("input"));
-  }
-
-  confirm() {
-    input.popContext();
-    this.dispatchEvent(
-      new CustomEvent("confirm", { detail: { value: this.value } }),
-    );
-  }
-
-  back() {
-    input.popContext();
-    this.dispatchEvent(
-      new CustomEvent("back", { detail: { value: this.value } }),
-    );
   }
 
   updateSlider() {
@@ -168,10 +137,19 @@ export class RangeSlider extends HTMLElement {
       const max = Number(this.slider.max) || 100;
       const val = Number(this.slider.value);
       const percent = (val - min) / (max - min || 1);
+      const valStr = String(val);
 
-      this.thumbValue.textContent = val;
-      // Posiciona el número sobre el centro del thumb según el porcentaje del valor
-      this.thumbValue.style.left = `calc(32px + (100% - 64px) * ${percent})`;
+      this.thumbValue.textContent = valStr;
+
+      // Escalar la fuente si el número tiene 3 o más dígitos para que no sobresalga
+      if (valStr.length >= 3) {
+        this.thumbValue.style.fontSize = "1.1rem";
+      } else {
+        this.thumbValue.style.fontSize = "1.4rem";
+      }
+
+      // Fórmula corregida: considera los 16px de padding + 24px de radio del thumb (total offset: 40px)
+      this.thumbValue.style.left = `calc(40px + (100% - 80px) * ${percent})`;
     }
   }
 
