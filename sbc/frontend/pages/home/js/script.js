@@ -11,9 +11,9 @@ const ICONS = {
 const APPS = [
   { id: "games", title: "Juegos", bg: "#132d4d", glow: "rgba(19,45,77,0.45)", cover: "assets/apps/games.png", icon: null },
   { id: "movement", title: "Movimiento", bg: "#3ad0c9", glow: "rgba(58,208,201,0.45)", cover: "assets/apps/motion.png", icon: null },
-  { id: "camera", title: "Cámara", bg: "#66a8dd", glow: "rgba(102,168,221,0.45)", cover: "assets/apps/camera.png", icon: null },
+  { id: "translator", title: "Traducción", bg: "#c47a3a", glow: "rgba(196,122,58,0.45)", cover: "assets/apps/translator.jpg", icon: null },
   { id: "chat", title: "Chat", bg: "#8fa3ba", glow: "rgba(143,163,186,0.45)", cover: "assets/apps/chat.png", icon: null },
-  { id: "translator", title: "Traducción", bg: "#c47a3a", glow: "rgba(196,122,58,0.45)", cover: "assets/apps/translator.png", icon: null },
+  { id: "camera", title: "Cámara", bg: "#66a8dd", glow: "rgba(102,168,221,0.45)", cover: "assets/apps/camera.png", icon: null },
 ]
 
 const SYSTEM = [
