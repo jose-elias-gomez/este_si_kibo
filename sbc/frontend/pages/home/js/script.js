@@ -8,10 +8,6 @@ const ICONS = {
   restart: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="icon icon-tabler icons-tabler-outline icon-tabler-refresh" viewBox="0 0 24 24"><path fill="none" stroke="none" d="M0 0h24v24H0z"/><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4m-4 4a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>`,
 }
 
-// ============================================================
-// Datos (equivalentes a APPS y SYSTEM del componente original)
-// Reemplazar "icon"/"cover" por tus rutas reales, ej: "apps/juegos.svg"
-// ============================================================
 const APPS = [
   { id: "games", title: "Juegos", bg: "#132d4d", glow: "rgba(19,45,77,0.45)", cover: "assets/apps/games.png", icon: null },
   { id: "movement", title: "Movimiento", bg: "#3ad0c9", glow: "rgba(58,208,201,0.45)", cover: "assets/apps/motion.png", icon: null },
@@ -21,16 +17,12 @@ const APPS = [
 ]
 
 const SYSTEM = [
-  { id: "sonido", title: "Sonido", bg: "#9b59b6", glow: "rgba(155,89,182,0.5)", iconKey: "volume2" },
-  { id: "brillo", title: "Brillo", bg: "#e0902b", glow: "rgba(224,144,43,0.5)", iconKey: "sun" },
+  { id: "volume", title: "Sonido", bg: "#9b59b6", glow: "rgba(155,89,182,0.5)", iconKey: "volume2" },
+  { id: "brightness", title: "Brillo", bg: "#e0902b", glow: "rgba(224,144,43,0.5)", iconKey: "sun" },
   { id: "wifi", title: "WiFi", bg: "#16a085", glow: "rgba(22,160,133,0.5)", iconKey: "wifi" },
-  { id: "apagado", title: "Apagado", bg: "#c43a3a", glow: "rgba(196,58,58,0.5)", iconKey: "power" },
-  { id: "reinicio", title: "Reinicio", bg: "#2b7de9", glow: "rgba(43,125,233,0.5)", iconKey: "restart" },
+  { id: "power", title: "Apagado", bg: "#c43a3a", glow: "rgba(196,58,58,0.5)", iconKey: "power" },
 ]
 
-// ============================================================
-// Estado
-// ============================================================
 let mode = "apps" // "apps" | "system"
 let index = 0
 
@@ -53,45 +45,14 @@ function openItem(id) {
 }
 
 function openOption(id) {
-  switch(id) {
-    case "wifi":
-      const wifiPopup = document.getElementById("wifiPopup");
-      const wifiComponent = wifiPopup.firstElementChild;
-      const context = wifiComponent.context;
-      input.pushContext(context);
-      wifiComponent.setupInputController();
-
-      input.on(InputAction.BACK, () => {
-        closePopup(wifiPopup);
-        input.popContext();
-      }, context);
-
-      openPopup(wifiPopup);
-      break;
+  id = id + "-menu";
+  var popupComponent = document.getElementById(id);
+  if (popupComponent === null) {
+    console.error("Can't found popup option for " + id);
+    return;
   }
+  popupComponent.open();
 }
-
-function openPopup(popupEl) {
-  popupEl.hidden = false;
-  // Doble rAF para asegurar que el navegador pinte el estado inicial
-  // (scale 0.92 / opacity 0) antes de agregar la clase que anima al estado final.
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      popupEl.classList.add("visible");
-    });
-  });
-}
-
-function closePopup(popupEl) {
-  popupEl.classList.remove("visible");
-  const onEnd = (e) => {
-    if (e.propertyName !== "transform") return;
-    popupEl.hidden = true;
-    popupEl.removeEventListener("transitionend", onEnd);
-  };
-  popupEl.addEventListener("transitionend", onEnd);
-}
-
 
 // ============================================================
 // Render de las tarjetas del modo actual
@@ -109,9 +70,20 @@ function renderItems() {
     btn.className = "item-btn"
     btn.setAttribute("aria-label", item.title)
 
+    const isFocused = i === index
+    const large = largeSize()
+    const small = smallSize()
+
     const card = document.createElement("div")
     card.className = "card"
     card.style.backgroundColor = item.bg
+    card.style.width = isFocused ? `${large}px` : `${small}px`
+    card.style.opacity = isFocused ? "1" : "0.68"
+    card.style.boxShadow = isFocused
+      ? `0 20px 45px -12px ${item.glow}, 0 6px 16px rgba(0,0,0,0.18)`
+      : "0 6px 16px rgba(0,0,0,0.14)"
+
+    if (isFocused) wrapper.classList.add("is-focused")
 
     if (item.cover) {
       const img = document.createElement("img")
@@ -143,18 +115,62 @@ function renderItems() {
     itemsTrack.appendChild(wrapper)
   })
 
-  updateFocusStyles()
+  // Los estilos de foco ya se aplicaron al crear cada card (arriba),
+  // así que aquí solo posicionamos el scroll — sin animación en la carga/cambio de modo.
+  scrollToFocused(largeSize(), smallSize(), { instant: true })
   renderDots()
 }
 
 // ============================================================
-// Tamaños de tarjeta (equivalentes a min(430px,26vw,50vh) / min(270px,16vw,32vh))
+// Alto real disponible para el slider.
+//
+// Antes, largeSize()/smallSize() usaban una fracción fija de
+// window.innerHeight (0.5 / 0.35) como si el slider tuviera todo
+// el alto de la pantalla disponible. Pero el slider comparte esa
+// altura con el topbar, las dos arrow-row y el footer, y como
+// .console tiene overflow:hidden, cualquier carta que termine más
+// alta que el espacio real que le queda se recorta (justo el bug
+// en 800x480, donde hay poco alto para repartir).
+//
+// Acá medimos el alto real disponible (alto del .console menos lo
+// que ocupan topbar + arrow-rows + footer + padding del slider),
+// así el cálculo se ajusta solo a cualquier resolución en vez de
+// depender de un porcentaje adivinado.
+// ============================================================
+function availableSliderHeight() {
+  const consoleEl = document.getElementById("console")
+  if (!consoleEl) return window.innerHeight
+
+  const topbar = document.querySelector(".topbar")
+  const footer = document.querySelector(".footer")
+  const arrowRows = document.querySelectorAll(".arrow-row")
+
+  let reserved = 0
+  if (topbar) reserved += topbar.offsetHeight
+  if (footer) reserved += footer.offsetHeight
+  arrowRows.forEach((row) => (reserved += row.offsetHeight))
+
+  // Padding vertical del scroll-container (16px arriba + 16px abajo)
+  // + un margen de seguridad para que el glow/box-shadow de la carta
+  // enfocada tampoco quede pegado al borde.
+  const sliderPadding = 64
+  const safetyMargin = 16
+
+  return Math.max(0, consoleEl.clientHeight - reserved - sliderPadding - safetyMargin)
+}
+
+// ============================================================
+// Tamaños de tarjeta. El ancho se deriva del alto disponible
+// usando el aspect-ratio 4:5 de .card (width = height * 4/5),
+// para garantizar que la carta enfocada siempre entre sin cortarse.
 // ============================================================
 function largeSize() {
-  return Math.min(500, window.innerWidth * 0.3, window.innerHeight * 0.5)
+  const maxByHeight = availableSliderHeight() * (4 / 5)
+  return Math.min(500, window.innerWidth * 0.3, maxByHeight)
 }
 function smallSize() {
-  return Math.min(300, window.innerWidth * 0.3, window.innerHeight * 0.35)
+  const maxByHeight = availableSliderHeight() * (4 / 5) * 0.7
+  return Math.min(300, window.innerWidth * 0.3, maxByHeight)
 }
 // ============================================================
 // Aplica estilos de foco/desenfoque a cada tarjeta
@@ -184,7 +200,7 @@ function updateFocusStyles() {
 // ============================================================
 // Centra la tarjeta enfocada (misma fórmula que el componente original)
 // ============================================================
-function scrollToFocused(large, small) {
+function scrollToFocused(large, small, { instant = false } = {}) {
   const spacerEl = scrollContainer.firstElementChild
   const spacer = spacerEl ? spacerEl.offsetWidth : window.innerWidth / 2
   const gap = 24
@@ -192,7 +208,7 @@ function scrollToFocused(large, small) {
   const focusedCenter = spacer + gap * (index + 1) + small * index + large / 2
   const target = focusedCenter - scrollContainer.clientWidth / 2
 
-  scrollContainer.scrollTo({ left: Math.max(0, target), behavior: "smooth" })
+  scrollContainer.scrollTo({ left: Math.max(0, target), behavior: instant ? "auto" : "smooth" })
 }
 
 // ============================================================
@@ -261,8 +277,13 @@ input.on(InputAction.CONFIRM, () => {
 
 window.addEventListener("resize", () => updateFocusStyles())
 
-// ============================================================
-// Inicialización
-// ============================================================
 btnUp.hidden = true
+
+// Evita que la primera pintura anime (width/opacity/scroll) al cargar.
+document.body.classList.add("no-transitions")
 renderItems()
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    document.body.classList.remove("no-transitions")
+  })
+})

@@ -12,32 +12,6 @@
     U+2215, U+FEFF, U+FFFD;
 }
 
-/* latin */
-@font-face {
-  font-family: "Geist";
-  font-style: italic;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url(../fonts/Geist.woff2) format("woff2");
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
-    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
-    U+2215, U+FEFF, U+FFFD;
-}
-
-/* latin */
-@font-face {
-  font-family: "Inter";
-  font-style: italic;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url(../fonts/Inter.woff2) format("woff2");
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
-    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
-    U+2215, U+FEFF, U+FFFD;
-}
-
 :root {
   --font-fallback:
     system-ui, -apple-system, blinkmacsystemfont, "Segoe UI", "Noto Sans",
@@ -180,51 +154,4 @@ html {
   text-transform: uppercase;
   text-rendering: optimizeLegibility;
   letter-spacing: 0.4rem;
-}
-
-.popup:not([hidden]) {
-  border: none;
-  border-radius: var(--radius-xl);
-  padding: 24px;
-  width: 90vw;
-  height: 90vh;
-
-  margin: 0;
-  position: fixed;
-
-  top: 50%;
-  left: 50%;
-
-  transform: translate(-50%, -50%) scale(0.92);
-  opacity: 0;
-  background-color: var(--overlay-first);
-  font-family: var(--font-ui);
-  overflow-y: hidden;
-
-  z-index: var(--z-popup);
-
-  display: flex;
-  flex-direction: column;
-
-  transition:
-    transform var(--duration-medium, 0.2s) var(--ease-panel, ease),
-    opacity var(--duration-medium, 0.2s) var(--ease-panel, ease);
-}
-
-.popup:not([hidden]).visible {
-  transform: translate(-50%, -50%) scale(1);
-  opacity: 1;
-}
-
-.popup-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-}
-
-.popup-header h1 {
-  margin: 0;
-  font-size: var(--font-size-2xl, 1.5rem);
-  font-weight: 600;
 }

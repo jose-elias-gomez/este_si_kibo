@@ -102,10 +102,7 @@ export class GenericBtn extends HTMLElement {
 
     this._button.classList.add("pressed");
 
-    setTimeout(() => {
-      this._button.classList.remove("pressed");
-      this._dispatchClickEvent();
-    }, 150);
+    setTimeout(() => this._button.classList.remove("pressed"), 150);
   }
 
   /**
@@ -118,16 +115,6 @@ export class GenericBtn extends HTMLElement {
   _onNativeClick(e) {
     e.stopPropagation();
     this.click();
-  }
-
-  _dispatchClickEvent() {
-    this.dispatchEvent(
-      new CustomEvent("btn-click", {
-        bubbles: true,
-        composed: true,
-        detail: { target: this }
-      })
-    );
   }
 }
 
