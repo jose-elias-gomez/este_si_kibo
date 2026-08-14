@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traductor de señas</title>
+
+  <link rel="stylesheet" href="../../shared/css/global.css">
+  <link rel="stylesheet" href="translator.css" />
+
+  <script type="modulepreload" src="../../shared/js/inputController.js"></script>
+  <script type="module" src="./js/translator.js"></script>
+</head>
+<body>
+
+<main class="signconsole" id="signconsole">
+
+  <!-- ===== Escenario: cámara + burbuja de subtítulos ===== -->
+  <section class="stage">
+
+    <div class="camera-frame" id="cameraFrame">
+      <video id="cameraFeed" autoplay playsinline muted></video>
+
+      <div class="camera-empty" id="cameraEmpty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h2l1.5-2h7L17 5h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <p>La cámara está apagada</p>
+      </div>
+
+      <canvas id="trackingCanvas" class="tracking-canvas"></canvas>
+
+      <div class="signal-pill" id="signalPill">
+        <span class="signal-dot" id="signalDot"></span>
+        <span id="signalLabel">Sin manos detectadas</span>
+      </div>
+
+      <!-- Indicador de que hay un panel oculto: subir con el mando para abrirlo -->
+      <button class="peek-handle" id="peekHandle" aria-label="Abrir controles">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="peek-arrow"><path d="m18 15-6-6-6 6"/></svg>
+      </button>
+
+      <!-- Burbuja de subtítulos, oculta hasta que se abre con el mando (arriba) -->
+      <div class="caption-dock" id="captionDock">
+        <div class="caption-tail" aria-hidden="true"></div>
+
+        <div class="caption-current">
+          <span class="caption-current-label">Última seña</span>
+          <span class="caption-current-glyph" id="currentGlyph">—</span>
+        </div>
+
+        <div class="caption-sentence-wrap">
+          <p class="caption-sentence" id="sentenceText"><span class="caret" id="caret"></span></p>
+        </div>
+
+        <div class="caption-controls">
+          <button class="ctrl-btn" id="btnSpace" title="Agregar espacio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9v3a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9"/></svg>
+            Espacio
+          </button>
+          <button class="ctrl-btn" id="btnBackspace" title="Borrar última letra">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6.5a1 1 0 0 0-.78.375L2 9l3.72 4.625A1 1 0 0 0 6.5 14H21a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1z"/><path d="m14 8 4 4m0-4-4 4"/></svg>
+            Borrar
+          </button>
+          <button class="ctrl-btn ctrl-btn--accent" id="btnSpeak" title="Reproducir en voz alta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+            Reproducir
+          </button>
+          <button class="ctrl-btn ctrl-btn--ghost" id="btnClear" title="Vaciar todo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6"/></svg>
+            Vaciar
+          </button>
+          <button class="ctrl-btn ctrl-btn--accent" id="btnToggleCamera">
+            <span class="camera-toggle-dot" id="cameraToggleDot"></span>
+            <span id="cameraToggleLabel">Iniciar cámara</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>
