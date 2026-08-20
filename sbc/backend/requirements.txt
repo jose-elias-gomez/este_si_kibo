@@ -7,3 +7,8 @@ fastapi
 uvicorn
 websockets
 pyserial
+
+pycaw>=20230407
+comtypes>=1.2.0
+
+screen-brightness-control
