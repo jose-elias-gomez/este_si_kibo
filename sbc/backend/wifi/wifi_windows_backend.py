@@ -8,11 +8,12 @@ from typing import Optional
 from wifi.wifi_base import _run, WifiError, BaseWifiBackend
 from xml.sax.saxutils import escape as _xml_escape
 
-# WINFUNCTYPE solo existe en Windows. Para evitar ImportError al importar/probar en Linux:
 WINFUNCTYPE = getattr(ctypes, "WINFUNCTYPE", ctypes.CFUNCTYPE)
 
-# --- Estructuras nativas de wlanapi.dll (usadas solo por WindowsWifiBackend) ---
+
+# Native C structures for wlanapi.dll (used by WindowsWifiBackend)
 class _GUID(ctypes.Structure):
+    """Represents a Globally Unique Identifier (GUID) structure in C."""
     _fields_ = [
         ("Data1", wintypes.DWORD),
         ("Data2", wintypes.WORD),
@@ -22,6 +23,7 @@ class _GUID(ctypes.Structure):
 
 
 class _WLAN_INTERFACE_INFO(ctypes.Structure):
+    """Contains information about a wireless network interface."""
     _fields_ = [
         ("InterfaceGuid", _GUID),
         ("strInterfaceDescription", ctypes.c_wchar * 256),
@@ -30,6 +32,7 @@ class _WLAN_INTERFACE_INFO(ctypes.Structure):
 
 
 class _WLAN_INTERFACE_INFO_LIST(ctypes.Structure):
+    """Contains an array of wireless interface information structures."""
     _fields_ = [
         ("dwNumberOfItems", wintypes.DWORD),
         ("dwIndex", wintypes.DWORD),
@@ -38,6 +41,7 @@ class _WLAN_INTERFACE_INFO_LIST(ctypes.Structure):
 
 
 class _DOT11_SSID(ctypes.Structure):
+    """Contains an IEEE 802.11 SSID."""
     _fields_ = [
         ("uSSIDLength", ctypes.c_ulong),
         ("ucSSID", ctypes.c_char * 32),
@@ -45,6 +49,7 @@ class _DOT11_SSID(ctypes.Structure):
 
 
 class _WLAN_AVAILABLE_NETWORK(ctypes.Structure):
+    """Contains information about an available wireless network."""
     _fields_ = [
         ("strProfileName", ctypes.c_wchar * 256),
         ("dot11Ssid", _DOT11_SSID),
@@ -65,6 +70,7 @@ class _WLAN_AVAILABLE_NETWORK(ctypes.Structure):
 
 
 class _WLAN_AVAILABLE_NETWORK_LIST(ctypes.Structure):
+    """Contains an array of available network information structures."""
     _fields_ = [
         ("dwNumberOfItems", wintypes.DWORD),
         ("dwIndex", wintypes.DWORD),
@@ -73,6 +79,7 @@ class _WLAN_AVAILABLE_NETWORK_LIST(ctypes.Structure):
 
 
 class _WLAN_NOTIFICATION_DATA(ctypes.Structure):
+    """Contains information provided during notification callbacks."""
     _fields_ = [
         ("NotificationSource", wintypes.DWORD),
         ("NotificationCode", wintypes.DWORD),
@@ -82,10 +89,9 @@ class _WLAN_NOTIFICATION_DATA(ctypes.Structure):
     ]
 
 
-# --- Estructuras para WlanQueryInterface(..., wlan_intf_opcode_current_connection, ...) ---
-# Permiten leer el SSID activo directamente de la API en vez de parsear el texto
-# (localizado) de 'netsh wlan show interfaces'.
+# --- Structures for WlanQueryInterface(..., wlan_intf_opcode_current_connection, ...) ---
 class _WLAN_ASSOCIATION_ATTRIBUTES(ctypes.Structure):
+    """Contains association attributes for a wireless connection."""
     _fields_ = [
         ("dot11Ssid", _DOT11_SSID),
         ("dot11BssType", ctypes.c_uint),
@@ -99,6 +105,7 @@ class _WLAN_ASSOCIATION_ATTRIBUTES(ctypes.Structure):
 
 
 class _WLAN_SECURITY_ATTRIBUTES(ctypes.Structure):
+    """Contains security attributes for a wireless connection."""
     _fields_ = [
         ("bSecurityEnabled", ctypes.c_int),
         ("bOneXEnabled", ctypes.c_int),
@@ -108,6 +115,7 @@ class _WLAN_SECURITY_ATTRIBUTES(ctypes.Structure):
 
 
 class _WLAN_CONNECTION_ATTRIBUTES(ctypes.Structure):
+    """Contains attributes for an active wireless connection."""
     _fields_ = [
         ("isState", ctypes.c_uint),
         ("wlanConnectionMode", ctypes.c_uint),
@@ -117,6 +125,7 @@ class _WLAN_CONNECTION_ATTRIBUTES(ctypes.Structure):
     ]
 
 
+# Native API Constants
 WLAN_NOTIFICATION_SOURCE_ACM = 0x00000008
 WLAN_NOTIFICATION_ACM_SCAN_COMPLETE = 7
 WLAN_NOTIFICATION_ACM_SCAN_FAIL = 8
@@ -143,17 +152,16 @@ _AUTH_ALGO_MAP = {
     10: "OWE",
     11: "WPA3-Enterprise-192",
 }
-# Este es el "esquema común" al que también normalizamos la salida del backend de
-# Linux (ver _normalize_linux_security), para que 'security' sea comparable entre
-# plataformas.
 
 
 def _load_wlanapi() -> ctypes.WinDLL:
     """
-    Carga wlanapi.dll declarando restype/argtypes explícitamente en las funciones
-    que usamos. No es estrictamente necesario (ctypes puede inferir la mayoría de
-    los casos), pero evita marshalling incorrecto silencioso y documenta la firma
-    real de cada función nativa.
+    Loads `wlanapi.dll` and explicitly defines return types and argument types.
+
+    Explicit definition prevents silent marshalling errors and documents native signatures.
+
+    :return: Loaded WinDLL handle for wlanapi.dll.
+    :rtype: ctypes.WinDLL
     """
     wlanapi = ctypes.WinDLL("wlanapi.dll")
 
@@ -220,12 +228,13 @@ def _load_wlanapi() -> ctypes.WinDLL:
 
     return wlanapi
 
-class WindowsWifiBackend(BaseWifiBackend):
-    """Implementación basada en Native WLAN API y netsh."""
 
-    # Mapea el esquema de seguridad normalizado (mismo que devuelve list_networks,
-    # ver _AUTH_ALGO_MAP / _normalize_linux_security) a (authentication, encryption)
-    # tal como los espera el XML de perfil de netsh.
+class WindowsWifiBackend(BaseWifiBackend):
+    """
+    Windows Wi-Fi backend implementation using Native WLAN API (`wlanapi.dll`) and `netsh`.
+    """
+
+    # Maps normalized security scheme to (authentication, encryption) pair for netsh XML profile
     _WINDOWS_AUTH_XML_MAP = {
         "OPEN": ("open", "none"),
         "SHARED": ("shared", "WEP"),
@@ -235,8 +244,7 @@ class WindowsWifiBackend(BaseWifiBackend):
         "WPA3-Personal": ("WPA3SAE", "AES"),
     }
 
-    # Estos requieren credenciales 802.1X/Enterprise (certificados, RADIUS, etc.),
-    # no solo una passphrase, así que no los soportamos con el flujo actual.
+    # Unsupported security types requiring 802.1X/Enterprise credentials (certificates, RADIUS)
     _UNSUPPORTED_WINDOWS_SECURITY = {
         "WPA-Enterprise",
         "WPA2-Enterprise",
@@ -246,9 +254,18 @@ class WindowsWifiBackend(BaseWifiBackend):
     }
 
     def __init__(self) -> None:
-        self._scan_callback = None  # ver comentario en list_networks()
+        """
+        Initializes the Windows Wi-Fi backend instance.
+        """
+        self._scan_callback = None
 
     def _interface_name(self) -> Optional[str]:
+        """
+        Retrieves the name of the primary wireless interface via `netsh`.
+
+        :return: Interface name string (e.g., 'Wi-Fi'), or None if not found.
+        :rtype: Optional[str]
+        """
         result = _run(["netsh", "wlan", "show", "interfaces"])
         if result.returncode != 0:
             return None
@@ -259,18 +276,18 @@ class WindowsWifiBackend(BaseWifiBackend):
 
     def _select_interface(self, iface_list_ptr) -> _GUID:
         """
-        Elige qué interfaz WLAN usar cuando hay más de un adaptador Wi-Fi.
+        Selects appropriate WLAN interface GUID when multiple adapters are present.
 
-        WlanEnumInterfaces() puede devolver varias; antes el código siempre tomaba
-        InterfaceInfo[0] (además, indexarlo con [0] directamente sobre un array de
-        tamaño fijo 1 en ctypes solo "funciona por casualidad" con una interfaz).
-        Acá casteamos el array a su tamaño real y, si hay más de una interfaz,
-        preferimos la que ya está conectada; si ninguna lo está, caemos al primer
-        elemento (mismo comportamiento que antes, pero explícito y documentado).
+        Prefers an active/connected interface if available; otherwise defaults to the first interface.
+
+        :param iface_list_ptr: Pointer to `_WLAN_INTERFACE_INFO_LIST`.
+        :return: Interface GUID structure.
+        :rtype: _GUID
+        :raises WifiError: If no Wi-Fi interfaces are present.
         """
         count = iface_list_ptr.contents.dwNumberOfItems
         if count == 0:
-            raise WifiError("No se encontró ninguna interfaz WiFi en el equipo.")
+            raise WifiError("No Wi-Fi interface found on the device.")
 
         interfaces = ctypes.cast(
             iface_list_ptr.contents.InterfaceInfo,
@@ -282,8 +299,20 @@ class WindowsWifiBackend(BaseWifiBackend):
                 return iface.InterfaceGuid
         return interfaces[0].InterfaceGuid
 
-    def _fetch_available_networks(self, wlanapi, handle, iface_guid, active: Optional[str]) -> list[dict]:
-        """Una sola consulta a WlanGetAvailableNetworkList, parseada a dicts."""
+    def _fetch_available_networks(
+        self, wlanapi, handle, iface_guid, active: Optional[str]
+    ) -> list[dict]:
+        """
+        Queries `WlanGetAvailableNetworkList` and parses output into dictionary format.
+
+        :param wlanapi: Loaded WinDLL handle.
+        :param handle: Open WLAN handle.
+        :param iface_guid: GUID of selected interface.
+        :param active: SSID of current active connection, if any.
+        :return: List of parsed network dictionary objects.
+        :rtype: list[dict]
+        :raises WifiError: If Native API call fails.
+        """
         net_list_ptr = ctypes.POINTER(_WLAN_AVAILABLE_NETWORK_LIST)()
         if (
             wlanapi.WlanGetAvailableNetworkList(
@@ -291,7 +320,7 @@ class WindowsWifiBackend(BaseWifiBackend):
             )
             != 0
         ):
-            raise WifiError("No se pudo obtener la lista de redes disponibles.")
+            raise WifiError("Failed to retrieve available network list.")
 
         try:
             count = net_list_ptr.contents.dwNumberOfItems
@@ -330,23 +359,25 @@ class WindowsWifiBackend(BaseWifiBackend):
 
     def list_networks(self) -> list[dict]:
         """
-        Obtiene la lista de redes Wi-Fi disponibles usando wlanapi.dll.
+        Scans and returns available Wi-Fi networks using Windows Native WLAN API (`wlanapi.dll`).
 
-        Registra un callback a eventos del servicio ACM (AutoConfig Module) de Windows
-        para esperar de forma precisa cuando el driver complete el escaneo de canales
-        de hardware que dispara WlanScan().
+        Registers a callback with the AutoConfig Module (ACM) service to await hardware scan completion.
+
+        :return: List of network dicts sorted by signal quality descending.
+        :rtype: list[dict]
+        :raises WifiError: If handle opening or interface enumeration fails.
         """
         wlanapi = _load_wlanapi()
 
         handle = wintypes.HANDLE()
         negotiated_version = wintypes.DWORD()
         if wlanapi.WlanOpenHandle(2, None, ctypes.byref(negotiated_version), ctypes.byref(handle)) != 0:
-            raise WifiError("No se pudo abrir un handle a la WLAN API de Windows.")
+            raise WifiError("Failed to open handle to Windows WLAN API.")
 
         try:
             iface_list_ptr = ctypes.POINTER(_WLAN_INTERFACE_INFO_LIST)()
             if wlanapi.WlanEnumInterfaces(handle, None, ctypes.byref(iface_list_ptr)) != 0:
-                raise WifiError("No se pudieron enumerar las interfaces WLAN.")
+                raise WifiError("Failed to enumerate WLAN interfaces.")
 
             try:
                 iface_guid = self._select_interface(iface_list_ptr)
@@ -365,14 +396,10 @@ class WindowsWifiBackend(BaseWifiBackend):
                         ):
                             scan_done_event.set()
 
-                # Guardado como atributo de instancia (no variable local): si el
-                # WlanRegisterNotification de desregistro más abajo fallara sin que
-                # lo notemos, este trampolín de ctypes seguiría vivo mientras exista
-                # el backend, en vez de ser recolectado por el GC y crashear el
-                # proceso ante una notificación tardía de Windows.
+                # Retained on instance to prevent GC cleanup prior to unregistration
                 self._scan_callback = WLAN_NOTIFICATION_CALLBACK(_notification_handler)
 
-                # Registrar notificación para detectar cuando el escaneo físico concluya
+                # Register event callback for completed scan
                 wlanapi.WlanRegisterNotification(
                     handle,
                     WLAN_NOTIFICATION_SOURCE_ACM,
@@ -383,20 +410,13 @@ class WindowsWifiBackend(BaseWifiBackend):
                     None,
                 )
 
-                # Disparar escaneo asincrónico
+                # Trigger asynchronous scan
                 scan_rc = wlanapi.WlanScan(handle, ctypes.byref(iface_guid), None, None, None)
 
                 if scan_rc == 0:
-                    # Espera a que Windows emita la notificación de escaneo finalizado (máx. 4.0s)
+                    # Wait for Windows ACM event completion (max 4 seconds)
                     scan_done_event.wait(timeout=4.0)
 
-                # Desregistrar notificaciones. Si esto falla, mantenemos la referencia
-                # en self._scan_callback (ver comentario arriba) en vez de descartarla.
-                #
-                # Nota: con argtypes declarado como WLAN_NOTIFICATION_CALLBACK (ver
-                # _load_wlanapi), ctypes ya no acepta 'None' pelado para ese
-                # parámetro como sí hacía sin argtypes -- hay que castear
-                # explícitamente a un puntero a función nulo del tipo correcto.
                 null_callback = ctypes.cast(None, WLAN_NOTIFICATION_CALLBACK)
                 unregister_rc = wlanapi.WlanRegisterNotification(
                     handle,
@@ -418,7 +438,15 @@ class WindowsWifiBackend(BaseWifiBackend):
             wlanapi.WlanCloseHandle(handle, None)
 
     def _query_current_connection(self, wlanapi, handle, iface_guid: _GUID) -> Optional[str]:
-        """Lee el SSID activo con WlanQueryInterface, dado un handle/GUID ya abiertos."""
+        """
+        Queries active SSID directly via `WlanQueryInterface`.
+
+        :param wlanapi: Loaded WinDLL handle.
+        :param handle: Open WLAN handle.
+        :param iface_guid: Selected interface GUID.
+        :return: Active network SSID string, or None if disconnected/failed.
+        :rtype: Optional[str]
+        """
         data_size = wintypes.DWORD()
         data_ptr = ctypes.c_void_p()
         opcode_type = ctypes.c_uint()
@@ -445,14 +473,12 @@ class WindowsWifiBackend(BaseWifiBackend):
 
     def current_connection(self) -> Optional[str]:
         """
-        Devuelve el SSID activo consultando wlanapi.dll directamente
-        (WlanQueryInterface), no parseando el texto de 'netsh wlan show interfaces'.
+        Retrieves active network SSID directly via Native API (`WlanQueryInterface`).
 
-        La razón: varias etiquetas de esa salida de netsh están localizadas según
-        el idioma de Windows (p. ej. "Signal"/"Segnale", "Authentication"/
-        "Autenticazione" en italiano). La etiqueta "SSID" en particular no parece
-        traducirse, pero seguir parseándola es apostar a que ningún locale la
-        cambie. Consultar la API directamente es 100% independiente del idioma.
+        Bypasses localized `netsh wlan show interfaces` output to remain language-independent.
+
+        :return: Active SSID, or None if disconnected/unavailable.
+        :rtype: Optional[str]
         """
         try:
             wlanapi = _load_wlanapi()
@@ -481,11 +507,11 @@ class WindowsWifiBackend(BaseWifiBackend):
 
     def _profile_exists(self, ssid: str) -> bool:
         """
-        Compara nombres de perfil exactos, no un 'in' contra toda la salida.
+        Checks whether an exact netsh profile name exists.
 
-        Antes, buscar 'Casa' con substring matcheaba también un perfil llamado
-        'Casa Fibra' (falso positivo). Acá tomamos, por línea, todo lo que sigue
-        a los ':' y lo comparamos exacto contra el SSID.
+        :param ssid: SSID string to match.
+        :return: True if exact matching profile exists, False otherwise.
+        :rtype: bool
         """
         result = _run(["netsh", "wlan", "show", "profiles"])
         if result.returncode != 0:
@@ -500,9 +526,12 @@ class WindowsWifiBackend(BaseWifiBackend):
 
     def _detect_security(self, ssid: str, password: Optional[str]) -> str:
         """
-        Detecta el tipo de seguridad real de la red escaneando con list_networks(),
-        en vez de asumir siempre WPA2PSK/AES al armar el perfil (lo que hacía
-        fallar la conexión contra redes WPA3-only, abiertas, WEP, etc.).
+        Detects security type of target SSID via active scanning.
+
+        :param ssid: Target network SSID.
+        :param password: Provided password.
+        :return: Security type string (e.g., 'WPA2-Personal', 'OPEN').
+        :rtype: str
         """
         try:
             for net in self.list_networks():
@@ -510,8 +539,7 @@ class WindowsWifiBackend(BaseWifiBackend):
                     return net["security"]
         except WifiError:
             pass
-        # Red oculta o fuera de alcance en el momento del escaneo: no hay forma de
-        # saber el tipo real. Asumimos según si nos pasaron password o no.
+        # Fallback for hidden or out-of-range networks
         return "WPA2-Personal" if password else "OPEN"
 
     def _create_profile(
@@ -521,12 +549,23 @@ class WindowsWifiBackend(BaseWifiBackend):
         security: str = "WPA2-Personal",
         hidden: bool = False,
     ) -> None:
-        """Crea (o reemplaza) un perfil XML temporal para poder conectar por SSID."""
+        """
+        Generates and registers a temporary XML network profile using `netsh`.
+
+        :param ssid: Target network SSID.
+        :type ssid: str
+        :param password: Passphrase for secure networks.
+        :type password: Optional[str]
+        :param security: Detected security type, defaults to 'WPA2-Personal'.
+        :type security: str, optional
+        :param hidden: Whether network is hidden, defaults to False.
+        :type hidden: bool, optional
+        :raises WifiError: If profile creation fails or security scheme is unsupported.
+        """
         if security in self._UNSUPPORTED_WINDOWS_SECURITY:
             raise WifiError(
-                f"La red '{ssid}' usa seguridad '{security}', que requiere "
-                "credenciales 802.1X/Enterprise y no está soportada por este "
-                "método de conexión basado solo en contraseña."
+                f"Network '{ssid}' uses '{security}' security, which requires "
+                "802.1X/Enterprise credentials and is not supported by this password-based method."
             )
 
         auth_algo, encryption = self._WINDOWS_AUTH_XML_MAP.get(security, ("WPA2PSK", "AES"))
@@ -534,15 +573,11 @@ class WindowsWifiBackend(BaseWifiBackend):
         needs_key = auth_algo not in ("open", "OWE")
         if needs_key and not password:
             raise WifiError(
-                f"La red '{ssid}' requiere contraseña (seguridad detectada: {security})."
+                f"Network '{ssid}' requires a password (detected security: {security})."
             )
         if not needs_key:
-            # Red abierta / OWE: no corresponde mandar keyMaterial aunque nos hayan
-            # pasado un password.
             password = None
 
-        # Los SSID y passphrases WPA2 pueden contener &, <, >, comillas, etc.
-        # (válido en la especificación), lo que rompía el XML antes de escapar.
         safe_ssid = _xml_escape(ssid)
 
         if password:
@@ -596,8 +631,6 @@ class WindowsWifiBackend(BaseWifiBackend):
             tmp_path = f.name
 
         try:
-            # user=current: sin esto, netsh crea el perfil "para todos los usuarios"
-            # por defecto, lo que en la práctica exige permisos de Administrador.
             cmd = ["netsh", "wlan", "add", "profile", f"filename={tmp_path}", "user=current"]
             interface_name = self._interface_name()
             if interface_name:
@@ -606,20 +639,30 @@ class WindowsWifiBackend(BaseWifiBackend):
             result = _run(cmd)
             if result.returncode != 0:
                 raise WifiError(
-                    f"No se pudo crear el perfil de red para '{ssid}'.",
+                    f"Failed to create network profile for '{ssid}'.",
                     detail=result.stderr.strip() or result.stdout.strip(),
                 )
         finally:
             os.unlink(tmp_path)
 
     def connect(self, ssid: str, password: Optional[str] = None, hidden: bool = False) -> dict:
+        """
+        Connects to a Wi-Fi network on Windows using `netsh`.
+
+        :param ssid: Target network SSID.
+        :type ssid: str
+        :param password: Passphrase, if required.
+        :type password: Optional[str], optional
+        :param hidden: Whether network is hidden, defaults to False.
+        :type hidden: bool, optional
+        :return: Dict containing status details ('ssid', 'status', 'previous').
+        :rtype: dict
+        :raises WifiError: If connection fails.
+        """
         current = self.current_connection()
         if current and current != ssid:
             self.disconnect()
 
-        # Si no existe un perfil guardado (o se pasó password nuevo), lo creamos/actualizamos.
-        # Solo en ese caso hace falta escanear para detectar la seguridad real
-        # (ver _detect_security): reconectar a un perfil ya guardado no dispara scan.
         if password or not self._profile_exists(ssid):
             security = self._detect_security(ssid, password)
             self._create_profile(ssid, password, security, hidden=hidden)
@@ -627,19 +670,24 @@ class WindowsWifiBackend(BaseWifiBackend):
         interface_name = self._interface_name()
         cmd = ["netsh", "wlan", "connect", f"name={ssid}", f"ssid={ssid}"]
         if interface_name:
-            # Necesario para desambiguar si el equipo tiene más de un adaptador
-            # Wi-Fi; sin esto, netsh puede quejarse de comando ambiguo.
             cmd.append(f"interface={interface_name}")
 
         result = _run(cmd)
         if result.returncode != 0:
             raise WifiError(
-                f"No se pudo conectar a la red '{ssid}'.",
+                f"Failed to connect to network '{ssid}'.",
                 detail=result.stderr.strip() or result.stdout.strip(),
             )
         return {"ssid": ssid, "status": "connected", "previous": current}
 
     def disconnect(self) -> dict:
+        """
+        Disconnects the active Wi-Fi interface on Windows.
+
+        :return: Dict containing disconnection status ('status', 'previous').
+        :rtype: dict
+        :raises WifiError: If disconnection fails.
+        """
         current = self.current_connection()
         interface_name = self._interface_name()
         cmd = ["netsh", "wlan", "disconnect"]
@@ -648,5 +696,5 @@ class WindowsWifiBackend(BaseWifiBackend):
 
         result = _run(cmd)
         if result.returncode != 0:
-            raise WifiError("No se pudo desconectar la interfaz WiFi.", detail=result.stderr)
+            raise WifiError("Failed to disconnect Wi-Fi interface.", detail=result.stderr)
         return {"status": "disconnected", "previous": current}
