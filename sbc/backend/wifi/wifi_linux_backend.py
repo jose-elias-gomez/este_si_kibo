@@ -6,10 +6,16 @@ from wifi.wifi_base import BaseWifiBackend, _run, WifiError
 
 def _normalize_linux_security(raw: str) -> str:
     """
-    Normaliza el string de seguridad que devuelve nmcli (p. ej. 'WPA2', 'WPA1 WPA2',
-    'WEP', 'WPA2 802.1X') al mismo esquema que usa _AUTH_ALGO_MAP en Windows
-    ('WPA2-Personal', 'WPA2-Enterprise', 'OPEN', etc.), para que el campo 'security'
-    sea comparable entre backends.
+    Normalizes the security string returned by `nmcli` (e.g., 'WPA2', 'WPA1 WPA2',
+    'WEP', 'WPA2 802.1X') into the standardized scheme used across platforms.
+
+    Maps values to match the Windows `_AUTH_ALGO_MAP` format ('WPA2-Personal',
+    'WPA2-Enterprise', 'OPEN', etc.) ensuring cross-backend consistency.
+
+    :param raw: The raw security string from nmcli output.
+    :type raw: str
+    :return: The normalized security protocol string.
+    :rtype: str
     """
     if not raw or not raw.strip():
         return "OPEN"
@@ -26,28 +32,35 @@ def _normalize_linux_security(raw: str) -> str:
     if "OWE" in upper:
         return "OWE"
     if "WEP" in upper:
-        # Nota: en Windows, _AUTH_ALGO_MAP no distingue WEP de forma explícita
-        # (queda como OPEN/SHARED según el algoritmo de autenticación, ya que la
-        # WLAN API separa autenticación de cifrado). Es una limitación conocida
-        # de esa API, no de este normalizador.
+        # Note: On Windows, _AUTH_ALGO_MAP does not explicitly distinguish WEP
+        # (it defaults to OPEN/SHARED depending on authentication algorithm, since
+        # the WLAN API separates authentication from encryption). This is a known
+        # limitation of that API, not this normalizer.
         return "WEP"
-    # Desconocido: devolvemos el valor crudo para no perder información.
+    # Unknown format: return raw value to preserve details.
     return raw
 
+
 class LinuxWifiBackend(BaseWifiBackend):
-    """Implementación basada en NetworkManager (nmcli)."""
+    """
+    Linux Wi-Fi backend implementation based on NetworkManager (`nmcli`).
+    """
 
     def _interface(self) -> Optional[str]:
-        """Devuelve el nombre de la primera interfaz wifi disponible."""
+        """
+        Retrieves the interface name of the first available Wi-Fi device.
+
+        :return: The interface name (e.g., 'wlan0'), or None if no Wi-Fi device is found.
+        :rtype: Optional[str]
+        :raises WifiError: If querying network devices via nmcli fails.
+        """
         result = _run(["nmcli", "-t", "-f", "DEVICE,TYPE", "device"])
         if result.returncode != 0:
-            raise WifiError("No se pudo listar dispositivos de red.", detail=result.stderr)
+            raise WifiError("Failed to list network devices.", detail=result.stderr)
         for line in result.stdout.strip().splitlines():
             if not line:
                 continue
-            # Igual que el resto del archivo: nmcli separa con ':' y escapa los ':'
-            # internos con '\:' (un nombre de interfaz virtual podría, en teoría,
-            # contener uno).
+            # nmcli separates fields with ':' and escapes internal colons with '\:'
             parts = re.split(r"(?<!\\):", line)
             parts = [p.replace("\\:", ":") for p in parts]
             device, dtype = (parts + [""])[:2]
@@ -56,9 +69,19 @@ class LinuxWifiBackend(BaseWifiBackend):
         return None
 
     def list_networks(self) -> list[dict]:
-        # 'nmcli device wifi list --rescan yes' le pide a NetworkManager que intente
-        # actualizar la lista. Si está bloqueado por rate-limiting, utiliza el caché
-        # reciente sin lanzar una excepción de comando fallido.
+        """
+        Scans and lists available Wi-Fi networks on Linux.
+
+        Uses `nmcli device wifi list --rescan yes` to trigger an updated hardware scan.
+        If rate-limited or using older nmcli versions, falls back to non-rescan mode.
+
+        :return: A list of dictionaries sorted by signal strength in descending order.
+                 Each dictionary contains 'ssid', 'signal', 'security', and 'in_use'.
+        :rtype: list[dict]
+        :raises WifiError: If nmcli fails to retrieve Wi-Fi networks.
+        """
+        # 'nmcli device wifi list --rescan yes' requests NetworkManager to refresh the list.
+        # If rate-limited, it falls back to recent cache without throwing an error.
         result = _run(
             [
                 "nmcli",
@@ -71,13 +94,11 @@ class LinuxWifiBackend(BaseWifiBackend):
                 "--rescan",
                 "yes",
             ],
-            # Con --rescan yes, nmcli espera a que termine un escaneo real de
-            # hardware; 20s por defecto puede quedarse corto con tarjetas lentas
-            # o muchas redes vecinas, así que lo alineamos con el timeout de connect().
+            # Allow 30s timeout to account for hardware scan delays on slow cards
             timeout=30,
         )
         if result.returncode != 0:
-            # Fallback sin la bandera --rescan por compatibilidad con versiones antiguas de nmcli
+            # Fallback without --rescan for backward compatibility with legacy nmcli versions
             result = _run(
                 [
                     "nmcli",
@@ -90,14 +111,14 @@ class LinuxWifiBackend(BaseWifiBackend):
                 ]
             )
             if result.returncode != 0:
-                raise WifiError("No se pudo obtener la lista de redes WiFi.", detail=result.stderr)
+                raise WifiError("Failed to retrieve Wi-Fi network list.", detail=result.stderr)
 
         networks = []
         seen = set()
         for line in result.stdout.strip().splitlines():
             if not line:
                 continue
-            # nmcli separa campos con ':' y escapa los ':' internos con '\:'
+            # nmcli separates fields with ':' and escapes internal colons with '\:'
             parts = re.split(r"(?<!\\):", line)
             parts = [p.replace("\\:", ":") for p in parts]
             if len(parts) < 4:
@@ -117,7 +138,13 @@ class LinuxWifiBackend(BaseWifiBackend):
         return sorted(networks, key=lambda n: (n["signal"] or 0), reverse=True)
 
     def current_connection(self) -> Optional[str]:
-        # Consulta directamente el estado de los APs para obtener el SSID activo real.
+        """
+        Queries active access points to determine the currently connected SSID.
+
+        :return: The active network SSID, or None if not connected or upon error.
+        :rtype: Optional[str]
+        """
+        # Directly queries AP status for the true active SSID
         result = _run(["nmcli", "-t", "-f", "ACTIVE,SSID", "device", "wifi"])
         if result.returncode != 0:
             return None
@@ -131,36 +158,52 @@ class LinuxWifiBackend(BaseWifiBackend):
         return None
 
     def connect(self, ssid: str, password: Optional[str] = None, hidden: bool = False) -> dict:
+        """
+        Connects to a Wi-Fi network using NetworkManager.
+
+        :param ssid: The target network SSID.
+        :type ssid: str
+        :param password: The Wi-Fi passphrase, if required.
+        :type password: Optional[str], optional
+        :param hidden: Whether to scan explicitly for hidden non-broadcasting SSIDs, defaults to False.
+        :type hidden: bool, optional
+        :return: Connection state details including target SSID, status, and previous SSID.
+        :rtype: dict
+        :raises WifiError: If connection attempt fails.
+        """
         current = self.current_connection()
 
-        # NetworkManager gestiona el cambio de red automáticamente.
-        # No es necesario llamar a disconnect() previamente.
+        # NetworkManager manages network switching automatically without requiring disconnect()
         cmd = ["nmcli", "device", "wifi", "connect", ssid]
         if password:
             cmd += ["password", password]
         if hidden:
-            # Sin esto, nmcli no intenta conectar a una red que no aparece en el
-            # scan pasivo/activo normal (SSID no difundido).
+            # Required for connecting to non-broadcasting (hidden) networks
             cmd += ["hidden", "yes"]
 
         result = _run(cmd, timeout=30)
         if result.returncode != 0:
             raise WifiError(
-                f"No se pudo conectar a la red '{ssid}'.",
+                f"Failed to connect to network '{ssid}'.",
                 detail=result.stderr.strip() or result.stdout.strip(),
             )
         return {"ssid": ssid, "status": "connected", "previous": current}
 
     def disconnect(self) -> dict:
+        """
+        Disconnects the current active Wi-Fi connection via nmcli.
+
+        :return: Disconnection result details including status and previous SSID.
+        :rtype: dict
+        """
         current = self.current_connection()
         if not current:
             return {"status": "disconnected", "previous": None}
 
-        # Desactivamos la conexión activa por perfil/SSID para no dejar la
-        # interfaz en estado 'unmanaged' ni deshabilitar la reconexión automática.
+        # Deactivate connection profile/SSID directly to avoid unmanaged interface state
         result = _run(["nmcli", "connection", "down", "id", current])
         if result.returncode != 0:
-            # Fallback en caso de que el ID del perfil difiera del SSID
+            # Fallback if profile ID differs from SSID
             iface = self._interface()
             if iface:
                 _run(["nmcli", "device", "disconnect", iface])
