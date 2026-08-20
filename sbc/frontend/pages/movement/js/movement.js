@@ -113,15 +113,35 @@ function findPivotInNode(parentName) {
     if (!modelRoot) return null;
 
     let parentObj = null;
+
     modelRoot.traverse((child) => {
         if (child.name === parentName) {
             parentObj = child;
         }
     });
 
-    if (!parentObj) return null;
+    if (!parentObj) {
+        console.warn(`No se encontró el nodo ${parentName}`);
+        return null;
+    }
 
-    let pivotObj = parentObj.getObjectByName('Pivot');
+    console.log(`Hijos de ${parentName}:`, parentObj.children);
+
+    let pivotObj = null;
+
+    // Buscar cualquier nodo cuyo nombre empiece por "Pivot"
+    parentObj.traverse((child) => {
+        if (child !== parentObj && child.name.startsWith('Pivot')) {
+            pivotObj = child;
+        }
+    });
+
+    console.log(
+        pivotObj
+            ? `Pivot encontrado para ${parentName}: ${pivotObj.name}`
+            : `No se encontró ningún nodo que empiece por "Pivot" para ${parentName}`
+    );
+
     return pivotObj || parentObj;
 }
 
