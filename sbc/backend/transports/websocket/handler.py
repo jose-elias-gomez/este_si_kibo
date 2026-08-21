@@ -1,7 +1,7 @@
 import logging
-from options.sound_editor import set_volume
-from options.screen_brightness import set_brightness
-from options.power import shutdown_computer
+from services.system_options.sound_editor import set_volume
+from services.system_options.screen_brightness import set_brightness
+from services.system_options.power import shutdown_computer
 
 logger = logging.getLogger(__name__)
 CONTEXT_HANDLERS = {}

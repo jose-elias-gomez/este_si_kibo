@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from wifi.wifi_base import BaseWifiBackend, _run, WifiError
+from services.wifi.wifi_base import BaseWifiBackend, _run, WifiError
 
 
 def _normalize_linux_security(raw: str) -> str:
@@ -14,7 +14,7 @@ def _normalize_linux_security(raw: str) -> str:
 
     :param raw: The raw security string from nmcli output.
     :type raw: str
-    :return: The normalized security protocol string.
+    :return: The normalized security websocket string.
     :rtype: str
     """
     if not raw or not raw.strip():

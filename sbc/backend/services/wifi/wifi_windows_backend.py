@@ -5,7 +5,7 @@ import threading
 from ctypes import wintypes
 from typing import Optional
 
-from wifi.wifi_base import _run, WifiError, BaseWifiBackend
+from services.wifi.wifi_base import _run, WifiError, BaseWifiBackend
 from xml.sax.saxutils import escape as _xml_escape
 
 WINFUNCTYPE = getattr(ctypes, "WINFUNCTYPE", ctypes.CFUNCTYPE)

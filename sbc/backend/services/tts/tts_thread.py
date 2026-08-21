@@ -1,6 +1,6 @@
 import queue
 import threading
-from tts.tts import TTS
+from services.tts.tts import TTS
 
 
 class TTSThread(threading.Thread):
