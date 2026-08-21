@@ -2,10 +2,10 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from wifi.wifi_base import WifiError
-from wifi.wifi_endpoint import router as wifi_router
-from tts.tts_endpoint import router as tts_router
-from protocol.websocket_connection import router as websocket_router
+from services.wifi.wifi_base import WifiError
+from services.wifi.wifi_endpoint import router as wifi_router
+from services.tts.tts_endpoint import router as tts_router
+from transports.websocket.server import router as websocket_router
 
 app = FastAPI(
     title="Web server",

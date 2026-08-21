@@ -3,9 +3,9 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from wifi.wifi_base import BaseWifiBackend, WifiError
-from wifi.wifi_linux_backend import LinuxWifiBackend
-from wifi.wifi_windows_backend import WindowsWifiBackend
+from services.wifi.wifi_base import BaseWifiBackend, WifiError
+from services.wifi.wifi_linux_backend import LinuxWifiBackend
+from services.wifi.wifi_windows_backend import WindowsWifiBackend
 
 router = APIRouter(prefix="/networks", tags=["WiFi"])
 
