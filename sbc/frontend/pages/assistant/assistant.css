@@ -1,0 +1,623 @@
+/* =========================================================
+   ASISTENTE AI
+   Utiliza exclusivamente el sistema visual de global.css
+   ========================================================= */
+
+.assistant {
+
+  position: relative;
+
+  display: flex;
+
+  width: 100%;
+  height: 100dvh;
+
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: var(--color-bg);
+
+  color: var(--color-text);
+
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.assistant__header {
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+
+  padding:
+    var(--space-md);
+
+  border-bottom:
+    1px solid
+    var(--color-border);
+
+  background:
+    var(--color-bg);
+
+}
+
+
+/* =========================================================
+   IDENTIDAD
+   ========================================================= */
+
+.assistant__identity {
+
+  display: flex;
+
+  align-items: center;
+
+  gap:
+    var(--space-sm);
+
+}
+
+
+.assistant__avatar {
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  border:
+    1px solid
+    var(--color-border);
+
+  border-radius:
+    var(--radius-md);
+
+  background:
+    var(--overlay-first);
+
+  color:
+    var(--color-text);
+
+  font-family:
+    var(--font-heading);
+
+  font-size:
+    var(--font-size-lg);
+
+  font-weight: 700;
+
+}
+
+
+.assistant__identity-text {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap:
+    2px;
+
+}
+
+
+.assistant__identity-text h1 {
+
+  margin: 0;
+
+  color:
+    var(--color-text);
+
+  font-family:
+    var(--font-heading);
+
+  font-size:
+    var(--font-size-xl);
+
+  font-weight: 600;
+
+  letter-spacing: 0;
+
+}
+
+
+.assistant__identity-text p {
+
+  color:
+    var(--color-h2);
+
+  font-family:
+    var(--font-body);
+
+  font-size:
+    var(--font-size-sm);
+
+}
+
+
+/* =========================================================
+   ESTADO
+   ========================================================= */
+
+.assistant__status {
+
+  display: flex;
+
+  align-items: center;
+
+  gap:
+    var(--space-xs);
+
+  padding:
+    var(--space-xs)
+    var(--space-sm);
+
+  border:
+    1px solid
+    var(--color-border);
+
+  border-radius:
+    var(--radius-pill);
+
+  background:
+    var(--overlay-first);
+
+  color:
+    var(--color-h2);
+
+  font-family:
+    var(--font-ui);
+
+  font-size:
+    var(--font-size-sm);
+
+}
+
+
+.assistant__status-dot {
+
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background:
+    var(--color-enabled);
+
+}
+
+
+.assistant.is-listening
+.assistant__status-dot {
+
+  animation:
+    status-pulse 1s
+    ease-in-out infinite;
+
+}
+
+
+@keyframes status-pulse {
+
+  0%,
+  100% {
+
+    opacity: 0.35;
+
+  }
+
+  50% {
+
+    opacity: 1;
+
+  }
+
+}
+
+
+/* =========================================================
+   CONVERSACIÓN
+   ========================================================= */
+
+.assistant__conversation {
+
+  flex: 1;
+
+  width: 100%;
+
+  overflow-y: auto;
+
+  padding:
+    var(--space-md);
+
+}
+
+
+.assistant__welcome {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 100%;
+
+  text-align: center;
+
+}
+
+
+.assistant__welcome-icon {
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 64px;
+  height: 64px;
+
+  margin-bottom:
+    var(--space-sm);
+
+  border:
+    1px solid
+    var(--color-border);
+
+  border-radius:
+    var(--radius-lg);
+
+  background:
+    var(--overlay-first);
+
+  color:
+    var(--color-h1);
+
+  font-size:
+    var(--font-size-xxxl);
+
+}
+
+
+.assistant__welcome h2 {
+
+  margin: 0;
+
+  color:
+    var(--color-text);
+
+  font-family:
+    var(--font-heading);
+
+  font-size:
+    var(--font-size-xxl);
+
+  font-weight: 600;
+
+}
+
+
+.assistant__welcome p {
+
+  margin-top:
+    var(--space-xs);
+
+  color:
+    var(--color-h2);
+
+  font-size:
+    var(--font-size-md);
+
+}
+
+
+/* =========================================================
+   MENSAJES
+   ========================================================= */
+
+.message {
+
+  display: flex;
+
+  width: 100%;
+
+  margin-bottom:
+    var(--space-sm);
+
+}
+
+
+.message--user {
+
+  justify-content: flex-end;
+
+}
+
+
+.message--assistant {
+
+  justify-content: flex-start;
+
+}
+
+
+.message__bubble {
+
+  max-width: 75%;
+
+  padding:
+    var(--space-sm);
+
+  border:
+    1px solid
+    var(--color-border);
+
+  border-radius:
+    var(--radius-lg);
+
+  font-family:
+    var(--font-body);
+
+  font-size:
+    var(--font-size-lg);
+
+  line-height: 1.4;
+
+}
+
+
+.message--user
+.message__bubble {
+
+  background:
+    var(--overlay-first-selected);
+
+  color:
+    var(--color-text);
+
+  border-bottom-right-radius:
+    var(--radius-sm);
+
+}
+
+
+.message--assistant
+.message__bubble {
+
+  background:
+    var(--overlay-first);
+
+  color:
+    var(--color-text);
+
+  border-bottom-left-radius:
+    var(--radius-sm);
+
+}
+
+
+/* =========================================================
+   CONTROL DE VOZ
+   ========================================================= */
+
+.assistant__voice {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding:
+    var(--space-sm)
+    var(--space-md)
+    var(--space-md);
+
+  border-top:
+    1px solid
+    var(--color-border);
+
+  background:
+    var(--color-bg);
+
+}
+
+
+.assistant__voice-label {
+
+  min-height: 20px;
+
+  margin-bottom:
+    var(--space-xs);
+
+  color:
+    var(--color-h2);
+
+  font-family:
+    var(--font-ui);
+
+  font-size:
+    var(--font-size-sm);
+
+}
+
+
+.assistant__mic {
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 76px;
+  height: 76px;
+
+  padding: 0;
+
+  border:
+    1px solid
+    var(--color-border);
+
+  border-radius:
+    50%;
+
+  background:
+    var(--overlay-first);
+
+  color:
+    var(--color-text);
+
+  cursor: pointer;
+
+  transition:
+    transform var(--duration-fast) ease,
+    background-color var(--duration-medium) ease,
+    border-color var(--duration-medium) ease;
+
+}
+
+
+.assistant__mic:hover {
+
+  background:
+    var(--overlay-first-selected);
+
+}
+
+
+.assistant__mic:active {
+
+  transform:
+    scale(0.94);
+
+}
+
+
+.assistant__mic-icon {
+
+  width: 30px;
+  height: 30px;
+
+}
+
+
+/* =========================================================
+   ESTADO ESCUCHANDO
+   ========================================================= */
+
+.assistant.is-listening
+.assistant__mic {
+
+  border-color:
+    var(--color-enabled);
+
+  background:
+    var(--overlay-first-selected);
+
+  animation:
+    microphone-pulse 1.4s
+    ease-in-out infinite;
+
+}
+
+
+@keyframes microphone-pulse {
+
+  0%,
+  100% {
+
+    box-shadow:
+      0 0 0 0
+      rgba(255, 255, 255, 0.08);
+
+  }
+
+  50% {
+
+    box-shadow:
+      0 0 0 14px
+      rgba(255, 255, 255, 0);
+
+  }
+
+}
+
+
+/* =========================================================
+   HINT
+   ========================================================= */
+
+.assistant__voice-hint {
+
+  margin-top:
+    var(--space-xs);
+
+  color:
+    var(--color-h2);
+
+  font-family:
+    var(--font-ui);
+
+  font-size:
+    var(--font-size-sm);
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  .assistant__header {
+
+    padding:
+      var(--space-sm);
+
+  }
+
+
+  .assistant__conversation {
+
+    padding:
+      var(--space-sm);
+
+  }
+
+
+  .message__bubble {
+
+    max-width: 85%;
+
+    font-size:
+      var(--font-size-md);
+
+  }
+
+
+  .assistant__mic {
+
+    width: 68px;
+    height: 68px;
+
+  }
+
+}
