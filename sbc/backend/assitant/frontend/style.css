@@ -1,0 +1,95 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f1115;
+  color: #f2f2f2;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.container {
+  width: 100%;
+  max-width: 480px;
+  padding: 24px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin-bottom: 24px;
+}
+
+.talk-btn {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: none;
+  background: #2f6feb;
+  color: white;
+  font-size: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.talk-btn:active,
+.talk-btn.recording {
+  background: #e0393e;
+  transform: scale(1.05);
+}
+
+#talk-icon {
+  font-size: 2rem;
+}
+
+#talk-label {
+  font-size: 0.75rem;
+  padding: 0 12px;
+}
+
+#status {
+  margin-top: 16px;
+  color: #9aa0a6;
+  min-height: 1.2em;
+}
+
+.chat {
+  margin-top: 24px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.bubble {
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 85%;
+  line-height: 1.35;
+  font-size: 0.95rem;
+}
+
+.bubble.user {
+  align-self: flex-end;
+  background: #2f6feb;
+  color: white;
+}
+
+.bubble.assistant {
+  align-self: flex-start;
+  background: #1e2128;
+  color: #f2f2f2;
+}

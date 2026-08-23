@@ -1,1 +1,5 @@
 sbc/backend/.idea/workspace.xml
+
+# Entornos virtuales
+venv/
+.venv/

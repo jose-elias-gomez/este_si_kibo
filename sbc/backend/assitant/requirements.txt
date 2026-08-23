@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+sherpa-onnx
+llama-cpp-python
+soundfile
+numpy
+python-multipart
