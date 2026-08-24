@@ -1,18 +1,36 @@
-(() => {
+import {
+  input,
+  InputAction
+} from "../../../shared/js/inputController.js";
 
+(() => {
   "use strict";
-  
+
+  // =========================================================
+  // CONTEXTO
+  // =========================================================
+
+  const CONTEXT = "CAMERA";
+
+
+  // =========================================================
+  // ELEMENTOS
+  // =========================================================
 
   const cameraFeed =
     document.getElementById("cameraFeed");
 
 
+  // =========================================================
+  // ESTADO
+  // =========================================================
+
   let mediaStream = null;
 
 
-  /* =========================================================
-     INICIAR CÁMARA
-     ========================================================= */
+  // =========================================================
+  // INICIAR CÁMARA
+  // =========================================================
 
   async function startCamera() {
 
@@ -24,12 +42,16 @@
       ) {
 
         console.error(
-          "[TRANSLATOR] getUserMedia no está disponible."
+          "[CAMERA] getUserMedia no está disponible."
         );
 
         return;
-
       }
+
+
+      console.log(
+        "[CAMERA] Solicitando acceso a la cámara..."
+      );
 
 
       mediaStream =
@@ -48,11 +70,16 @@
         mediaStream;
 
 
+      cameraFeed.muted = true;
+      cameraFeed.autoplay = true;
+      cameraFeed.playsInline = true;
+
+
       await cameraFeed.play();
 
 
       console.log(
-        "[TRANSLATOR] Cámara iniciada."
+        "[CAMERA] Cámara iniciada."
       );
 
     }
@@ -60,7 +87,7 @@
     catch (error) {
 
       console.error(
-        "[TRANSLATOR] No se pudo acceder a la cámara:",
+        "[CAMERA] No se pudo acceder a la cámara:",
         error
       );
 
@@ -69,9 +96,9 @@
   }
 
 
-  /* =========================================================
-     DETENER CÁMARA
-     ========================================================= */
+  // =========================================================
+  // DETENER CÁMARA
+  // =========================================================
 
   function stopCamera() {
 
@@ -83,32 +110,79 @@
     mediaStream
       .getTracks()
       .forEach((track) => {
+
         track.stop();
+
       });
 
 
     mediaStream = null;
 
+
     cameraFeed.srcObject = null;
+
+
+    console.log(
+      "[CAMERA] Cámara detenida."
+    );
 
   }
 
 
-  /* =========================================================
-     INICIO AUTOMÁTICO
-     ========================================================= */
+  // =========================================================
+  // ESCAPE / BACK
+  // =========================================================
+
+  function handleBack() {
+
+    console.log(
+      "[CAMERA] BACK"
+    );
+
+
+    // Detener cámara
+    stopCamera();
+
+
+    // Salir del contexto actual
+    input.popContext();
+
+
+    // Volver al Home
+    window.location.href =
+      "../home/home.html";
+
+  }
+
+
+  // =========================================================
+  // INPUT CONTROLLER
+  // =========================================================
+
+  input.pushContext(CONTEXT);
+
+
+  input.on(
+    InputAction.BACK,
+    handleBack,
+    CONTEXT
+  );
+
+
+  // =========================================================
+  // INICIO
+  // =========================================================
 
   startCamera();
 
 
-  /* =========================================================
-     LIMPIEZA
-     ========================================================= */
+  // =========================================================
+  // LIMPIEZA
+  // =========================================================
 
   window.addEventListener(
     "beforeunload",
     stopCamera
   );
-
 
 })();

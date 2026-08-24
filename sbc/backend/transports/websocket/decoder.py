@@ -1,6 +1,6 @@
 import json
 import logging
-from handler import handle_context_int_packet
+from .handler import handle_context_int_packet
 
 logger = logging.getLogger(__name__)
 

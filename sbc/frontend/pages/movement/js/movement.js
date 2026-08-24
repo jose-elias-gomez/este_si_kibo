@@ -22,6 +22,15 @@ const PARTS_CONFIG = {
     'RightWheel': { axis: 'x', min: -180, max: 180 }
 };
 
+// Nombres legibles para el overlay de estado
+const NODE_LABELS = {
+    'Head': 'Cabeza',
+    'LeftArm': 'Brazo izquierdo',
+    'RightArm': 'Brazo derecho',
+    'LeftWheel': 'Rueda izquierda',
+    'RightWheel': 'Rueda derecha'
+};
+
 // Ángulos actuales guardados por pieza
 const pivotAngles = {
     'Head': 0,
@@ -35,6 +44,8 @@ const pivotAngles = {
 const partButtons = document.querySelectorAll('.btn-part');
 const slider = document.getElementById('angle-slider');
 const angleVal = document.getElementById('angle-val');
+const resetBtn = document.getElementById('btn-reset');
+const statusPart = document.getElementById('status-part');
 
 function init3D() {
     const container = document.getElementById('canvas-container');
@@ -225,6 +236,12 @@ function selectPart(node, view) {
     slider.value = currentAngle;
     angleVal.textContent = `${currentAngle}° (${config.axis.toUpperCase()})`;
 
+    // Reflejar la pieza activa en el overlay del viewport, no solo en
+    // el botón de la barra lateral (más visible mientras se mira el modelo)
+    if (statusPart) {
+        statusPart.textContent = NODE_LABELS[node] || node;
+    }
+
     transitionToView(view);
 }
 
@@ -264,6 +281,13 @@ partButtons.forEach(btn => {
         selectPart(nodeName, targetView);
     });
 });
+
+// El botón de reset ahora se cablea acá en vez de usar onclick="" en el
+// HTML: dentro de un <script type="module">, resetPositions() no queda
+// colgada de `window`, así que el onclick inline nunca la encontraba.
+if (resetBtn) {
+    resetBtn.addEventListener('click', resetPositions);
+}
 
 // Manejo del Slider (Rotación en el eje específico configurado)
 slider.addEventListener('input', (e) => {

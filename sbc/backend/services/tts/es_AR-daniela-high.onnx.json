@@ -1,14 +1,19 @@
 {
-    "dataset": "piper",
+    "dataset": "daniela",
     "audio": {
         "sample_rate": 22050,
-        "quality": "Hikari"
+        "quality": "Daniela"
     },
     "espeak": {
-        "voice": "es"
+        "voice": "es-419"
     },
     "language": {
-        "code": "es"
+        "code": "es_AR",
+        "family": "es",
+        "region": "AR",
+        "name_native": "Español",
+        "name_english": "Spanish",
+        "country_english": "Argentina"
     },
     "inference": {
         "noise_scale": 0.667,

@@ -21,19 +21,43 @@
     src: url("assets/AuxMono.ttf");
 }
 
+:root {
+    --bg: #000;
+    --panel-bg: rgba(255, 255, 255, 0.03);
+    --panel-border: #262626;
+    --surface: #29292e;
+    --surface-hover: #323238;
+    --surface-border: #323238;
+    --text-primary: #e1e1e6;
+    --text-secondary: #8d8d99;
+    --text-muted: #6a6a75;
+    --accent: #6156e2;
+    --accent-hover: #7b71f0;
+    --accent-glow: rgba(97, 86, 226, 0.4);
+    --danger: #e2565f;
+    --radius: 3px;
+}
+
 body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #000;
-    color: #e1e1e6;
+    background-color: var(--bg);
+    color: var(--text-primary);
     height: 100vh;
     width: 100vw;
     overflow: hidden;
     outline: none;
 }
 
+/* Foco visible: clave acá porque la app se navega por teclado / control,
+   no solo con mouse */
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .app-grid {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 300px 1fr;
     grid-template-rows: 1fr auto;
     gap: 4px;
     height: 100vh;
@@ -41,23 +65,29 @@ body {
 }
 
 .panel {
-    background-color: oklab(0.999994 0.0000455678 0.0000200868 / 0.05);
+    background-color: var(--panel-bg);
+    border-radius: var(--radius);
 }
 
 .panel header {
     width: 100%;
-    margin: 0;
-    padding: 0;
-    border-style: solid;
-    border-width: 1px;
-    border-color: #262626;
+    padding: 14px 4px;
+    border-bottom: 1px solid var(--panel-border);
+}
 
-    h2 {
-        margin-left: 8px;
-        font-family: "Aux Mono";
-        color: #fff;
-        font-weight: 600;
-    }
+.panel header h2 {
+    margin-left: 8px;
+    font-family: "Aux Mono", monospace;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    color: #fff;
+    font-weight: 600;
+}
+
+.panel header p {
+    margin: 4px 0 0 8px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
 }
 
 /* 1. Barra lateral */
@@ -66,44 +96,102 @@ body {
     grid-row: 1;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
+    padding: 12px;
     overflow-y: auto;
 }
 
-.sidebar h2 {
-    font-size: 0.9rem;
+/* Encabezados de grupo (Cabeza / Brazos / Ruedas). Antes eran <label>
+   sueltos sin ningún estilo propio -> se veían como texto plano. */
+.group-label {
+    font-family: "Aux Mono", monospace;
+    font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #8d8d99;
-    margin-top: 6px;
-    margin-bottom: 4px;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-top: 14px;
+    margin-bottom: 2px;
+    padding-left: 2px;
+}
+
+.group-label:first-of-type {
+    margin-top: 4px;
 }
 
 .btn-part {
-    background-color: #29292e;
-    color: #e1e1e6;
-    border: 1px solid #323238;
-    padding: 12px 16px;
+    background-color: var(--surface);
+    color: var(--text-primary);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
     font-size: 0.9rem;
     font-weight: 500;
+    font-family: "Aux Mono", monospace;
     cursor: pointer;
     text-align: left;
-    transition: all 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
+}
+
+.btn-part .icon {
+    font-size: 1rem;
+    opacity: 0.85;
+    margin-right: 6px;
+}
+
+/* Chip con el eje de rotación: le da uso real al espacio que quedaba
+   vacío del lado derecho del botón y anticipa cómo se va a mover */
+.btn-part .axis-badge {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    padding: 2px 6px;
+    letter-spacing: 0.04em;
 }
 
 .btn-part:hover {
-    background-color: #323238;
-    border-color: #6156e2;
+    background-color: var(--surface-hover);
+    border-color: var(--accent);
 }
 
 .btn-part.active {
-    background-color: #6156e2;
+    background-color: var(--accent);
     color: #ffffff;
-    border-color: #7b71f0;
-    box-shadow: 0 0 12px rgba(97, 86, 226, 0.4);
+    border-color: var(--accent-hover);
+    box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.btn-part.active .axis-badge {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Antes no existía: el botón "Reiniciar" quedaba sin estilo */
+.btn-reset {
+    margin-top: 20px;
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid rgba(226, 86, 95, 0.4);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-family: "Aux Mono", monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-reset:hover {
+    background-color: rgba(226, 86, 95, 0.12);
+    color: #ff7b82;
 }
 
 .file-input-container {
@@ -114,8 +202,9 @@ body {
 
 .file-input-label {
     display: block;
-    background-color: #29292e;
-    border: 1px dashed #6156e2;
+    background-color: var(--surface);
+    border: 1px dashed var(--accent);
+    border-radius: var(--radius);
     color: #a9a9b6;
     padding: 10px;
     text-align: center;
@@ -125,7 +214,7 @@ body {
 }
 
 .file-input-label:hover {
-    background-color: #323238;
+    background-color: var(--surface-hover);
     color: #ffffff;
 }
 
@@ -140,7 +229,14 @@ input[type="file"] {
     padding: 0;
     position: relative;
     overflow: hidden;
-    background: radial-gradient(circle at center, #25252b 0%, #111113 100%);
+    /* Grilla sutil de "sala de control" detrás del modelo, en vez de un
+       radial-gradient liso: refuerza la identidad técnica del resto de
+       la UI (monoespaciada, HUD) sin competir con el modelo. */
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        radial-gradient(circle at center, #25252b 0%, #111113 100%);
+    background-size: 32px 32px, 32px 32px, 100% 100%;
     /* Comparte nombre con .selected-img de home.css: el navegador
        hace un morph automático entre ambos elementos al navegar */
     view-transition-name: app-hero;
@@ -157,16 +253,33 @@ input[type="file"] {
     left: 16px;
     background: rgba(18, 18, 20, 0.8);
     backdrop-filter: blur(8px);
-    border: 1px solid #2e2e34;
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
     padding: 8px 14px;
-    font-size: 0.85rem;
-    color: #a9a9b6;
+    font-family: "Aux Mono", monospace;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
     pointer-events: none;
 }
 
 .status-overlay span {
-    color: #6156e2;
+    color: var(--accent-hover);
     font-weight: 600;
+}
+
+.hint-overlay {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    background: rgba(18, 18, 20, 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 6px 12px;
+    font-family: "Aux Mono", monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    pointer-events: none;
 }
 
 /* 3. Panel Inferior con Slider */
@@ -177,6 +290,7 @@ input[type="file"] {
     align-items: center;
     justify-content: space-between;
     gap: 20px;
+    padding: 14px 20px;
 }
 
 .slider-container {
@@ -189,28 +303,37 @@ input[type="file"] {
 }
 
 .slider-container label {
+    font-family: "Aux Mono", monospace;
     font-weight: 600;
-    min-width: 140px;
-    font-size: 0.95rem;
-    color: #c5c5d0;
+    min-width: 150px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
 }
 
 input[type="range"] {
     flex: 1;
-    accent-color: #6156e2;
+    accent-color: var(--accent);
     height: 6px;
-    background: #29292e;
+    border-radius: 3px;
+    background: var(--surface);
     cursor: pointer;
 }
 
+input[type="range"]:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* Un poco más ancho que antes: "-45° (X)" no entraba en 70px */
 .angle-value {
-    font-family: monospace;
-    font-size: 1.1rem;
+    font-family: "Aux Mono", monospace;
+    font-size: 1rem;
     background: #121214;
     padding: 6px 14px;
-    min-width: 70px;
+    min-width: 96px;
     text-align: center;
-    border: 1px solid #2e2e34;
-    color: #6156e2;
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    color: var(--accent);
     font-weight: bold;
 }

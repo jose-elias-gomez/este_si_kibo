@@ -90,5 +90,5 @@ class TTS:
             TTS: The standard singleton TTS instance[cite: 8].
         """
         if cls._instance is None:
-            cls("es-hikari-medium.onnx")
+            cls("es_AR-daniela-high.onnx")
         return cls._instance

@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from decoder import decode, PacketDecodeError
+from .decoder import decode, PacketDecodeError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ws", tags=["WebSocket"])

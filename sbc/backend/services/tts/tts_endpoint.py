@@ -3,11 +3,14 @@ from pydantic import BaseModel
 
 from services.tts.tts import TTS
 from services.tts.tts_thread import TTSThread
+from pathlib import Path
 
 router = APIRouter(prefix="/speak", tags=["TTS"])
 
-# Path to the voice model file
-TTS_MODEL_PATH = "es-hikari-medium.onnx"
+
+TTS_MODEL_PATH = str(
+    Path(__file__).resolve().parent / "es_AR-daniela-high.onnx"
+)
 
 # Singleton instance of TTS and its dedicated worker thread
 tts_instance = TTS(TTS_MODEL_PATH)

@@ -7,7 +7,7 @@
   <!-- El CSS va primero para que @view-transition esté disponible de
        inmediato y no dependa de que las libs pesadas de abajo terminen
        de cargar (eso rompía la transición de salida hacia home.html) -->
-  <link rel="stylesheet" href="movement.css"></link>
+  <link rel="stylesheet" href="movement.css">
 
   <!-- Three.js, GLTFLoader, OrbitControls y GSAP via CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -17,46 +17,65 @@
 
   <script src="../../shared/js/inputController.js" type="module"></script>
   <script src="../../shared/components/sliderbar.js" type="module"></script>
-    <script src="js/movement.js" type="module" defer></script>
+  <script src="js/movement.js" type="module" defer></script>
 </head>
 <body>
 
   <div class="app-grid">
-    
+
     <!-- Barra Izquierda -->
     <aside class="panel sidebar">
       <header>
-        <h2>Componentes</h2>      
+        <h2>Componentes</h2>
+        <p>Elegí una pieza y ajustá su ángulo</p>
       </header>
 
-      <button class="btn-part" data-node="Head" data-view="front">Cabeza</button>
+      <p class="group-label">Cabeza</p>
+      <button class="btn-part" data-node="Head" data-view="front">
+        <span><span class="icon">◍</span>Cabeza</span>
+        <span class="axis-badge">Y</span>
+      </button>
 
-      <label>Brazo</label>
-      <button class="btn-part" data-node="LeftArm" data-view="left">Izquierdo</button>
-      <button class="btn-part" data-node="RightArm" data-view="right">Derecho</button>
+      <p class="group-label">Brazos</p>
+      <button class="btn-part" data-node="LeftArm" data-view="left">
+        <span><span class="icon">↰</span>Izquierdo</span>
+        <span class="axis-badge">X</span>
+      </button>
+      <button class="btn-part" data-node="RightArm" data-view="right">
+        <span><span class="icon">↱</span>Derecho</span>
+        <span class="axis-badge">X</span>
+      </button>
 
-      <label>Rueda</label>
-      <button class="btn-part" data-node="LeftWheel" data-view="left">Izquierda</button>
-      <button class="btn-part" data-node="RightWheel" data-view="right">Derecha</button>
+      <p class="group-label">Ruedas</p>
+      <button class="btn-part" data-node="LeftWheel" data-view="left">
+        <span><span class="icon">◐</span>Izquierda</span>
+        <span class="axis-badge">X</span>
+      </button>
+      <button class="btn-part" data-node="RightWheel" data-view="right">
+        <span><span class="icon">◑</span>Derecha</span>
+        <span class="axis-badge">X</span>
+      </button>
 
-      <button class="btn-reset" onclick="resetPositions()">Reiniciar</button>
+      <button class="btn-reset" id="btn-reset" type="button">↺ Reiniciar posición</button>
     </aside>
 
     <!-- Espacio Central para Modelo 3D -->
     <main class="panel viewport-3d">
       <div id="canvas-container"></div>
+      <div class="status-overlay">Editando: <span id="status-part">—</span></div>
+      <div class="hint-overlay">ESC vuelve al home</div>
     </main>
 
     <!-- Control Inferior -->
     <footer class="panel controls-bottom">
       <div class="slider-container">
-        <label for="angle-slider">Ángulo de Pivot:</label>
-        <input 
-          type="range" 
-          id="angle-slider" 
-          min="-45" 
-          max="45" 
-          value="0" 
+        <label for="angle-slider">Ángulo de pivot</label>
+        <input
+          type="range"
+          id="angle-slider"
+          min="-45"
+          max="45"
+          value="0"
           disabled
         >
         <span id="angle-val" class="angle-value">0°</span>

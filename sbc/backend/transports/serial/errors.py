@@ -1,4 +1,4 @@
-from status import DecodeStatus, DECODE_STATUS_MESSAGES
+from .status import DecodeStatus, DECODE_STATUS_MESSAGES
 
 class SerialConnectionError(RuntimeError):
     pass
