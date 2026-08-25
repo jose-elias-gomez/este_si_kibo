@@ -1,7 +1,8 @@
 import uvicorn
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Path
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from services.wifi.wifi_base import WifiError
 from services.wifi.wifi_endpoint import router as wifi_router
@@ -43,18 +44,21 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup():
-
     load_assistant()
 
 
-app.include_router(assistant_router)
-app.include_router(wifi_router)
-app.include_router(tts_router)
-app.include_router(websocket_router)
-app.include_router(
-    translator_router
-)
+API_PREFIX = "/api"
+app.include_router(assistant_router, prefix=API_PREFIX)
+app.include_router(wifi_router, prefix=API_PREFIX)
+app.include_router(tts_router, prefix=API_PREFIX)
+app.include_router(websocket_router, prefix=API_PREFIX)
+app.include_router(translator_router, prefix=API_PREFIX)
 
+app.mount(
+    "",
+    StaticFiles(directory="../frontend", html=True),
+    name="frontend",
+)
 
 @app.exception_handler(WifiError)
 def wifi_error_handler(exc: WifiError):

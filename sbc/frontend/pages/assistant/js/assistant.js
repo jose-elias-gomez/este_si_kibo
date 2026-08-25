@@ -1,6 +1,7 @@
 import {
   setupBackHandler
 } from "../../../shared/components/backHandler.js";
+import { DEBUG_MODE, getApiUrl } from './common.js';
 
 (() => {
   "use strict";
@@ -235,13 +236,12 @@ const CONTEXT = "ASSISTANT";
       );
 
 
-      const response = await fetch(
-        "http://127.0.0.1:25566/assistant/talk",
+      const response = await fetch(getApiUrl("assistant/talk"),
         {
-            method: "POST",
-            body: formData
+          method: "POST",
+          body: formData
         }
-    );
+      );
 
       if (!response.ok) {
 
