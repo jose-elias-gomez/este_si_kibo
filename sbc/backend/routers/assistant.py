@@ -3,13 +3,11 @@ import subprocess
 import tempfile
 import time
 from pathlib import Path
-from urllib.parse import quote
 
 import numpy as np
 import soundfile as sf
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from fastapi.responses import Response
 
 from services.stt.stt import SpeechRecognizer
 from services.llm.llm import VoiceAssistantLLM
