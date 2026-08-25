@@ -7,6 +7,17 @@ const QUESTIONS = [
   { q: "¿Qué planeta es conocido como el planeta rojo?", options: ["Venus", "Júpiter", "Marte", "Saturno"], correct: 2 },
   { q: "¿Quién pintó la Mona Lisa?", options: ["Van Gogh", "Picasso", "Da Vinci", "Miguel Ángel"], correct: 2 },
   { q: "¿Cuál es el océano más grande del mundo?", options: ["Atlántico", "Índico", "Ártico", "Pacífico"], correct: 3 },
+  { q: "¿En qué año llegó el ser humano a la Luna?", options: ["1965", "1969", "1972", "1959"], correct: 1 },
+  { q: "¿Cuál es el elemento químico más abundante en el universo?", options: ["Oxígeno", "Helio", "Hidrógeno", "Carbono"], correct: 2 },
+  { q: "¿Qué país tiene la mayor cantidad de habitantes en el mundo?", options: ["India", "China", "Estados Unidos", "Brasil"], correct: 0 },
+  { q: "¿Cuál es el animal terrestre más rápido del mundo?", options: ["León", "Guepardo", "Antílope", "Hiena"], correct: 1 },
+  { q: "¿En qué continente se encuentra Egipto?", options: ["Asia", "Europa", "África", "Oceanía"], correct: 2 },
+  { q: "¿Cuál es el libro más vendido de la historia después de la Biblia?", options: ["El Señor de los Anillos", "Don Quijote de la Mancha", "Harry Potter", "El Principito"], correct: 1 },
+  { q: "¿Cuántos huesos tiene el cuerpo humano adulto?", options: ["206", "210", "198", "300"], correct: 0 },
+  { q: "¿Cuál es el río más largo del mundo?", options: ["Nilo", "Misisipi", "Amazonas", "Yangtsé"], correct: 2 },
+  { q: "¿Qué instrumento musical tiene 88 teclas?", options: ["Organo", "Acordeón", "Piano", "Arpa"], correct: 2 },
+  { q: "¿Cuál es el metal cuyo símbolo químico es Au?", options: ["Plata", "Oro", "Cobre", "Aluminio"], correct: 1 },
+  { q: "¿Cual es la función de kibo?", options: ["Asistente", "Robot de pelea", "Auto"], correct: 0 },
 ];
 
 export function mountQuiz(container, exitToMenu) {
