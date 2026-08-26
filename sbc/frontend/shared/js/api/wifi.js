@@ -18,12 +18,27 @@ export class WifiApiError extends Error {
   }
 }
 
+async function handleResponse(response) {
+  if (!response.ok) {
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch (_) {
+      // response body wasn't JSON
+    }
+    const detail = payload?.detail;
+    const message = detail?.message || `Wifi request failed with status ${response.status}`;
+    throw new WifiApiError(message, detail?.detail);
+  }
+  return response.json();
+}
+
 export function listWifiNetworks() {
   if (DEBUG_MODE) {
     return Promise.resolve([
       new WifiNetwork('Network 1', 10, 'OPEN', false),
       new WifiNetwork('Network 2', 30, 'WPA2-Personal', false),
-      new WifiNetwork('Network 3', 50, 'WPA2-Personal', false),
+      new WifiNetwork('Network 3', 60, 'WPA2-Personal', false),
       new WifiNetwork('Network 4', 90, 'WPA3-Personal', true),
     ]);
   }

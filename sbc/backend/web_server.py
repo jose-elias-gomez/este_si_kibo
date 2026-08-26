@@ -1,8 +1,10 @@
+import traceback
+
 import uvicorn
 
-from fastapi import FastAPI, Path
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Request
 
 from services.wifi.wifi_base import WifiError
 from services.wifi.wifi_endpoint import router as wifi_router
@@ -26,12 +28,13 @@ app = FastAPI(
     version="1.0.0",
 )
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://127.0.0.1:3000",
         "http://localhost:3000",
+        "http://127.0.0.1:25566",
+        "http://localhost:25566",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -53,6 +56,10 @@ app.include_router(wifi_router, prefix=API_PREFIX)
 app.include_router(tts_router, prefix=API_PREFIX)
 app.include_router(websocket_router, prefix=API_PREFIX)
 app.include_router(translator_router, prefix=API_PREFIX)
+
+@app.get("/api/ping")
+def ping():
+    return "pong"
 
 app.mount(
     "",

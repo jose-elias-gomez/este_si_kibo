@@ -6,6 +6,7 @@
 
 import { input, InputAction } from "../../../shared/js/inputController.js";
 import { BasePopup } from "../../../shared/components/BasePopup.js";
+import { listWifiNetworks, connectToNetwork, disconnectFromNetwork } from "../../../shared/js/api/wifi.js";
 
 // Contenido que se proyecta en el slot="header" del BasePopup
 const headerTemplate = document.createElement("template");
@@ -205,141 +206,10 @@ bodyTemplate.innerHTML = `
 
   <section id="content">
     <h2>Red actual</h2>
-    <article class="wifi-card active">
-      <header>
-        <div class="wifi-icon-wrapper" data-signal="full">
-          <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
-          <img class="wifi-icon-bars" src="../../shared/assets/wifi/full.svg" alt="Barras de señal">
-        </div>
-
-        <div class="wifi-info">
-          <span class="ssid">GLC_alpha_ac2-5G_E381F</span>
-          <span class="status">Conectada, segura</span>
-        </div>
-
-        <generic-btn class="disconnect-btn">Desconectar</generic-btn>
-      </header>
-    </article>
+    <article class="wifi-card active" hidden></article>
 
     <h2>Redes disponibles</h2>
-    <ul class="wifi-list">
-          <li class="wifi-card">
-        <header>
-          <div class="wifi-icon-wrapper" data-signal="full">
-            <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
-            <img class="wifi-icon-bars" src="../../shared/assets/wifi/full.svg" alt="Barras de señal">
-          </div>
-
-          <div class="wifi-info">
-            <span class="ssid">GLC_alpha_ac2-5G_E381F</span>
-            <span class="status">Requiere contraseña</span>
-          </div>
-        </header>
-
-        <div class="wifi-options" hidden>
-          <div class="wifi-options-inner">
-            <text-container class="wifi-password" label="Contraseña" max-length="128"></text-container>
-            <generic-btn class="connect-btn">Conectar</generic-btn>
-          </div>
-        </div>
-      </li>      <li class="wifi-card">
-        <header>
-          <div class="wifi-icon-wrapper" data-signal="full">
-            <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
-            <img class="wifi-icon-bars" src="../../shared/assets/wifi/full.svg" alt="Barras de señal">
-          </div>
-
-          <div class="wifi-info">
-            <span class="ssid">GLC_alpha_ac2-5G_E381F</span>
-            <span class="status">Requiere contraseña</span>
-          </div>
-        </header>
-
-        <div class="wifi-options" hidden>
-          <div class="wifi-options-inner">
-            <text-container class="wifi-password" label="Contraseña" max-length="128"></text-container>
-            <generic-btn class="connect-btn">Conectar</generic-btn>
-          </div>
-        </div>
-      </li>      <li class="wifi-card">
-        <header>
-          <div class="wifi-icon-wrapper" data-signal="full">
-            <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
-            <img class="wifi-icon-bars" src="../../shared/assets/wifi/full.svg" alt="Barras de señal">
-          </div>
-
-          <div class="wifi-info">
-            <span class="ssid">GLC_alpha_ac2-5G_E381F</span>
-            <span class="status">Requiere contraseña</span>
-          </div>
-        </header>
-
-        <div class="wifi-options" hidden>
-          <div class="wifi-options-inner">
-            <text-container class="wifi-password" label="Contraseña" max-length="128"></text-container>
-            <generic-btn class="connect-btn">Conectar</generic-btn>
-          </div>
-        </div>
-      </li>      <li class="wifi-card">
-        <header>
-          <div class="wifi-icon-wrapper" data-signal="full">
-            <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
-            <img class="wifi-icon-bars" src="../../shared/assets/wifi/full.svg" alt="Barras de señal">
-          </div>
-
-          <div class="wifi-info">
-            <span class="ssid">GLC_alpha_ac2-5G_E381F</span>
-            <span class="status">Requiere contraseña</span>
-          </div>
-        </header>
-
-        <div class="wifi-options" hidden>
-          <div class="wifi-options-inner">
-            <text-container class="wifi-password" label="Contraseña" max-length="128"></text-container>
-            <generic-btn class="connect-btn">Conectar</generic-btn>
-          </div>
-        </div>
-      </li>      <li class="wifi-card">
-        <header>
-          <div class="wifi-icon-wrapper" data-signal="full">
-            <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
-            <img class="wifi-icon-bars" src="../../shared/assets/wifi/full.svg" alt="Barras de señal">
-          </div>
-
-          <div class="wifi-info">
-            <span class="ssid">GLC_alpha_ac2-5G_E381F</span>
-            <span class="status">Requiere contraseña</span>
-          </div>
-        </header>
-
-        <div class="wifi-options" hidden>
-          <div class="wifi-options-inner">
-            <text-container class="wifi-password" label="Contraseña" max-length="128"></text-container>
-            <generic-btn class="connect-btn">Conectar</generic-btn>
-          </div>
-        </div>
-      </li>
-      <li class="wifi-card">
-        <header>
-          <div class="wifi-icon-wrapper" data-signal="full">
-            <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
-            <img class="wifi-icon-bars" src="../../shared/assets/wifi/full.svg" alt="Barras de señal">
-          </div>
-
-          <div class="wifi-info">
-            <span class="ssid">GLC_alpha_ac2-5G_E381F</span>
-            <span class="status">Requiere contraseña</span>
-          </div>
-        </header>
-
-        <div class="wifi-options" hidden>
-          <div class="wifi-options-inner">
-            <text-container class="wifi-password" label="Contraseña" max-length="128"></text-container>
-            <generic-btn class="connect-btn">Conectar</generic-btn>
-          </div>
-        </div>
-      </li>
-    </ul>
+    <ul class="wifi-list"></ul>
   </section>
 `;
 
@@ -373,8 +243,11 @@ export class WifiMenu extends BasePopup {
     this._disableWifiContent = this.querySelector("#disable-wifi-content");
     this._enableWifiContent = this.querySelector("#content");
     this._wifiToggleSwitch = this.querySelector("#autoConnectToggle");
+    this._activeCard = this.querySelector(".wifi-card.active");
+    this._wifiListEl = this.querySelector(".wifi-list");
 
     this._setupToggleListener();
+    this.loadNetworks();
   }
 
   disconnectedCallback() {
@@ -397,11 +270,105 @@ export class WifiMenu extends BasePopup {
     } else {
       this._disableWifiContent.hidden = true;
       this._enableWifiContent.hidden = false;
+      this.loadNetworks();
     }
   }
 
   getWifiCards() {
-    return Array.from(this.querySelectorAll(".wifi-card"));
+    return Array.from(this.querySelectorAll(".wifi-card")).filter((card) => !card.hidden);
+  }
+
+  _signalIcon(signal) {
+    if (signal >= 76) return "full";
+    if (signal >= 51) return "2";
+    if (signal >= 26) return "1";
+    return "0";
+  }
+
+  _activeCardHTML(network) {
+    const icon = this._signalIcon(network.signal);
+    const statusText = network.security === "OPEN" ? "Conectada" : "Conectada, segura";
+
+    return `
+      <header>
+        <div class="wifi-icon-wrapper" data-signal="${icon}">
+          <img class="wifi-icon-bg" src="../../shared/assets/wifi/${icon}.svg" alt="Señal base">
+          <img class="wifi-icon-bars" src="../../shared/assets/wifi/${icon}.svg" alt="Barras de señal">
+        </div>
+
+        <div class="wifi-info">
+          <span class="ssid">${network.ssid}</span>
+          <span class="status">${statusText}</span>
+        </div>
+
+        <generic-btn class="disconnect-btn">Desconectar</generic-btn>
+      </header>
+    `;
+  }
+
+  _availableCardHTML(network) {
+    const icon = this._signalIcon(network.signal);
+    const isOpen = network.security === "OPEN";
+    const statusText = isOpen ? "Red abierta" : "Requiere contraseña";
+    const optionsInner = isOpen
+      ? `<generic-btn class="connect-btn">Conectar</generic-btn>`
+      : `<text-container class="wifi-password" label="Contraseña" max-length="128"></text-container>
+         <generic-btn class="connect-btn">Conectar</generic-btn>`;
+
+    return `
+      <li class="wifi-card">
+        <header>
+          <div class="wifi-icon-wrapper" data-signal="${icon}">
+            <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
+            <img class="wifi-icon-bars" src="../../shared/assets/wifi/${icon}.svg" alt="Barras de señal">
+          </div>
+
+          <div class="wifi-info">
+            <span class="ssid">${network.ssid}</span>
+            <span class="status">${statusText}</span>
+          </div>
+        </header>
+
+        <div class="wifi-options" hidden>
+          <div class="wifi-options-inner">
+            ${optionsInner}
+          </div>
+        </div>
+      </li>
+    `;
+  }
+
+  // Consulta la API y (re)pinta la card activa + la lista de redes disponibles
+  async loadNetworks() {
+    try {
+      const networks = await listWifiNetworks();
+      this.renderNetworks(networks);
+    } catch (error) {
+      console.error("Error al obtener las redes Wi-Fi:", error);
+    }
+  }
+
+  renderNetworks(networks) {
+    const activeNetwork = networks.find((n) => n.inUse) || null;
+    const availableNetworks = networks.filter((n) => !n.inUse);
+
+    if (this._activeCard) {
+      if (activeNetwork) {
+        this._activeCard.hidden = false;
+        this._activeCard.innerHTML = this._activeCardHTML(activeNetwork);
+      } else {
+        this._activeCard.hidden = true;
+        this._activeCard.innerHTML = "";
+      }
+    }
+
+    if (this._wifiListEl) {
+      this._wifiListEl.innerHTML = availableNetworks
+        .map((network) => this._availableCardHTML(network))
+        .join("");
+    }
+
+    this.clearSelection();
   }
 
   selectCard(index) {
@@ -490,6 +457,9 @@ export class WifiMenu extends BasePopup {
     input.on(InputAction.CONFIRM, () => {
       if (disconnectBtn.isHovered) {
         disconnectBtn.click();
+        disconnectFromNetwork()
+          .then(() => this.loadNetworks())
+          .catch((error) => console.error("Error al desconectar Wi-Fi:", error));
       }
     }, context);
 
@@ -501,13 +471,15 @@ export class WifiMenu extends BasePopup {
     const connectBtn = card.querySelector(".connect-btn");
     const passwordContainer = card.querySelector(".wifi-password");
 
-    function connectToWifi() {
+    const connectToWifi = () => {
       const ssidEl = card.querySelector(".ssid");
       const ssid = ssidEl ? ssidEl.textContent.trim() : "";
       const password = passwordContainer ? passwordContainer.text : "";
-      const eventDetail = { ssid, password };
 
-      console.log("Conectar a red:", eventDetail);
+      connectToNetwork(ssid, password || null)
+        .then(() => this.loadNetworks())
+        .catch((error) => console.error(`Error al conectar a la red "${ssid}":`, error));
+
       if (passwordContainer) {
         passwordContainer.text = "";
       }
