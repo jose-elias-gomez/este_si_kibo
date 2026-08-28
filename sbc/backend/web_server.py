@@ -12,6 +12,7 @@ from services.tts.tts_endpoint import router as tts_router
 
 from transports.websocket.server import router as websocket_router
 from fastapi.middleware.cors import CORSMiddleware
+from services.joystick.service import JoystickService
 
 
 from routers.assistant import (
@@ -27,6 +28,8 @@ app = FastAPI(
     title="Web server",
     version="1.0.0",
 )
+
+joystick_service = JoystickService()
 
 app.add_middleware(
     CORSMiddleware,
@@ -48,6 +51,7 @@ app.add_middleware(
 @app.on_event("startup")
 def startup():
     load_assistant()
+    joystick_service.start()
 
 
 API_PREFIX = "/api"
