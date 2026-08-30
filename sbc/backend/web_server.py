@@ -1,18 +1,19 @@
 import traceback
-
 import uvicorn
+from dotenv import load_dotenv
 
+# Cargar variables de entorno al iniciar la aplicación (.env)
+load_dotenv()
+
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
 from services.wifi.wifi_base import WifiError
 from services.wifi.wifi_endpoint import router as wifi_router
 from services.tts.tts_endpoint import router as tts_router
-
 from transports.websocket.server import router as websocket_router
-from fastapi.middleware.cors import CORSMiddleware
-
 
 from routers.assistant import (
     router as assistant_router,
@@ -21,7 +22,6 @@ from routers.assistant import (
 from routers.translator import (
     router as translator_router,
 )
-
 
 app = FastAPI(
     title="Web server",
@@ -49,7 +49,6 @@ app.add_middleware(
 def startup():
     load_assistant()
 
-
 API_PREFIX = "/api"
 app.include_router(assistant_router, prefix=API_PREFIX)
 app.include_router(wifi_router, prefix=API_PREFIX)
@@ -61,15 +60,8 @@ app.include_router(translator_router, prefix=API_PREFIX)
 def ping():
     return "pong"
 
-app.mount(
-    "",
-    StaticFiles(directory="../frontend", html=True),
-    name="frontend",
-)
-
 @app.exception_handler(WifiError)
-def wifi_error_handler(exc: WifiError):
-
+def wifi_error_handler(request: Request, exc: WifiError):
     return JSONResponse(
         status_code=500,
         content={
@@ -78,15 +70,22 @@ def wifi_error_handler(exc: WifiError):
         },
     )
 
+app.mount(
+    "",
+    StaticFiles(directory="../frontend", html=True),
+    name="frontend",
+)
 
 def start_webserver(
-    host: str,
-    port: int,
+    host: str = "0.0.0.0",
+    port: int = 25566,
 ):
-
     uvicorn.run(
         "web_server:app",
         host=host,
         port=port,
-        reload=True,
+        reload=False,
     )
+
+if __name__ == "__main__":
+    start_webserver()

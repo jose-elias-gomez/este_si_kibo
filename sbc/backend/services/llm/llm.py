@@ -1,6 +1,8 @@
-from pathlib import Path
-from llama_cpp import Llama
+import os
+from dotenv import load_dotenv
+from groq import Groq
 
+load_dotenv()
 
 SYSTEM_PROMPT = (
     "Sos un asistente de voz que responde en español rioplatense con acento argentino, "
@@ -14,26 +16,19 @@ class VoiceAssistantLLM:
 
     def __init__(
         self,
-        model_path: str,
+        model_path: str = None,  # Mantenido por compatibilidad
+        model: str = "openai/gpt-oss-20b",  # Modelo activo y ultra rápido de Groq
         n_ctx: int = 2048,
         n_threads: int = 4,
+        **kwargs  # Previene errores si se envían parámetros obsoletos
     ):
+        # Busca primero la clave específica o usa la clave por defecto de Groq
+        api_key = os.getenv("GROQ_API_KEY_LLM") or os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise ValueError("[LLM Error] No se encontró GROQ_API_KEY_LLM ni GROQ_API_KEY en el archivo .env")
 
-        model_path = Path(model_path)
-
-        if not model_path.exists():
-            raise FileNotFoundError(
-                f"No existe el modelo LLM: {model_path}"
-            )
-
-        print(f"[LLM] Cargando: {model_path}")
-
-        self.llm = Llama(
-            model_path=str(model_path),
-            n_ctx=n_ctx,
-            n_threads=n_threads,
-            verbose=False,
-        )
+        self.client = Groq(api_key=api_key)
+        self.model = model
 
         self.history = [
             {
@@ -42,7 +37,7 @@ class VoiceAssistantLLM:
             }
         ]
 
-        print("[LLM] Modelo cargado")
+        print(f"[LLM] Groq Cloud cargado ({self.model})")
 
     def ask(
         self,
@@ -60,16 +55,18 @@ class VoiceAssistantLLM:
             }
         )
 
-        output = self.llm.create_chat_completion(
-            messages=self.history,
-            max_tokens=max_tokens,
-            temperature=0.6,
-        )
+        try:
+            output = self.client.chat.completions.create(
+                messages=self.history,
+                model=self.model,
+                max_tokens=max_tokens,
+                temperature=0.6,
+            )
 
-        reply = (
-            output["choices"][0]["message"]["content"]
-            .strip()
-        )
+            reply = output.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"[LLM Error] Fallo al generar respuesta en Groq: {e}")
+            reply = "Disculpa, tuve un problema al procesar tu respuesta."
 
         self.history.append(
             {
@@ -78,6 +75,7 @@ class VoiceAssistantLLM:
             }
         )
 
+        # Recorte de historial
         if len(self.history) > 21:
             self.history = (
                 [self.history[0]]
@@ -87,7 +85,6 @@ class VoiceAssistantLLM:
         return reply
 
     def reset(self):
-
         self.history = [
             {
                 "role": "system",

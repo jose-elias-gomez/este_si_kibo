@@ -1,7 +1,7 @@
 import {
   setupBackHandler
 } from "../../../shared/components/backHandler.js";
-import { DEBUG_MODE, getApiUrl } from './common.js';
+import { DEBUG_MODE, getApiUrl } from '../../../shared/js/api/common.js';
 
 (() => {
   "use strict";
