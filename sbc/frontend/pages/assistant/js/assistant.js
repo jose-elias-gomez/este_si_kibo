@@ -1,512 +1,605 @@
 import {
-  setupBackHandler
+    setupBackHandler
 } from "../../../shared/components/backHandler.js";
-import { DEBUG_MODE, getApiUrl } from '../../../shared/js/api/common.js';
+
+import {
+    DEBUG_MODE,
+    getApiUrl
+} from "../../../shared/js/api/common.js";
 
 (() => {
-  "use strict";
-const CONTEXT = "ASSISTANT";    
-  const assistant = document.getElementById("assistant");
-  const micButton = document.getElementById("micButton");
-  const voiceLabel = document.getElementById("voiceLabel");
-  const conversation = document.getElementById("conversation");
-  const welcome = document.getElementById("welcome");
-  const statusText = document.getElementById("statusText");
+    "use strict";
 
-  let mediaRecorder = null;
-  let mediaStream = null;
-  let audioChunks = [];
+    const CONTEXT = "ASSISTANT";
 
-  let isRecording = false;
-  let isProcessing = false;
+    const assistant = document.getElementById("assistant");
+    const micButton = document.getElementById("micButton");
+    const voiceLabel = document.getElementById("voiceLabel");
+    const conversation = document.getElementById("conversation");
+    const welcome = document.getElementById("welcome");
+    const statusText = document.getElementById("statusText");
 
+    let mediaRecorder = null;
+    let mediaStream = null;
+    let audioChunks = [];
 
-  // =========================================================
-  // SOPORTE
-  // =========================================================
-
-  if (!navigator.mediaDevices?.getUserMedia) {
-    statusText.textContent = "No disponible";
-    voiceLabel.textContent = "El navegador no permite usar el micrófono";
-    micButton.disabled = true;
-    return;
-  }
+    let isRecording = false;
+    let isProcessing = false;
 
 
-  // =========================================================
-  // BOTÓN DEL MICRÓFONO
-  // =========================================================
+    // =========================================================
+    // VALIDAR ELEMENTOS
+    // =========================================================
 
-  micButton.addEventListener("click", async () => {
-
-    if (isProcessing) {
-      return;
-    }
-
-    if (isRecording) {
-      stopRecording();
-    } else {
-      await startRecording();
-    }
-
-  });
-
-
-  // =========================================================
-  // INICIAR GRABACIÓN
-  // =========================================================
-
-  async function startRecording() {
-
-    try {
-
-      mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: false
-      });
-
-      audioChunks = [];
-
-      /*
-       * Chrome normalmente soporta audio/webm.
-       */
-
-      let mimeType = "";
-
-      if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
-        mimeType = "audio/webm;codecs=opus";
-      } else if (MediaRecorder.isTypeSupported("audio/webm")) {
-        mimeType = "audio/webm";
-      } else if (MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")) {
-        mimeType = "audio/ogg;codecs=opus";
-      }
-
-      mediaRecorder = mimeType
-        ? new MediaRecorder(mediaStream, { mimeType })
-        : new MediaRecorder(mediaStream);
-
-
-      mediaRecorder.ondataavailable = (event) => {
-
-        if (event.data && event.data.size > 0) {
-          audioChunks.push(event.data);
-        }
-
-      };
-
-
-      mediaRecorder.onstop = async () => {
-
-        /*
-         * Liberamos el micrófono.
-         */
-
-        if (mediaStream) {
-
-          mediaStream
-            .getTracks()
-            .forEach(track => track.stop());
-
-          mediaStream = null;
-        }
-
-
-        const actualMimeType =
-          mediaRecorder.mimeType || "audio/webm";
-
-
-        const audioBlob = new Blob(
-          audioChunks,
-          {
-            type: actualMimeType
-          }
+    if (
+        !assistant ||
+        !micButton ||
+        !voiceLabel ||
+        !conversation ||
+        !statusText
+    ) {
+        console.error(
+            "[ASSISTANT] Faltan elementos HTML necesarios."
         );
+        return;
+    }
 
 
-        console.log(
-          "[ASSISTANT] Audio grabado:",
-          audioBlob.size,
-          "bytes"
-        );
+    // =========================================================
+    // SOPORTE DEL MICRÓFONO
+    // =========================================================
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+
+        statusText.textContent = "No disponible";
+
+        voiceLabel.textContent =
+            "El navegador no permite usar el micrófono.";
+
+        micButton.disabled = true;
+
+        return;
+    }
 
 
-        if (audioBlob.size === 0) {
+    // =========================================================
+    // BOTÓN DEL MICRÓFONO
+    // =========================================================
 
-          setIdle();
+    micButton.addEventListener("click", async () => {
 
-          return;
+        if (isProcessing) {
+            return;
         }
 
-
-        await sendAudio(audioBlob);
-
-      };
-
-
-      mediaRecorder.start();
-
-      isRecording = true;
-
-      assistant.classList.add("is-listening");
-
-      statusText.textContent = "Escuchando";
-
-      voiceLabel.textContent =
-        "Hablá... tocá nuevamente para terminar";
-
-
-      console.log(
-        "[ASSISTANT] Grabación iniciada"
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "[ASSISTANT] Error accediendo al micrófono:",
-        error
-      );
-
-      isRecording = false;
-
-      setIdle();
-
-    }
-
-  }
-
-
-  // =========================================================
-  // DETENER GRABACIÓN
-  // =========================================================
-
-  function stopRecording() {
-
-    if (!mediaRecorder || mediaRecorder.state === "inactive") {
-      return;
-    }
-
-    isRecording = false;
-
-    assistant.classList.remove("is-listening");
-
-    statusText.textContent = "Procesando";
-
-    voiceLabel.textContent =
-      "Procesando tu mensaje...";
-
-
-    mediaRecorder.stop();
-
-    console.log(
-      "[ASSISTANT] Grabación detenida"
-    );
-
-  }
-
-
-  // =========================================================
-  // ENVIAR AUDIO AL BACKEND
-  // =========================================================
-
-  async function sendAudio(audioBlob) {
-
-    isProcessing = true;
-
-    try {
-
-      const formData = new FormData();
-
-      /*
-       * El backend espera:
-       *
-       * UploadFile = audio
-       */
-
-      formData.append(
-        "audio",
-        audioBlob,
-        "voice.webm"
-      );
-
-
-      console.log(
-        "[ASSISTANT] Enviando audio al backend..."
-      );
-
-
-      const response = await fetch(getApiUrl("assistant/talk"),
-        {
-          method: "POST",
-          body: formData
+        if (isRecording) {
+            stopRecording();
+        } else {
+            await startRecording();
         }
-      );
 
-      if (!response.ok) {
+    });
 
-        let errorMessage =
-          "Error procesando el audio.";
+
+    // =========================================================
+    // INICIAR GRABACIÓN
+    // =========================================================
+
+    async function startRecording() {
 
         try {
 
-          const errorData =
-            await response.json();
-
-          if (errorData.detail) {
-            errorMessage =
-              errorData.detail;
-          }
-
-        } catch (_) {}
+            mediaStream =
+                await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: false
+                });
 
 
-        throw new Error(
-          errorMessage
+            audioChunks = [];
+
+
+            // -------------------------------------------------
+            // Elegir formato compatible
+            // -------------------------------------------------
+
+            let mimeType = "";
+
+            if (
+                MediaRecorder.isTypeSupported(
+                    "audio/webm;codecs=opus"
+                )
+            ) {
+
+                mimeType =
+                    "audio/webm;codecs=opus";
+
+            } else if (
+                MediaRecorder.isTypeSupported(
+                    "audio/webm"
+                )
+            ) {
+
+                mimeType =
+                    "audio/webm";
+
+            } else if (
+                MediaRecorder.isTypeSupported(
+                    "audio/ogg;codecs=opus"
+                )
+            ) {
+
+                mimeType =
+                    "audio/ogg;codecs=opus";
+            }
+
+
+            mediaRecorder = mimeType
+                ? new MediaRecorder(
+                    mediaStream,
+                    { mimeType }
+                )
+                : new MediaRecorder(mediaStream);
+
+
+            // -------------------------------------------------
+            // Datos de audio
+            // -------------------------------------------------
+
+            mediaRecorder.ondataavailable =
+                (event) => {
+
+                    if (
+                        event.data &&
+                        event.data.size > 0
+                    ) {
+
+                        audioChunks.push(
+                            event.data
+                        );
+                    }
+                };
+
+
+            // -------------------------------------------------
+            // Grabación terminada
+            // -------------------------------------------------
+
+            mediaRecorder.onstop =
+                async () => {
+
+                    // Liberar micrófono
+                    if (mediaStream) {
+
+                        mediaStream
+                            .getTracks()
+                            .forEach(track => {
+                                track.stop();
+                            });
+
+                        mediaStream = null;
+                    }
+
+
+                    const actualMimeType =
+                        mediaRecorder.mimeType ||
+                        "audio/webm";
+
+
+                    const audioBlob =
+                        new Blob(
+                            audioChunks,
+                            {
+                                type: actualMimeType
+                            }
+                        );
+
+
+                    console.log(
+                        "[ASSISTANT] Audio grabado:",
+                        audioBlob.size,
+                        "bytes"
+                    );
+
+
+                    if (audioBlob.size === 0) {
+
+                        setIdle();
+                        return;
+                    }
+
+
+                    await sendAudio(audioBlob);
+                };
+
+
+            // -------------------------------------------------
+            // Comenzar
+            // -------------------------------------------------
+
+            mediaRecorder.start();
+
+            isRecording = true;
+
+            assistant.classList.add(
+                "is-listening"
+            );
+
+            statusText.textContent =
+                "Escuchando";
+
+            voiceLabel.textContent =
+                "Hablá... tocá nuevamente para terminar";
+
+
+            console.log(
+                "[ASSISTANT] Grabación iniciada"
+            );
+
+        } catch (error) {
+
+            console.error(
+                "[ASSISTANT] Error accediendo al micrófono:",
+                error
+            );
+
+            if (mediaStream) {
+
+                mediaStream
+                    .getTracks()
+                    .forEach(track => {
+                        track.stop();
+                    });
+
+                mediaStream = null;
+            }
+
+            isRecording = false;
+
+            setIdle();
+        }
+    }
+
+
+    // =========================================================
+    // DETENER GRABACIÓN
+    // =========================================================
+
+    function stopRecording() {
+
+        if (
+            !mediaRecorder ||
+            mediaRecorder.state === "inactive"
+        ) {
+            return;
+        }
+
+
+        isRecording = false;
+
+        assistant.classList.remove(
+            "is-listening"
         );
 
-      }
+        statusText.textContent =
+            "Procesando";
+
+        voiceLabel.textContent =
+            "Procesando tu mensaje...";
 
 
-      /*
-       * El backend devuelve:
-       *
-       * audio/wav
-       *
-       * y los textos en headers.
-       */
+        mediaRecorder.stop();
 
-      const data = await response.json();
 
-    console.log("[ASSISTANT] Transcripción:", data.transcription);
-    console.log("[ASSISTANT] Respuesta:", data.reply);
-
-    if (data.transcription) {
-        addMessage(data.transcription, "user");
-    }
-
-    if (data.reply) {
-        addMessage(data.reply, "assistant");
+        console.log(
+            "[ASSISTANT] Grabación detenida"
+        );
     }
 
 
+    // =========================================================
+    // ENVIAR AUDIO AL BACKEND
+    // =========================================================
+
+    async function sendAudio(audioBlob) {
+
+        isProcessing = true;
+
+
+        try {
+
+            const formData =
+                new FormData();
+
+
+            formData.append(
+                "audio",
+                audioBlob,
+                "voice.webm"
+            );
+
+
+            const apiUrl =
+                getApiUrl("assistant/talk");
+
+
+            console.log(
+                "[ASSISTANT] Enviando audio a:",
+                apiUrl
+            );
+
+
+            const response =
+                await fetch(
+                    apiUrl,
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
+
+
+            console.log(
+                "[ASSISTANT] HTTP:",
+                response.status
+            );
+
+
+            // -------------------------------------------------
+            // Error HTTP
+            // -------------------------------------------------
+
+            if (!response.ok) {
+
+                let errorMessage =
+                    "Error procesando el audio.";
+
+                try {
+
+                    const errorData =
+                        await response.json();
+
+                    if (
+                        typeof errorData.detail ===
+                        "string"
+                    ) {
+
+                        errorMessage =
+                            errorData.detail;
+
+                    } else if (
+                        errorData.detail?.message
+                    ) {
+
+                        errorMessage =
+                            errorData.detail.message;
+                    }
+
+                } catch (_) {
+                    // El backend no devolvió JSON
+                }
+
+
+                throw new Error(
+                    errorMessage
+                );
+            }
+
+
+            // -------------------------------------------------
+            // Respuesta
+            // -------------------------------------------------
+
+            const data =
+                await response.json();
+
+
+            console.log(
+                "[ASSISTANT] Respuesta backend:",
+                data
+            );
+
+
+            // -------------------------------------------------
+            // Transcripción
+            // -------------------------------------------------
+
+            if (data.transcription) {
+
+                addMessage(
+                    data.transcription,
+                    "user"
+                );
+            }
+
+
+            // -------------------------------------------------
+            // Respuesta del asistente
+            // -------------------------------------------------
+
+            if (data.reply) {
+
+                addMessage(
+                    data.reply,
+                    "assistant"
+                );
+            }
+
+
+            // -------------------------------------------------
+            // Si no recibimos nada
+            // -------------------------------------------------
+
+            if (
+                !data.transcription &&
+                !data.reply
+            ) {
+
+                console.warn(
+                    "[ASSISTANT] El backend respondió pero no devolvió transcription/reply."
+                );
+            }
+
+
+            setIdle();
+
+        } catch (error) {
+
+            console.error(
+                "[ASSISTANT] Error:",
+                error
+            );
+
+
+            addMessage(
+                error.message ||
+                "No pude procesar tu mensaje.",
+                "assistant"
+            );
+
+
+            setIdle();
+
+        } finally {
+
+            isProcessing = false;
+        }
     }
 
-    catch (error) {
 
-      console.error(
-        "[ASSISTANT] Error:",
-        error
-      );
+    // =========================================================
+    // AGREGAR MENSAJE
+    // =========================================================
 
+    function addMessage(text, type) {
 
-      addMessage(
-        error.message ||
-          "No pude procesar tu mensaje.",
-        "assistant"
-      );
-
-      setIdle();
-
-    }
-
-    finally {
-
-      isProcessing = false;
-
-    }
-
-  }
+        if (!text) {
+            return;
+        }
 
 
-  // =========================================================
-  // REPRODUCIR RESPUESTA
-  // =========================================================
-
-  async function playResponse(blob) {
-
-    if (!blob || blob.size === 0) {
-      setIdle();
-      return;
-    }
+        if (welcome) {
+            welcome.style.display =
+                "none";
+        }
 
 
-    statusText.textContent =
-      "Hablando";
+        const message =
+            document.createElement("div");
 
-    voiceLabel.textContent =
-      "El asistente está respondiendo...";
-
-
-    const audioURL =
-      URL.createObjectURL(blob);
+        message.className =
+            `message message--${type}`;
 
 
-    const audio =
-      new Audio(audioURL);
+        const bubble =
+            document.createElement("div");
+
+        bubble.className =
+            "message__bubble";
 
 
-    audio.onended = () => {
-
-      URL.revokeObjectURL(audioURL);
-
-      setIdle();
-
-    };
+        bubble.textContent =
+            text;
 
 
-    audio.onerror = () => {
-
-      URL.revokeObjectURL(audioURL);
-
-      console.error(
-        "[ASSISTANT] No se pudo reproducir el audio"
-      );
-
-      setIdle();
-
-    };
+        message.appendChild(
+            bubble
+        );
 
 
-    try {
-
-      await audio.play();
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "[ASSISTANT] Error reproduciendo audio:",
-        error
-      );
-
-      URL.revokeObjectURL(audioURL);
-
-      setIdle();
-
-    }
-
-  }
+        conversation.appendChild(
+            message
+        );
 
 
-  // =========================================================
-  // MENSAJES
-  // =========================================================
-
-  function addMessage(text, type) {
-
-    if (!text) {
-      return;
+        conversation.scrollTop =
+            conversation.scrollHeight;
     }
 
 
-    if (welcome) {
-      welcome.style.display = "none";
+    // =========================================================
+    // ESTADO IDLE
+    // =========================================================
+
+    function setIdle() {
+
+        isRecording = false;
+
+        assistant.classList.remove(
+            "is-listening"
+        );
+
+        statusText.textContent =
+            "Listo";
+
+        voiceLabel.textContent =
+            "Tocá para hablar";
     }
 
 
-    const message =
-      document.createElement("div");
+    // =========================================================
+    // LIMPIAR AL SALIR
+    // =========================================================
 
-    message.className =
-      `message message--${type}`;
+    window.addEventListener(
+        "beforeunload",
+        () => {
 
+            if (mediaStream) {
 
-    const bubble =
-      document.createElement("div");
-
-    bubble.className =
-      "message__bubble";
-
-    bubble.textContent =
-      text;
-
-
-    message.appendChild(
-      bubble
+                mediaStream
+                    .getTracks()
+                    .forEach(track => {
+                        track.stop();
+                    });
+            }
+        }
     );
 
 
-    conversation.appendChild(
-      message
+    // =========================================================
+    // BOTÓN ATRÁS
+    // =========================================================
+
+    setupBackHandler({
+
+        context: CONTEXT,
+
+        onBack: () => {
+
+            if (isProcessing) {
+                return;
+            }
+
+
+            if (isRecording) {
+
+                stopRecording();
+                return;
+            }
+
+
+            if (mediaStream) {
+
+                mediaStream
+                    .getTracks()
+                    .forEach(track => {
+                        track.stop();
+                    });
+
+                mediaStream = null;
+            }
+
+
+            window.location.href =
+                "../home/home.html";
+        }
+
+    });
+
+
+    console.log(
+        "[ASSISTANT] Assistant JS cargado correctamente."
     );
-
-
-    conversation.scrollTop =
-      conversation.scrollHeight;
-
-  }
-
-
-  // =========================================================
-  // ESTADO IDLE
-  // =========================================================
-
-  function setIdle() {
-
-    isRecording = false;
-
-    assistant.classList.remove(
-      "is-listening"
-    );
-
-    statusText.textContent =
-      "Listo";
-
-    voiceLabel.textContent =
-      "Tocá para hablar";
-
-  }
-
-
-  // =========================================================
-  // LIMPIAR AL SALIR
-  // =========================================================
-
-  window.addEventListener(
-    "beforeunload",
-    () => {
-
-      if (mediaStream) {
-
-        mediaStream
-          .getTracks()
-          .forEach(track => {
-            track.stop();
-          });
-
-      }
-
-    }
-);
-
-setupBackHandler({
-  context: CONTEXT,
-
-  onBack: () => {
-
-    if (isProcessing) {
-      return;
-    }
-
-    if (isRecording) {
-      stopRecording();
-      return;
-    }
-
-    if (mediaStream) {
-
-      mediaStream
-        .getTracks()
-        .forEach(track => track.stop());
-
-      mediaStream = null;
-    }
-
-    window.location.href =
-      "../home/home.html";
-  }
-});
 
 })();

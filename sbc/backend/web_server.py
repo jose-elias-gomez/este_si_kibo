@@ -14,6 +14,9 @@ from services.wifi.wifi_base import WifiError
 from services.wifi.wifi_endpoint import router as wifi_router
 from services.tts.tts_endpoint import router as tts_router
 from transports.websocket.server import router as websocket_router
+from fastapi.middleware.cors import CORSMiddleware
+from services.joystick.service import JoystickService
+
 
 from routers.assistant import (
     router as assistant_router,
@@ -27,6 +30,8 @@ app = FastAPI(
     title="Web server",
     version="1.0.0",
 )
+
+joystick_service = JoystickService()
 
 app.add_middleware(
     CORSMiddleware,
@@ -48,6 +53,7 @@ app.add_middleware(
 @app.on_event("startup")
 def startup():
     load_assistant()
+    joystick_service.start()
 
 API_PREFIX = "/api"
 app.include_router(assistant_router, prefix=API_PREFIX)
