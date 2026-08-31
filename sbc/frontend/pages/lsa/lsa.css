@@ -1,0 +1,285 @@
+/* ============================================================
+ * Este archivo asume que shared/css/global.css ya está linkeado
+ * antes en lsa.html (tokens de color, tipografía, radios, etc.).
+ * Acá sólo van los componentes propios de la app LSA.
+ * ============================================================ */
+
+:root {
+  --color-accent-sky: #6EC1E4;
+  --color-accent-sky-dim: rgba(110, 193, 228, 0.16);
+  --color-accent-sun: #F4C542;
+  --color-accent-sun-dim: rgba(244, 197, 66, 0.16);
+  --color-success: #5FBF77;
+  --color-success-dim: rgba(95, 191, 119, 0.16);
+  --color-error: #E5707A;
+  --color-error-dim: rgba(229, 112, 122, 0.16);
+}
+
+#console {
+  width: 100%;
+  height: 100vh;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.no-transitions * {
+  transition: none !important;
+}
+
+/* ---- Topbar ---- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg) 0 var(--space-lg);
+  flex-shrink: 0;
+}
+
+.topbar-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.topbar-eyebrow {
+  color: var(--color-accent-sky);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-pill);
+  background: var(--overlay-first);
+  border: 1px solid var(--color-border);
+}
+
+.status-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--color-disabled);
+  transition: background var(--duration-base) var(--ease-panel);
+}
+
+.status-dot.is-connected {
+  background: var(--color-success);
+  box-shadow: 0 0 0 4px var(--color-success-dim);
+}
+
+.status-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-enabled);
+}
+
+/* ---- Cuerpo de pantalla ---- */
+
+.screen-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-md) 0;
+}
+
+/* ---- Carrusel (categorías y señas de una lección) ---- */
+
+.scroll-container {
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.items-track {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.item-btn {
+  display: block;
+  cursor: default;
+}
+
+.card {
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    width var(--duration-base) var(--ease-slide),
+    opacity var(--duration-base) var(--ease-panel),
+    box-shadow var(--duration-base) var(--ease-panel);
+}
+
+.icon-inner {
+  font-size: 2.4rem;
+}
+
+.lesson-card-inner .hand-illustration {
+  width: 70%;
+  height: auto;
+}
+
+.item.is-focused .item-title {
+  color: var(--color-text);
+  opacity: 1;
+}
+
+.item-title {
+  font-size: var(--font-size-md);
+  color: var(--color-enabled);
+  opacity: 0.6;
+  transition: opacity var(--duration-base) var(--ease-panel);
+}
+
+.dots {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  padding-top: var(--space-sm);
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-border);
+  transition: background var(--duration-base) var(--ease-panel), transform var(--duration-base) var(--ease-panel);
+}
+
+.dot.active {
+  background: var(--color-accent-sky);
+  transform: scale(1.3);
+}
+
+/* ---- Nota de la lección (debajo del carrusel de señas) ---- */
+
+.flashcard-note {
+  flex-shrink: 0;
+  text-align: center;
+  font-size: var(--font-size-md);
+  color: var(--color-enabled);
+  padding: 0 var(--space-lg);
+  min-height: 2.4rem;
+}
+
+/* ---- Quiz (lista vertical, sin carrusel) ---- */
+
+.quiz-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+.quiz-prompt {
+  font-size: var(--font-size-md);
+  color: var(--color-enabled);
+  opacity: 0.7;
+}
+
+.quiz-score {
+  color: var(--color-accent-sun);
+}
+
+.quiz-card {
+  width: 9rem;
+  background: var(--overlay-first);
+  border: 1px solid var(--color-border);
+}
+
+.quiz-card .hand-illustration {
+  width: 65%;
+  height: auto;
+}
+
+.quiz-options {
+  width: min(20rem, 85vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.quiz-option {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--overlay-first);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-lg);
+  text-align: center;
+  transition:
+    transform var(--duration-fast) var(--ease-panel),
+    border-color var(--duration-fast) var(--ease-panel),
+    background var(--duration-fast) var(--ease-panel);
+}
+
+.quiz-option.is-focused {
+  border-color: var(--color-accent-sky);
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 3px var(--color-accent-sky-dim);
+}
+
+.quiz-option.is-correct {
+  border-color: var(--color-success);
+  background: var(--color-success-dim);
+}
+
+.quiz-option.is-incorrect {
+  border-color: var(--color-error);
+  background: var(--color-error-dim);
+}
+
+/* ---- Footer / ayuda del control ---- */
+
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  padding: var(--space-sm) var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.hint-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-enabled);
+  opacity: 0.7;
+}
+
+.hint-key {
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.4rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
