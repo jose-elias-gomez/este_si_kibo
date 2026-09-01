@@ -9,7 +9,6 @@ export class RangeSlider extends HTMLElement {
     const max = this.getAttribute("max") || "100";
     const value = this.getAttribute("value") || min;
     const step = this.getAttribute("step") || "1";
-    const context = this.getAttribute("context") || "GLOBAL";
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -17,6 +16,7 @@ export class RangeSlider extends HTMLElement {
           display: block;
           width: 100%;
           box-sizing: border-box;
+          font-family: var(--font-body);
         }
         .slidecontainer {
           width: 100%;
@@ -109,7 +109,6 @@ export class RangeSlider extends HTMLElement {
     // Referencias del Shadow DOM
     this.slider = this.shadowRoot.getElementById("myRange");
     this.thumbValue = this.shadowRoot.getElementById("thumbValue");
-    this.context = context;
 
     // Listeners nativos del <input type="range">
     this.slider.addEventListener("input", () => this.updateSlider());
@@ -162,6 +161,29 @@ export class RangeSlider extends HTMLElement {
       this.slider.value = val;
       this.updateSlider();
     }
+  }
+
+  setTitle(title) {
+    const slot = this.shadowRoot.querySelector("slot");
+    if (slot) {
+      this.textContent = title;
+    }
+  }
+
+  setMin(min) {
+    this.slider.min = min;
+    this.shadowRoot.getElementById("minLabel").textContent = min;
+    this.updateSlider();
+  }
+
+  setMax(max) {
+    this.slider.max = max;
+    this.shadowRoot.getElementById("maxLabel").textContent = max;
+    this.updateSlider();
+  }
+
+  setStep(step) {
+    this.slider.step = step;
   }
 }
 

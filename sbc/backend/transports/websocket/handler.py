@@ -6,7 +6,7 @@ from services.system_options.power import shutdown_computer
 logger = logging.getLogger(__name__)
 CONTEXT_HANDLERS = {}
 
-def handle_context_int_packet(context: str, value: int):
+def handle_set_context_int(context: str, value: int):
     handler = CONTEXT_HANDLERS.get(context)
     if handler is None:
         logger.warning("No hay handler registrado para contexto '%s'", context)
@@ -16,12 +16,16 @@ def handle_context_int_packet(context: str, value: int):
     except Exception:
         logger.exception("Error ejecutando handler para '%s' con value=%s", context, value)
 
-def register_context_int(context_name: str, handler_func):
+def register_set_context_int(context_name: str, handler_func):
     CONTEXT_HANDLERS[context_name] = handler_func
 
 def register_handlers():
-    register_context_int("volume", set_volume)
-    register_context_int("brightness", set_brightness)
-    register_context_int("shutdown", shutdown_computer)
+    register_set_context_int("volume", set_volume)
+    register_set_context_int("brightness", set_brightness)
+    register_set_context_int("shutdown", shutdown_computer)
+
+    register_set_context_int("get_volume", set_volume)
+    register_set_context_int("get_brightness", set_brightness)
+    register_set_context_int("shutdown", shutdown_computer)
 
 register_handlers()

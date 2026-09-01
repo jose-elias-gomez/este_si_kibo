@@ -1,339 +1,293 @@
-/* Habilita las View Transitions entre documentos (home <-> movement) */
-@view-transition {
-    navigation: auto;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-/* Transición por defecto: fade suave para el resto de la página */
-::view-transition-old(root),
-::view-transition-new(root) {
-    animation-duration: 320ms;
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@font-face {
-    font-family: "Aux Mono";
-    src: url("assets/AuxMono.ttf");
-}
-
-:root {
-    --bg: #000;
-    --panel-bg: rgba(255, 255, 255, 0.03);
-    --panel-border: #262626;
-    --surface: #29292e;
-    --surface-hover: #323238;
-    --surface-border: #323238;
-    --text-primary: #e1e1e6;
-    --text-secondary: #8d8d99;
-    --text-muted: #6a6a75;
-    --accent: #6156e2;
-    --accent-hover: #7b71f0;
-    --accent-glow: rgba(97, 86, 226, 0.4);
-    --danger: #e2565f;
-    --radius: 3px;
-}
-
-body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: var(--bg);
-    color: var(--text-primary);
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-    outline: none;
-}
-
-/* Foco visible: clave acá porque la app se navega por teclado / control,
-   no solo con mouse */
-:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-}
-
-.app-grid {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    grid-template-rows: 1fr auto;
-    gap: 4px;
-    height: 100vh;
-    padding: 4px;
-}
-
-.panel {
-    background-color: var(--panel-bg);
-    border-radius: var(--radius);
-}
-
-.panel header {
-    width: 100%;
-    padding: 14px 4px;
-    border-bottom: 1px solid var(--panel-border);
-}
-
-.panel header h2 {
-    margin-left: 8px;
-    font-family: "Aux Mono", monospace;
-    font-size: 0.95rem;
-    letter-spacing: 0.04em;
-    color: #fff;
-    font-weight: 600;
-}
-
-.panel header p {
-    margin: 4px 0 0 8px;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-}
-
-/* 1. Barra lateral */
-.sidebar {
-    grid-column: 1;
-    grid-row: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 12px;
-    overflow-y: auto;
-}
-
-/* Encabezados de grupo (Cabeza / Brazos / Ruedas). Antes eran <label>
-   sueltos sin ningún estilo propio -> se veían como texto plano. */
-.group-label {
-    font-family: "Aux Mono", monospace;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-secondary);
-    margin-top: 14px;
-    margin-bottom: 2px;
-    padding-left: 2px;
-}
-
-.group-label:first-of-type {
-    margin-top: 4px;
-}
-
-.btn-part {
-    background-color: var(--surface);
-    color: var(--text-primary);
-    border: 1px solid var(--surface-border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    font-family: "Aux Mono", monospace;
-    cursor: pointer;
-    text-align: left;
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-}
-
-.btn-part .icon {
-    font-size: 1rem;
-    opacity: 0.85;
-    margin-right: 6px;
-}
-
-/* Chip con el eje de rotación: le da uso real al espacio que quedaba
-   vacío del lado derecho del botón y anticipa cómo se va a mover */
-.btn-part .axis-badge {
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    border: 1px solid var(--surface-border);
-    border-radius: var(--radius);
-    padding: 2px 6px;
-    letter-spacing: 0.04em;
-}
-
-.btn-part:hover {
-    background-color: var(--surface-hover);
-    border-color: var(--accent);
-}
-
-.btn-part.active {
-    background-color: var(--accent);
-    color: #ffffff;
-    border-color: var(--accent-hover);
-    box-shadow: 0 0 12px var(--accent-glow);
-}
-
-.btn-part.active .axis-badge {
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.4);
-}
-
-/* Antes no existía: el botón "Reiniciar" quedaba sin estilo */
-.btn-reset {
-    margin-top: 20px;
-    background: transparent;
-    color: var(--danger);
-    border: 1px solid rgba(226, 86, 95, 0.4);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    font-family: "Aux Mono", monospace;
-    font-size: 0.85rem;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    text-align: center;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.btn-reset:hover {
-    background-color: rgba(226, 86, 95, 0.12);
-    color: #ff7b82;
-}
-
-.file-input-container {
-    margin-bottom: 8px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #2e2e34;
-}
-
-.file-input-label {
-    display: block;
-    background-color: var(--surface);
-    border: 1px dashed var(--accent);
-    border-radius: var(--radius);
-    color: #a9a9b6;
-    padding: 10px;
-    text-align: center;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
-}
-
-.file-input-label:hover {
-    background-color: var(--surface-hover);
-    color: #ffffff;
-}
-
-input[type="file"] {
-    display: none;
-}
-
-/* 2. Viewport 3D */
-.viewport-3d {
-    grid-column: 2;
-    grid-row: 1;
-    padding: 0;
-    position: relative;
-    overflow: hidden;
-    /* Grilla sutil de "sala de control" detrás del modelo, en vez de un
-       radial-gradient liso: refuerza la identidad técnica del resto de
-       la UI (monoespaciada, HUD) sin competir con el modelo. */
-    background:
-        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-        radial-gradient(circle at center, #25252b 0%, #111113 100%);
-    background-size: 32px 32px, 32px 32px, 100% 100%;
-    /* Comparte nombre con .selected-img de home.css: el navegador
-       hace un morph automático entre ambos elementos al navegar */
-    view-transition-name: app-hero;
+html, body {
+  margin: 0;
+  height: 100%;
+  background: rgb(24, 24, 24);
+  z-index: -2;
 }
 
 #canvas-container {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100vh;
+  z-index: 1;
 }
 
-.status-overlay {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    background: rgba(18, 18, 20, 0.8);
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--panel-border);
-    border-radius: var(--radius);
-    padding: 8px 14px;
-    font-family: "Aux Mono", monospace;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    pointer-events: none;
+#ui-panel {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
 }
 
-.status-overlay span {
-    color: var(--accent-hover);
-    font-weight: 600;
+.btn-part {
+  width: 256px;
+  height: 256px;
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
+
+  border-radius: 50%;
+  border: 4px solid transparent; 
+  
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease, border-color var(--duration-fast) ease;
 }
 
-.hint-overlay {
-    position: absolute;
-    bottom: 16px;
-    right: 16px;
-    background: rgba(18, 18, 20, 0.8);
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--panel-border);
-    border-radius: var(--radius);
-    padding: 6px 12px;
-    font-family: "Aux Mono", monospace;
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    pointer-events: none;
+.btn-part img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
 }
 
-/* 3. Panel Inferior con Slider */
-.controls-bottom {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 14px 20px;
+.btn-part.active {
+  background: var(--color-highlight);
+  border-color: none;
 }
 
-.slider-container {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
-    max-width: 700px;
-    margin: 0 auto;
+.btn-part.hovered {
+  border-color: var(--color-border);
 }
 
-.slider-container label {
-    font-family: "Aux Mono", monospace;
-    font-weight: 600;
-    min-width: 150px;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+.lateral-selector {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 16px;
+  overflow-x: auto; 
+  scroll-behavior: smooth;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
-input[type="range"] {
-    flex: 1;
-    accent-color: var(--accent);
-    height: 6px;
-    border-radius: 3px;
-    background: var(--surface);
-    cursor: pointer;
+.arrow {
+  border-radius: 999px;
+  color: #5a6066;
+  transition: color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xxxl);
+  letter-spacing: 0.2rem;
 }
 
-input[type="range"]:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
+.background-draw {
+  position: absolute;
+  height: 256px;
+  width: 100%;
+  padding: 48px;
+  top: 48px;
+  display: flex;
+  justify-content: space-between;
+  opacity: 0.5;
+  z-index: -1;
 }
 
-/* Un poco más ancho que antes: "-45° (X)" no entraba en 70px */
-.angle-value {
-    font-family: "Aux Mono", monospace;
-    font-size: 1rem;
-    background: #121214;
-    padding: 6px 14px;
-    min-width: 96px;
-    text-align: center;
-    border: 1px solid var(--panel-border);
-    border-radius: var(--radius);
-    color: var(--accent);
-    font-weight: bold;
+#manual-slider {
+  z-index: 2;
+  padding-left: 8px;
+  padding-right: 8px;
+  position: absolute;
+  bottom: 8px; 
+}
+
+/* Contenedor del widget del motor */
+.motor-widget {
+  position: absolute;
+  z-index: 2;
+  bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  /* Transición suave al cambiar de posición */
+  transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+              right 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Alineación por defecto / borde izquierdo */
+.motor-widget,
+.motor-widget.align-left {
+  left: 16px;
+  right: auto;
+  flex-direction: row; /* Botón a la izquierda, timer a la derecha */
+}
+
+/* Alineación en el borde derecho */
+.motor-widget.align-right {
+  left: auto;
+  right: 16px;
+  flex-direction: row-reverse; /* Invierte para tener el botón pegado al borde y el timer hacia adentro */
+}
+
+/* Ajuste de animación del timer según la alineación */
+.motor-widget.align-left .motor-timer {
+  transform: translateX(-6px);
+}
+
+.motor-widget.align-left:has(.media-btn.is-paused) .motor-timer {
+  transform: translateX(0);
+}
+
+.motor-widget.align-right .motor-timer {
+  transform: translateX(6px);
+}
+
+.motor-widget.align-right:has(.media-btn.is-paused) .motor-timer {
+  transform: translateX(0);
+}
+
+/* Botón circular, centrado, con feedback de estado */
+.media-btn {
+  position: relative;
+  flex: 0 0 auto;
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  border: 4px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.2s ease,
+              border-color 0.2s ease;
+  outline: none;
+}
+
+.media-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.media-btn:active {
+  transform: scale(0.94);
+}
+
+/* Cuando está corriendo, resaltamos el borde con el color de highlight */
+.media-btn.is-paused {
+  border-color: var(--color-highlight);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* SVG Wrapper */
+.icon {
+  width: 72px;
+  height: 72px;
+  position: relative;
+}
+
+/* Barras que componen el ícono (Play / Pause morphing) */
+.bar {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-border);
+  transition: clip-path 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.2s ease;
+}
+
+/* Estado por defecto: PLAY (un solo triángulo, ligeramente desplazado para verse óptico-centrado) */
+.bar-1 {
+  clip-path: polygon(22% 10%, 22% 90%, 85% 50%);
+}
+
+.bar-2 {
+  clip-path: polygon(22% 10%, 22% 10%, 22% 10%);
+}
+
+/* Estado activo: PAUSA (dos barras verticales) */
+.media-btn.is-paused .bar-1 {
+  clip-path: polygon(20% 15%, 42% 15%, 42% 85%, 20% 85%);
+}
+
+.media-btn.is-paused .bar-2 {
+  clip-path: polygon(58% 15%, 80% 15%, 80% 85%, 58% 85%);
+}
+
+.media-btn.is-paused .bar {
+  background-color: var(--color-highlight);
+}
+
+/* Contador de tiempo activo, al costado */
+.motor-timer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xxxl);
+  color: var(--color-border);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+}
+
+.motor-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.motor-widget:has(.media-btn.is-paused) .motor-timer {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.motor-timer-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-highlight);
+  flex: 0 0 auto;
+}
+
+.motor-widget:has(.media-btn.is-paused) .motor-timer-dot {
+  animation: motor-dot-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes motor-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.motor-timer-value {
+  min-width: 2.5ch;
+}
+
+.fade-appears {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-base) ease, visibility var(--duration-base) ease;
+}
+
+.fade-appears.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.arrow:hover {
+  color: #2c2c2c;
+}
+
+.arrow svg {
+  width: clamp(128px, 6vh, 128px);
+  height: clamp(128px, 6vh, 128px);
+}
+
+@keyframes arrow-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.45; }
+  50% { transform: translateY(9px); opacity: 1; }
+}
+
+.arrow-bounce {
+  animation: arrow-bounce 1.6s ease-in-out infinite;
 }

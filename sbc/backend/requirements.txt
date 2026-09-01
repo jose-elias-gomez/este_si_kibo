@@ -21,6 +21,7 @@ screen-brightness-control
 opencv-python-headless; sys_platform != 'win32'
 opencv-python; sys_platform == 'win32'
 mediapipe
+hidapi
 
 # AI / ML
 faster-whisper

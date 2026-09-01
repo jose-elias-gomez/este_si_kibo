@@ -35,6 +35,7 @@
   /* ---- Overlays ---- */
   --overlay-first: #2C2C2C;
   --overlay-first-selected: #383838;
+  --overlay-backdrop: rgba(0, 0, 0, 0.75);
 
   /* ---- Tipografía ---- */
   --font-body: "Fredoka", sans-serif; /* texto general */

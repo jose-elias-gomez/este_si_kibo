@@ -1,317 +1,164 @@
-import { InputAction, input } from "../../../shared/js/inputController.js";
+import { SceneEngine } from "./sceneEngine.js";
+import { CameraViewController, CameraView } from "./cameraViews.js";
+import { loadGltfModel } from "./modelLoader.js";
+import { PartsController } from "./partsController.js";
+import { AnimationBuilder, buildAnimation } from "./animationBuilder.js";
 
-// Volver a home ../../home/home.html
-input.on(InputAction.BACK, () => {
-    window.location.href = "../home/home.html"
-});
-
-let scene, camera, renderer, controls;
-let modelRoot = null;
-let selectedNodeName = null;
-let activePivotMesh = null;
-
-let modelCenter = new THREE.Vector3(0, 0.8, 0);
+const MODEL_URL = 'assets/kibo_model.glb';
+const modelCenter = new THREE.Vector3(0, 0.8, 0);
 let cameraDistance = 3.5;
 
-// 1. Configuración por pieza: Define eje único y límites (min, max)
-const PARTS_CONFIG = {
-    'Head':       { axis: 'y', min: -90, max: 90 },
-    'LeftArm':    { axis: 'x', min: -45, max: 45 },
-    'RightArm':   { axis: 'x', min: -45, max: 45 },
-    'LeftWheel':  { axis: 'x', min: -180, max: 180 },
-    'RightWheel': { axis: 'x', min: -180, max: 180 }
-};
+let sceneEngine = null;
+let cameraViewController = null;
+let partsController = null;
 
-// Nombres legibles para el overlay de estado
-const NODE_LABELS = {
-    'Head': 'Cabeza',
-    'LeftArm': 'Brazo izquierdo',
-    'RightArm': 'Brazo derecho',
-    'LeftWheel': 'Rueda izquierda',
-    'RightWheel': 'Rueda derecha'
-};
-
-// Ángulos actuales guardados por pieza
-const pivotAngles = {
-    'Head': 0,
-    'LeftArm': 0,
-    'RightArm': 0,
-    'LeftWheel': 0,
-    'RightWheel': 0
-};
-
-// DOM Elements
-const partButtons = document.querySelectorAll('.btn-part');
-const slider = document.getElementById('angle-slider');
-const angleVal = document.getElementById('angle-val');
-const resetBtn = document.getElementById('btn-reset');
-const statusPart = document.getElementById('status-part');
-
-function init3D() {
+/**
+ * Punto de entrada. Crea el motor 3D, carga el modelo y deja listo
+ * el controlador de piezas. Devuelve las piezas necesarias para que
+ * cualquier capa de UI externa pueda conectarse (seleccionar pieza,
+ * mover un ángulo, resetear, etc.).
+ */
+async function init3D() {
     const container = document.getElementById('canvas-container');
-    
-    scene = new THREE.Scene();
 
-    camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 1.5, 3.5);
+    sceneEngine = new SceneEngine(container, modelCenter);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    container.appendChild(renderer.domElement);
-
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableRotate = false;
-    controls.enableZoom = false;
-    controls.enablePan = false;
-    controls.target.copy(modelCenter);
-
-    window.addEventListener('resize', onWindowResize);
-
-    loadModel();
-    
-    // Seleccionar Head por defecto al iniciar (después de cargar)
-    setTimeout(() => {
-        const defaultBtn = document.querySelector('.btn-part[data-node="Head"]');
-        if (defaultBtn) defaultBtn.click();
-    }, 500);
-
-    animate();
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-}
-
-function onWindowResize() {
-    const container = document.getElementById('canvas-container');
-    camera.aspect = container.clientWidth / container.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
-}
-
-function transitionToView(targetView) {
-    if (!modelRoot) return;
-
-    let targetPos = new THREE.Vector3();
-
-    if (targetView === 'front') {
-        targetPos.set(modelCenter.x, modelCenter.y, modelCenter.z + cameraDistance);
-    } else if (targetView === 'left') {
-        targetPos.set(modelCenter.x - cameraDistance, modelCenter.y, modelCenter.z);
-    } else if (targetView === 'right') {
-        targetPos.set(modelCenter.x + cameraDistance, modelCenter.y, modelCenter.z);
-    }
-
-    gsap.to(camera.position, {
-        x: targetPos.x,
-        y: targetPos.y,
-        z: targetPos.z,
-        duration: 1.2,
-        ease: "power2.inOut",
-        onUpdate: () => {
-            camera.lookAt(modelCenter);
-            controls.target.copy(modelCenter);
-            controls.update();
-        }
-    });
-}
-
-function findPivotInNode(parentName) {
-    if (!modelRoot) return null;
-
-    let parentObj = null;
-
-    modelRoot.traverse((child) => {
-        if (child.name === parentName) {
-            parentObj = child;
-        }
-    });
-
-    if (!parentObj) {
-        console.warn(`No se encontró el nodo ${parentName}`);
-        return null;
-    }
-
-    console.log(`Hijos de ${parentName}:`, parentObj.children);
-
-    let pivotObj = null;
-
-    // Buscar cualquier nodo cuyo nombre empiece por "Pivot"
-    parentObj.traverse((child) => {
-        if (child !== parentObj && child.name.startsWith('Pivot')) {
-            pivotObj = child;
-        }
-    });
-
-    console.log(
-        pivotObj
-            ? `Pivot encontrado para ${parentName}: ${pivotObj.name}`
-            : `No se encontró ningún nodo que empiece por "Pivot" para ${parentName}`
+    // Le pasamos requestRender a todo lo que puede modificar la escena
+    // (cámara y piezas), para que el loop de render (que ahora es
+    // "bajo demanda") sepa cuándo tiene que pintar un frame nuevo.
+    cameraViewController = new CameraViewController(
+        sceneEngine.camera,
+        sceneEngine.controls,
+        modelCenter,
+        cameraDistance,
+        () => sceneEngine.requestRender()
     );
 
-    return pivotObj || parentObj;
+    sceneEngine.start();
+
+    const modelRoot = await loadGltfModel(MODEL_URL);
+    sceneEngine.scene.add(modelRoot);
+    sceneEngine.requestRender(); // el modelo recién agregado tiene que pintarse
+
+    partsController = new PartsController(modelRoot, () => sceneEngine.requestRender());
+
+    fitCameraToModel(modelRoot);
+
+    return { sceneEngine, cameraViewController, partsController };
 }
 
-// Guardará la rotación inicial exacta de cada pieza tal como viene en el GLTF
-const initialRotations = {};
+/**
+ * Ajusta centro y distancia de cámara al tamaño real del modelo cargado,
+ * y posiciona la cámara en la vista frontal.
+ * @param {THREE.Object3D} modelRoot
+ */
+function fitCameraToModel(modelRoot) {
+    const box = new THREE.Box3().setFromObject(modelRoot);
+    box.getCenter(modelCenter);
+    const size = box.getSize(new THREE.Vector3());
 
-function loadModel() {
-    const loader = new THREE.GLTFLoader();
+    cameraDistance = size.y * 1.5;
+    cameraViewController.setDistance(cameraDistance);
+    sceneEngine.controls.target.copy(modelCenter);
 
-    loader.load(
-        'assets/kibo_model.glb',
-        function (gltf) {
-            if (modelRoot) scene.remove(modelRoot);
+    sceneEngine.camera.position.set(
+        modelCenter.x,
+        modelCenter.y,
+        modelCenter.z + cameraDistance
+    );
+    sceneEngine.camera.lookAt(modelCenter);
+    sceneEngine.controls.update();
+    cameraViewController.syncLookAt(modelCenter); // evita el salto en el primer goTo() de la sesión
+    sceneEngine.requestRender(); // reposicionamos la cámara fuera de un tween de gsap
+}
 
-            modelRoot = gltf.scene;
+/**
+ * Selecciona una pieza y mueve la cámara a la vista indicada.
+ * Pensado como el punto de conexión para cualquier UI externa
+ * (botones, gestos, voz, etc.).
+ * @param {string} partName - p.ej. 'Head', 'LeftArm'
+ * @param {string} view - uno de CameraView (front | left | right)
+ */
+export function selectPart(partName, view) {
+    if (!partsController) return null;
 
-            modelRoot.traverse((child) => {
-                if (child.isMesh && child.material) {
-                    child.material = new THREE.MeshBasicMaterial({
-                        map: child.material.map,
-                        color: child.material.color,
-                        transparent: child.material.transparent,
-                        opacity: child.material.opacity
-                    });
-                }
-            });
+    const selection = partsController.selectPart(partName);
+    cameraViewController.goTo(view, partName);
 
-            scene.add(modelRoot);
+    return selection; // { config, currentAngle } — útil para actualizar cualquier UI
+}
 
-            // Guardar la rotación inicial predeterminada de cada pivote configurado
-            Object.keys(PARTS_CONFIG).forEach(partName => {
-                const pivotMesh = findPivotInNode(partName);
-                if (pivotMesh) {
-                    initialRotations[partName] = pivotMesh.rotation.clone();
-                }
-            });
+/**
+ * Aplica un ángulo (en grados) a la pieza actualmente seleccionada.
+ * @param {number} angleDegrees
+ */
+export function setPartAngle(angleDegrees) {
+    partsController?.setAngle(angleDegrees);
+}
 
-            const box = new THREE.Box3().setFromObject(modelRoot);
-            box.getCenter(modelCenter);
-            const size = box.getSize(new THREE.Vector3());
+export function getPivotAngle(partName) {
+    return partsController?.getPivotAngle(partName);
+}
 
-            cameraDistance = size.y * 1.8;
-            controls.target.copy(modelCenter);
+/**
+ * Arranca el motor DC de una rueda (giro continuo, sin ángulo objetivo).
+ * @param {string} partName - 'LeftWheel' | 'RightWheel'
+ * @param {string} [direction] - MotorDirection.FORWARD (default) o .BACKWARD
+ */
+export function runMotor(partName, direction) {
+    partsController?.runMotor(partName, direction);
+}
 
-            camera.position.set(
-                modelCenter.x,
-                modelCenter.y,
-                modelCenter.z + cameraDistance
-            );
+/**
+ * Frena el motor DC de una rueda.
+ * @param {string} partName - 'LeftWheel' | 'RightWheel'
+ */
+export function stopMotor(partName) {
+    partsController?.stopMotor(partName);
+}
 
-            camera.lookAt(modelCenter);
-            controls.update();
+/** Restaura todas las piezas a su posición inicial. */
+export function resetParts() {
+    partsController?.resetAll();
+}
 
-            // Seleccionar Head por defecto al terminar de cargar
-            const defaultBtn = document.querySelector('.btn-part[data-node="Head"]');
-            if (defaultBtn) defaultBtn.click();
-        },
-        undefined,
-        function (error) {
-            console.error('Error cargando el modelo:', error);
-        }
+/**
+ * Crea un nuevo builder de animación encadenable, listo para usar:
+ *
+ *   const anim = animate().leftArm(180).head(-45);
+ *   await anim.execute();
+ *
+ * @param {boolean} [followWithCamera=false] - si true, cada paso también mueve la cámara a una vista acorde a la pieza
+ * @returns {AnimationBuilder}
+ */
+export function animate(followWithCamera = false) {
+    return new AnimationBuilder(
+        partsController,
+        followWithCamera ? cameraViewController : null
     );
 }
 
-// Selección de Componente + Aplicación de Configuración
-function selectPart(node, view) {
-    selectedNodeName = node;
-
-    // Asignación correcta a la variable GLOBAL (sin el 'const')
-    activePivotMesh = findPivotInNode(node);
-
-    const config = PARTS_CONFIG[node] || { axis: 'y', min: -45, max: 45 };
-
-    // Ajustar límites dinámicos del HTML Slider según la pieza
-    slider.min = config.min;
-    slider.max = config.max;
-    slider.disabled = false;
-
-    // Recuperar ángulo guardado
-    const currentAngle = pivotAngles[node] || 0;
-    slider.value = currentAngle;
-    angleVal.textContent = `${currentAngle}° (${config.axis.toUpperCase()})`;
-
-    // Reflejar la pieza activa en el overlay del viewport, no solo en
-    // el botón de la barra lateral (más visible mientras se mira el modelo)
-    if (statusPart) {
-        statusPart.textContent = NODE_LABELS[node] || node;
-    }
-
-    transitionToView(view);
+/**
+ * Arma y ejecuta de una una animación declarada en ANIMATIONS
+ * (animationsConfig.js) por nombre.
+ *
+ *   await playAnimation('confusion');
+ *
+ * @param {string} animationName - clave dentro de ANIMATIONS
+ * @param {boolean} [followWithCamera=false] - si true, cada paso también mueve la cámara a una vista acorde a la pieza
+ * @returns {Promise<void>} resuelve cuando termina toda la secuencia
+ */
+export function playAnimation(animationName, followWithCamera = false) {
+    const builder = buildAnimation(
+        partsController,
+        animationName,
+        followWithCamera ? cameraViewController : null
+    );
+    return builder.execute();
 }
 
-function resetPositions() {
-    if (!modelRoot) return;
+export { CameraView };
 
-    // 1. Resetear todos los ángulos guardados a 0 (desplazamiento relativo)
-    Object.keys(pivotAngles).forEach(part => {
-        pivotAngles[part] = 0;
-    });
-
-    // 2. Restaurar la rotación base inicial guardada al cargar el modelo
-    Object.keys(PARTS_CONFIG).forEach(partName => {
-        const pivotMesh = findPivotInNode(partName);
-        if (pivotMesh && initialRotations[partName]) {
-            pivotMesh.rotation.copy(initialRotations[partName]);
-        }
-    });
-
-    // 3. Volver a seleccionar la vista y botón de la Cabeza
-    const headBtn = document.querySelector('.btn-part[data-node="Head"]');
-    if (headBtn) {
-        headBtn.click();
-    } else {
-        selectPart('Head', 'front');
-    }
-}
-
-// Listeners para botones de selección
-partButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        partButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const nodeName = btn.getAttribute('data-node');
-        const targetView = btn.getAttribute('data-view');
-        selectPart(nodeName, targetView);
-    });
-});
-
-// El botón de reset ahora se cablea acá en vez de usar onclick="" en el
-// HTML: dentro de un <script type="module">, resetPositions() no queda
-// colgada de `window`, así que el onclick inline nunca la encontraba.
-if (resetBtn) {
-    resetBtn.addEventListener('click', resetPositions);
-}
-
-// Manejo del Slider (Rotación en el eje específico configurado)
-slider.addEventListener('input', (e) => {
-    const angleDegrees = parseFloat(e.target.value);
-
-    if (selectedNodeName) {
-        pivotAngles[selectedNodeName] = angleDegrees;
-    }
-
-    if (activePivotMesh && selectedNodeName) {
-        const config = PARTS_CONFIG[selectedNodeName] || { axis: 'y' };
-        const radiansOffset = THREE.MathUtils.degToRad(angleDegrees);
-
-        // Obtener la rotación inicial del archivo 3D
-        const baseRotation = initialRotations[selectedNodeName] || new THREE.Euler(0, 0, 0);
-
-        // Restaurar rotaciones base de los 3 ejes
-        activePivotMesh.rotation.copy(baseRotation);
-
-        // Aplicar el offset/desplazamiento solo en el eje correspondiente
-        activePivotMesh.rotation[config.axis] = baseRotation[config.axis] + radiansOffset;
-        
-        angleVal.textContent = `${angleDegrees}° (${config.axis.toUpperCase()})`;
-    }
-});
-
-window.onload = init3D;
+window.onload = () => {
+    init3D();
+};

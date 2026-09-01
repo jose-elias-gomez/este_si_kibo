@@ -67,7 +67,7 @@ export class BasePopup extends HTMLElement {
         }
 
         dialog::backdrop {
-          background-color: rgba(0, 0, 0, 0.75);
+          background-color: var(--overlay-backdrop);
           opacity: 0;
           transition: opacity var(--duration-medium, 0.2s) var(--ease-panel, ease);
         }

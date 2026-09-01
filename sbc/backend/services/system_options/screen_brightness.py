@@ -1,106 +1,6 @@
-"""System settings controller module for cross-platform hardware management.
-
-This module provides unified access to master volume and display brightness
-controls across Windows, macOS, Linux, and Raspberry Pi hardware.
-
-Dependencies:
-    - pycaw (Windows audio)
-    - comtypes (Windows COM interface)
-    - screen-brightness-control (Cross-platform brightness)
-"""
-
-import os
-import platform
-import subprocess
 from pathlib import Path
 
-# Optional dependency imports with graceful fallback for non-Windows platforms
-try:
-  from comtypes import CLSCTX_ALL
-  from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-except ImportError:
-  pass
-
-try:
-  import screen_brightness_control as sbc
-except ImportError:
-  sbc = None
-
-
-def set_volume(level: int) -> None:
-  """Sets the system master volume.
-
-  Args:
-      level (int): Target volume percentage. Must be an integer between 0 and 100.
-
-  Raises:
-      NotImplementedError: Raised if the running operating system is unsupported.
-      subprocess.CalledProcessError: Raised if Linux audio backend commands fail.
-
-  Example:
-      >>> set_volume(50)
-  """
-  # Clamp value within the valid range [0, 100]
-  level = max(0, min(100, level))
-  system = platform.system()
-
-  if system == "Windows":
-    _set_volume_windows(level)
-  elif system == "Darwin":
-    _set_volume_macos(level)
-  elif system == "Linux":
-    _set_volume_linux(level)
-  else:
-    raise NotImplementedError(f"Unsupported operating system: {system}")
-
-
-def _set_volume_windows(level: int) -> None:
-  """Adjusts master volume on Windows using Windows Core Audio APIs (pycaw).
-
-  Args:
-      level (int): Normalized volume level (0 to 100).
-  """
-  devices = AudioUtilities.GetSpeakers()
-  interface = devices.Activate(
-    getattr(IAudioEndpointVolume, "_iid_"), CLSCTX_ALL, None
-  )
-  volume = interface.QueryInterface(IAudioEndpointVolume)
-
-  # pycaw expects a scalar float from 0.0 to 1.0
-  volume.SetMasterVolumeLevelScalar(level / 100.0, None)
-
-
-def _set_volume_macos(level: int) -> None:
-  """Adjusts output volume on macOS using native AppleScript execution.
-
-  Args:
-      level (int): Volume percentage (0 to 100).
-  """
-  subprocess.run(
-    ["osascript", "-e", f"set volume output volume {level}"],
-    check=True
-  )
-
-
-def _set_volume_linux(level: int) -> None:
-  """Adjusts master volume on Linux systems using PulseAudio or ALSA fallback.
-
-  Args:
-      level (int): Volume percentage (0 to 100).
-  """
-  try:
-    # Default target for PulseAudio / PipeWire
-    subprocess.run(
-      ["pactl", "set-sink-volume", "@DEFAULT_SINK@", f"{level}%"],
-      check=True
-    )
-  except (subprocess.CalledProcessError, FileNotFoundError):
-    # Fallback to ALSA if pactl is unavailable
-    subprocess.run(
-      ["amixer", "-D", "pulse", "sset", "Master", f"{level}%"],
-      check=True
-    )
-
+import screen_brightness_control as sbc
 
 def set_brightness(level: int) -> None:
   """Sets the display brightness across desktop monitors or Raspberry Pi displays.
@@ -123,14 +23,10 @@ def set_brightness(level: int) -> None:
     return
 
   # Standard desktop monitor brightness control
-  if sbc is not None:
-    try:
-      sbc.set_brightness(level)
-    except Exception as err:
-      print(f"Failed to adjust desktop display brightness: {err}")
-  else:
-    print("Error: 'screen-brightness-control' library is not installed.")
-
+  try:
+    sbc.set_brightness(level)
+  except Exception as err:
+    print(f"Failed to adjust desktop display brightness: {err}")
 
 def _set_brightness_raspberry_pi(level: int, backlight_path: Path) -> None:
   """Writes raw brightness scalar directly to the Linux sysfs kernel interface.
@@ -157,3 +53,43 @@ def _set_brightness_raspberry_pi(level: int, backlight_path: Path) -> None:
       "Permission denied: Writing to /sys/class/backlight requires root "
       "privileges or udev rule permission."
     )
+
+def get_brightness() -> int | None:
+  backlight_paths = list(Path("/sys/class/backlight/").glob("*"))
+  if backlight_paths:
+    return _get_brightness_raspberry_pi(backlight_paths[0])
+
+  try:
+    brightness_list = sbc.get_brightness()
+    if brightness_list:
+      primary_brightness = brightness_list[0]
+      if primary_brightness is not None:
+        return int(primary_brightness)
+  except Exception as err:
+    print(f"Failed to retrieve desktop display brightness: {err}")
+
+  return None
+
+def _get_brightness_raspberry_pi(backlight_path: Path) -> int | None:
+  brightness_file = backlight_path / "actual_brightness"
+  if not brightness_file.exists():
+    brightness_file = backlight_path / "brightness"
+
+  max_brightness_file = backlight_path / "max_brightness"
+
+  try:
+    current_val = int(brightness_file.read_text().strip())
+    max_val = (
+      int(max_brightness_file.read_text().strip())
+      if max_brightness_file.exists()
+      else 255
+    )
+
+    if max_val == 0:
+      return 0
+
+    percentage = (current_val / max_val) * 100
+    return int(max(0, min(100, percentage)))
+  except Exception as err:
+    print(f"Failed to read Raspberry Pi brightness: {err}")
+    return None

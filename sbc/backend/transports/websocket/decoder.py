@@ -1,6 +1,6 @@
 import json
 import logging
-from .handler import handle_context_int_packet
+from .handler import handle_set_context_int
 
 logger = logging.getLogger(__name__)
 
@@ -42,4 +42,4 @@ def decode_context_int(data):
     except (TypeError, ValueError):
         raise PacketDecodeError(f"'value' inválido: {value_raw!r}")
 
-    handle_context_int_packet(context, value)
+    handle_set_context_int(context, value)
