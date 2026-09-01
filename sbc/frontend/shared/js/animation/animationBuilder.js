@@ -15,8 +15,7 @@
 //   const anim = buildAnimation(partsController, 'confusion');
 //   await anim.execute();
 
-import { ANIMATIONS } from "../../../shared/js/animation/animations.js";
-import { CameraView } from "./cameraViews.js";
+import { ANIMATIONS } from "./animations.js";
 
 // --- Timing del servo SG90 ---
 // Datasheet: ~0.1s por cada 60° a 4.8V (más lento a menor voltaje).
@@ -53,10 +52,6 @@ const PART_NAMES = {
 };
 
 export class AnimationBuilder {
-    /**
-     * @param {import("./partsController.js").PartsController} partsController
-     * @param {import("./cameraViews.js").CameraViewController} [cameraViewController] - opcional, solo si se quiere que el builder también mueva la cámara
-     */
     constructor(partsController, cameraViewController = null) {
         this.partsController = partsController;
         this.cameraViewController = cameraViewController;
@@ -192,8 +187,7 @@ export class AnimationBuilder {
         const duration = servoDurationMs(targetAngle - startAngle) / 1000; // gsap usa segundos
 
         if (this.cameraViewController) {
-            const view = CAMERA_VIEW_BY_PART[partName];
-            if (view) this.cameraViewController.goTo(view, partName);
+            this.cameraViewController.goToPart(partName);
         }
 
         return new Promise((resolve) => {
@@ -272,9 +266,6 @@ export class AnimationBuilder {
  * en ANIMATIONS (ver animationsConfig.js), lista para .execute().
  * Es la traducción directa dato -> builder: recorre los pasos y llama a
  * .move()/.parallel()/.wait() según corresponda, sin motor nuevo.
- * @param {import("./partsController.js").PartsController} partsController
- * @param {string} animationName - clave dentro de ANIMATIONS
- * @param {import("./cameraViews.js").CameraViewController} [cameraViewController]
  * @returns {AnimationBuilder}
  */
 export function buildAnimation(partsController, animationName, cameraViewController = null) {
@@ -308,13 +299,3 @@ export function buildAnimation(partsController, animationName, cameraViewControl
 
     return builder;
 }
-
-// Vista de cámara sugerida por pieza, usada solo si se le pasa un
-// cameraViewController al builder. Puramente cosmético.
-const CAMERA_VIEW_BY_PART = {
-    Head: CameraView.FRONT,
-    LeftArm: CameraView.LEFT,
-    RightArm: CameraView.RIGHT,
-    LeftWheel: CameraView.LEFT,
-    RightWheel: CameraView.RIGHT
-};

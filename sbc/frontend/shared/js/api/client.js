@@ -3,6 +3,9 @@ import { API_BASE_URL, DEBUG_MODE } from "./common.js";
 export const PACKET_ID = {
   SYSTEM_OPTION: 1,
   JOYSTICK: 2,
+
+  GET_PARTS: 3,
+  MOVE_PART: 4
 };
 
 let socket = null;

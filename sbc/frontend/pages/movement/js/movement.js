@@ -2,7 +2,7 @@ import { SceneEngine } from "./sceneEngine.js";
 import { CameraViewController, CameraView } from "./cameraViews.js";
 import { loadGltfModel } from "./modelLoader.js";
 import { PartsController } from "./partsController.js";
-import { AnimationBuilder, buildAnimation } from "./animationBuilder.js";
+import { AnimationBuilder, buildAnimation } from "../../../shared/js/animation/animationBuilder.js";
 
 const MODEL_URL = 'assets/kibo_model.glb';
 const modelCenter = new THREE.Vector3(0, 0.8, 0);

@@ -4,6 +4,14 @@ export const CameraView = Object.freeze({
     RIGHT: 'right'
 });
 
+export const CAMERA_VIEW_BY_PART = Object.freeze({
+    Head: CameraView.FRONT,
+    LeftArm: CameraView.LEFT,
+    RightArm: CameraView.RIGHT,
+    LeftWheel: CameraView.LEFT,
+    RightWheel: CameraView.RIGHT
+});
+
 export class CameraViewController {
     /**
      * @param {THREE.PerspectiveCamera} camera
@@ -63,6 +71,11 @@ export class CameraViewController {
      */
     syncLookAt(point) {
         this._lookAtProxy.copy(point);
+    }
+
+    goToPart(partName) {
+      const view = CAMERA_VIEW_BY_PART[partName];
+      this.goTo(view, partName);
     }
 
     /**
