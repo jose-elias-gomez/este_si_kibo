@@ -12,6 +12,7 @@ websockets
 pyserial
 python-multipart
 dotenv
+groq
 
 # Windows-only (Correctamente aislados)
 pycaw>=20230407; sys_platform == 'win32'

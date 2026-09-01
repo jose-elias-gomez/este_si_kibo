@@ -1,6 +1,6 @@
 import { BasePopup } from "../../../shared/components/BasePopup.js";
 import { input, InputAction } from "../../../shared/js/inputController.js";
-
+import { sendPacket, PACKET_ID } from "../../../shared/js/api/client.js";
 const headerTemplate = document.createElement("template");
 headerTemplate.innerHTML = `
   <h1>Volumen</h1>
@@ -68,11 +68,19 @@ export class VolumeMenu extends BasePopup {
     input.off(this.context);
   }
 
-  setupInputController() {
+  _step(direction) {
     const volumeSlider = this.querySelector("range-slider");
+    if (volumeSlider.step(direction)) {
+      sendPacket({ "id": PACKET_ID.SYSTEM_OPTION, "context": "set_volume", "value": volumeSlider.value });
+    }
+  }
 
-    input.on(InputAction.LEFT, () => volumeSlider.step(-1), this.context);
-    input.on(InputAction.RIGHT, () => volumeSlider.step(1), this.context);
+  setupInputController() {   
+    sendPacket({ "id": PACKET_ID.SYSTEM_OPTION, "context": "get_volume" }, true)
+      .then((response) => this.querySelector("range-slider").value = parseInt(response));
+
+    input.on(InputAction.LEFT, () => this._step(-1), this.context);
+    input.on(InputAction.RIGHT, () => this._step(1), this.context);
   }
 }
 

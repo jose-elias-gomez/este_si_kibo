@@ -1,5 +1,5 @@
 import logging
-from packet_registry import PacketId, DECODERS
+from transports.websocket.packet_registry import MIN_PACKET_ID, MAX_PACKET_ID, DECODERS
 
 logger = logging.getLogger(__name__)
 
@@ -15,11 +15,15 @@ def decode(packet):
         packet_id = int(packet_id_raw)
     except (TypeError, ValueError):
         raise PacketDecodeError(f"'id' inválido: {packet_id_raw!r}")
+    if not (MIN_PACKET_ID <= packet_id <= MAX_PACKET_ID):
+        raise PacketDecodeError(
+            f"Packet ${packet_id} fuera de rango, debe estar entre {MIN_PACKET_ID} y {MAX_PACKET_ID}")
 
-    if len(DECODERS) < packet_id or len(DECODERS) > len(PacketId):
-      raise PacketDecodeError(f"Packet ${packet_id} fuera de rango, debe estar entre 0 y ${len(DECODERS)}")
+    decoder = DECODERS[packet_id]
+    if not decoder:
+        raise PacketDecodeError(f"Packet ${packet_id} no tiene un decodificador registrado")
 
     return {
       "id": packet_id,
-      "payload": DECODERS[packet_id].decode(packet)
+      "payload": decoder(packet)
     }

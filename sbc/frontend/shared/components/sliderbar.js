@@ -120,12 +120,17 @@ export class RangeSlider extends HTMLElement {
     const stepAttr = Number(this.slider.step) || 1;
     const min = Number(this.slider.min) || 0;
     const max = Number(this.slider.max) || 100;
-    let newValue = Number(this.slider.value) + direction * stepAttr;
-    newValue = Math.min(max, Math.max(min, newValue));
+    const currentValue = Number(this.slider.value);
+    const newValue = Math.min(max, Math.max(min, currentValue + direction * stepAttr));
+
+    if (newValue === currentValue) {
+      return false;
+    }
+
     this.slider.value = newValue;
     this.updateSlider();
-
     this.slider.dispatchEvent(new Event("input"));
+    return true;
   }
 
   updateSlider() {

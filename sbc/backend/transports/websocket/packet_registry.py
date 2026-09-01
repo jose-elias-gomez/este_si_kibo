@@ -1,7 +1,13 @@
 from enum import Enum, auto
 
 class PacketId(Enum):
-    SYSTEM_OPTION = auto()
-    JOYSTICK = auto()
+    SYSTEM_OPTION = 1
+    JOYSTICK = 2
 
-DECODERS = [len(PacketId)]
+DECODERS = {}
+
+def register_decoder(packet_id: PacketId, decoder_func):
+    DECODERS[packet_id.value] = decoder_func
+
+MIN_PACKET_ID = min(p.value for p in PacketId)
+MAX_PACKET_ID = max(p.value for p in PacketId)

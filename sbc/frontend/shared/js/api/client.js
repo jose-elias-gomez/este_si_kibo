@@ -7,10 +7,10 @@ export const PACKET_ID = {
 
 let socket = null;
 const pendingRequests = new Map();
-const listeners = new Map(); // packetId -> Set<function>
+const listeners = new Map();
 
 function connect() {
-  socket = new WebSocket(`wss://${API_BASE_URL}/ws`);
+  socket = new WebSocket(`ws://${API_BASE_URL}/api/ws`);
 
   socket.onopen = function () {
     console.log("Websocket conectado");
@@ -78,8 +78,13 @@ export function onPacket(packetId, handler) {
  * OJO: si mandás dos requests del mismo packet.id en paralelo, la segunda
  * va a pisar a la primera en pendingRequests (ver nota arriba).
  */
-export function sendPacket(packet, timeout = 5000, receiveResponse = false) {
+export function sendPacket(packet, receiveResponse = false, timeout = 5000) {
   return new Promise((resolve, reject) => {
+    if (DEBUG_MODE) {
+      console.log("DEBUG_MODE: sendPacket", packet);
+      return resolve();
+    }
+
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       return reject(new Error(`Websocket not open. Current state: ${socket?.readyState}`));
     }

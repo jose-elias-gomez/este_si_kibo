@@ -1,18 +1,6 @@
 import platform
 import subprocess
 
-try:
-  from comtypes import CLSCTX_ALL
-  from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-except ImportError:
-  pass
-
-try:
-  import screen_brightness_control as sbc
-except ImportError:
-  sbc = None
-
-
 def set_volume(level: int) -> None:
   """Sets the system master volume.
 
@@ -57,14 +45,12 @@ def get_volume() -> int | None:
 
 
 def _get_volume_windows() -> int:
-  devices = AudioUtilities.GetSpeakers()
-  interface = devices.Activate(
-    getattr(IAudioEndpointVolume, "_iid_"), CLSCTX_ALL, None
-  )
-  volume = interface.QueryInterface(IAudioEndpointVolume)
+    from pycaw.pycaw import AudioUtilities
 
-  scalar_vol = volume.GetMasterVolumeLevelScalar()
-  return int(round(scalar_vol * 100))
+    devices = AudioUtilities.GetSpeakers()
+    volume = devices.EndpointVolume
+    scalar_vol = volume.GetMasterVolumeLevelScalar()
+    return int(round(scalar_vol * 100))
 
 
 def _get_volume_macos() -> int:
@@ -108,14 +94,11 @@ def _get_volume_linux() -> int:
 
 
 def _set_volume_windows(level: int) -> None:
-  devices = AudioUtilities.GetSpeakers()
-  interface = devices.Activate(
-    getattr(IAudioEndpointVolume, "_iid_"), CLSCTX_ALL, None
-  )
-  volume = interface.QueryInterface(IAudioEndpointVolume)
+    from pycaw.pycaw import AudioUtilities
 
-  volume.SetMasterVolumeLevelScalar(level / 100.0, None)
-
+    devices = AudioUtilities.GetSpeakers()
+    volume = devices.EndpointVolume
+    volume.SetMasterVolumeLevelScalar(level / 100.0, None)
 
 def _set_volume_macos(level: int) -> None:
   subprocess.run(

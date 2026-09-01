@@ -25,7 +25,7 @@ async def broadcast(packet):
         except Exception as e:
             logger.warning(f"Error al enviar datos a cliente: {e}")
 
-@router.websocket("/ws")
+@router.websocket("")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     clients.append(websocket)

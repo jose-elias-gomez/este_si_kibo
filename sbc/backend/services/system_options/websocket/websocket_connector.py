@@ -1,6 +1,6 @@
 
 from decoder import PacketDecodeError
-from transports.websocket.packet_registry import DECODERS, PacketId
+from transports.websocket.packet_registry import register_decoder, DECODERS, PacketId
 from services.system_options.power import shutdown_computer
 from services.system_options.sound_editor import set_volume, get_volume
 from services.system_options.screen_brightness import set_brightness, get_brightness
@@ -15,7 +15,8 @@ def register():
 
     HANDLERS["shutdown"] = shutdown_computer
 
-    DECODERS[PacketId.SYSTEM_OPTION] = decode
+    print("register system options")
+    register_decoder(PacketId.SYSTEM_OPTION, decode)
 
 def decode(data):
     context = data["context"]
