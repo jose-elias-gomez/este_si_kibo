@@ -1,3 +1,5 @@
+import { onPacket, PACKET_ID } from "./api/client.js";
+
 export const InputAction = Object.freeze({
   UP: "UP",
   DOWN: "DOWN",
@@ -31,6 +33,7 @@ class InputManager {
     this.eventhandlers = new Map();
     this.contextStack = ["GLOBAL"]; // el tope de la pila es el contexto activo
     this._initKeyboard();
+    this._initController();
   }
 
   /**
@@ -114,6 +117,15 @@ class InputManager {
         // "por izquierda" sin pasar por popContext()/close(), dejando el
         // contextStack desincronizado del estado visual.
         e.preventDefault();
+        this._emit(action);
+      }
+    });
+  }
+
+  _initController() {
+    onPacket(PACKET_ID.JOYSTICK, (data) => {
+      const action = data.action;
+      if (action) {
         this._emit(action);
       }
     });

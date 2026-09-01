@@ -11,6 +11,7 @@ uvicorn
 websockets
 pyserial
 python-multipart
+dotenv
 
 # Windows-only (Correctamente aislados)
 pycaw>=20230407; sys_platform == 'win32'

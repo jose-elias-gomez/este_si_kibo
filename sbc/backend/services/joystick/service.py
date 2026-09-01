@@ -1,7 +1,8 @@
 import asyncio
 
+from transports.websocket.packet_registry import PacketId
 from services.joystick.joystick import Joystick
-from transports.websocket.server import manager
+from transports.websocket.server import broadcast
 
 
 class JoystickService:
@@ -48,9 +49,9 @@ class JoystickService:
             return
 
         asyncio.run_coroutine_threadsafe(
-            manager.broadcast_json({
-                "type": "input",
-                "action": action,
+            broadcast({
+              "id": PacketId.SYSTEM_OPTION.value,
+              "action": action
             }),
             self.loop
         )
