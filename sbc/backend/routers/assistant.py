@@ -81,7 +81,7 @@ def load_assistant():
 
     stt_engine = SpeechRecognizer(
         language="es",
-        num_threads=4,
+        model="whisper-large-v3"
     )
 
     # ----------------------------

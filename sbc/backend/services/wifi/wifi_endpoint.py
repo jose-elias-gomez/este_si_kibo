@@ -4,8 +4,6 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from services.wifi.wifi_base import BaseWifiBackend, WifiError
-from services.wifi.wifi_linux_backend import LinuxWifiBackend
-from services.wifi.wifi_windows_backend import WindowsWifiBackend
 
 router = APIRouter(prefix="/networks", tags=["WiFi"])
 
@@ -40,8 +38,10 @@ class DisconnectResponse(BaseModel):
 def get_backend() -> BaseWifiBackend:
     system = platform.system()
     if system == "Linux":
+        from services.wifi.wifi_linux_backend import LinuxWifiBackend
         return LinuxWifiBackend()
     if system == "Windows":
+        from services.wifi.wifi_windows_backend import WindowsWifiBackend
         return WindowsWifiBackend()
     raise WifiError(f"Unsupported operating system: {system}")
 
