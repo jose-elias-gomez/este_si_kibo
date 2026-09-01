@@ -7,19 +7,20 @@ logger = logging.getLogger(__name__)
 CONTEXT_HANDLERS = {}
 
 def handle_set_context_int(context: str, value: int):
-    handler = CONTEXT_HANDLERS.get(context)
+    handler = CONTEXT_HANDLERS[context]
     if handler is None:
         logger.warning("No hay handler registrado para contexto '%s'", context)
         return
     try:
         handler(value)
     except Exception:
-        logger.exception("Error ejecutando handler para '%s' con value=%s", context, value)
+      logger.exception("Error ejecutando handler para '%s' con value=%s", context, value)
+      raise
 
 def register_set_context_int(context_name: str, handler_func):
     CONTEXT_HANDLERS[context_name] = handler_func
 
-def register_handlers():
+def register_context_handlers():
     register_set_context_int("volume", set_volume)
     register_set_context_int("brightness", set_brightness)
     register_set_context_int("shutdown", shutdown_computer)
@@ -27,5 +28,3 @@ def register_handlers():
     register_set_context_int("get_volume", set_volume)
     register_set_context_int("get_brightness", set_brightness)
     register_set_context_int("shutdown", shutdown_computer)
-
-register_handlers()
