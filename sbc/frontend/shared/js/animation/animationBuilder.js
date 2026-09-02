@@ -16,6 +16,7 @@
 //   await anim.execute();
 
 import { ANIMATIONS } from "./animations.js";
+import { WHEEL_MOTOR_CONFIG, WHEEL_MOTOR_SPEED_DEG_PER_SEC, MotorDirection } from "./partsConfig.js";
 
 // --- Timing del servo SG90 ---
 // Datasheet: ~0.1s por cada 60° a 4.8V (más lento a menor voltaje).
@@ -36,6 +37,33 @@ export function servoDurationMs(degreesDelta) {
     const distance = Math.abs(degreesDelta);
     if (distance === 0) return 0;
     return distance * SG90_MS_PER_DEGREE + SETTLE_TIME_MS;
+}
+
+/**
+ * Calcula cuánto tiempo hay que correr el motor DC de una rueda para que,
+ * en la previsualización 3D, "recorra" una distancia angular dada. Esto
+ * es puramente un truco visual: el motor real (Arduino) no tiene noción
+ * de ángulo, solo gira a velocidad constante hasta que se le manda parar
+ * (LEFT/RIGHT/STOP). Se reusa la misma velocidad angular que ya usa el
+ * giro libre (runMotor en partsController) para que ambos casos, si se
+ * mezclaran, sean coherentes entre sí.
+ * @param {number} degreesDelta - grados "equivalentes" a recorrer (valor absoluto)
+ * @returns {number} duración en milisegundos
+ */
+export function wheelDurationMs(degreesDelta) {
+    const distance = Math.abs(degreesDelta);
+    if (distance === 0) return 0;
+    return (distance / WHEEL_MOTOR_SPEED_DEG_PER_SEC) * 1000;
+}
+
+/**
+ * @param {string} partName
+ * @returns {boolean} true si la pieza es un motor DC de rueda (solo
+ *   soporta LEFT/RIGHT/STOP) en vez de un servo con ángulo objetivo
+ *   (Head/LeftArm/RightArm, que sí aceptan cualquier grado dentro de su rango).
+ */
+function isWheelPart(partName) {
+    return Object.prototype.hasOwnProperty.call(WHEEL_MOTOR_CONFIG, partName);
 }
 
 // Nombres de piezas válidos, para mapear los métodos de conveniencia del
@@ -117,10 +145,20 @@ export class AnimationBuilder {
         return this.move(PART_NAMES.rightArm, angleDegrees, options);
     }
 
+    /**
+     * Corre la rueda izquierda. A diferencia de head()/leftArm()/rightArm(),
+     * esto NO mueve la rueda a un ángulo objetivo real (el motor DC no
+     * tiene esa noción) — angleDegrees es un delta "equivalente" que solo
+     * se usa para calcular cuánto tiempo y en qué sentido correr el motor
+     * (ver wheelDurationMs / _runWheelStep). Al robot real solo le llega
+     * LEFT/RIGHT/STOP.
+     * @param {number} angleDegrees - delta equivalente (no ángulo objetivo)
+     */
     leftWheel(angleDegrees, options) {
         return this.move(PART_NAMES.leftWheel, angleDegrees, options);
     }
 
+    /** Ver nota en leftWheel(). */
     rightWheel(angleDegrees, options) {
         return this.move(PART_NAMES.rightWheel, angleDegrees, options);
     }
@@ -170,25 +208,47 @@ export class AnimationBuilder {
     }
 
     /**
-     * Anima un único paso: mueve el ángulo de una pieza puntual desde su
-     * ángulo actual hasta el objetivo, durante el tiempo que tardaría un
-     * SG90 real en recorrer esa distancia. No depende ni altera la
-     * selección global, por lo que es seguro correrlo junto a otros pasos
-     * en paralelo.
+     * Anima un único paso. Bifurca según el tipo de pieza:
+     *   - Servo (Head/LeftArm/RightArm): se mueve a un ángulo objetivo
+     *     puntual, con la duración de un SG90 real. Comportamiento sin
+     *     cambios respecto de antes.
+     *   - Rueda (LeftWheel/RightWheel): no tiene ángulo objetivo real —
+     *     es un motor DC que solo entiende LEFT/RIGHT/STOP. El "ángulo"
+     *     que le llega acá (tal como está escrito en animations.js) se
+     *     usa únicamente para decidir, en la previsualización 3D, cuánto
+     *     tiempo y en qué sentido girar (ver _runWheelStep), pero nunca
+     *     se manda como ángulo real al robot.
+     * No depende ni altera la selección global, por lo que es seguro
+     * correrlo junto a otros pasos en paralelo.
      * @param {{partName: string, angle: number}} step
      * @param {number} repeat - repeticiones extra tras la primera pasada (semántica de gsap: 2 = 3 pasadas en total)
      * @param {boolean} yoyo - si es true, cada repetición alterna de sentido (ida y vuelta) en vez de saltar de golpe al inicio
      * @returns {Promise<void>}
      */
     _runStep(step, repeat = 0, yoyo = false) {
+        if (this.cameraViewController) {
+            this.cameraViewController.goToPart(step.partName);
+        }
+
+        if (isWheelPart(step.partName)) {
+            return this._runWheelStep(step, repeat, yoyo);
+        }
+        return this._runServoStep(step, repeat, yoyo);
+    }
+
+    /**
+     * Mueve un servo (Head/LeftArm/RightArm) desde su ángulo actual hasta
+     * el objetivo, durante el tiempo que tardaría un SG90 real.
+     * @param {{partName: string, angle: number}} step
+     * @param {number} repeat
+     * @param {boolean} yoyo
+     * @returns {Promise<void>}
+     */
+    _runServoStep(step, repeat, yoyo) {
         const { partName, angle: targetAngle } = step;
 
         const startAngle = this.partsController.getAngleForPart(partName);
         const duration = servoDurationMs(targetAngle - startAngle) / 1000; // gsap usa segundos
-
-        if (this.cameraViewController) {
-            this.cameraViewController.goToPart(partName);
-        }
 
         return new Promise((resolve) => {
             if (duration === 0) {
@@ -218,6 +278,53 @@ export class AnimationBuilder {
                 }
             });
         });
+    }
+
+    /**
+     * Corre el motor DC de una rueda como comando discreto (LEFT/RIGHT),
+     * durante el tiempo equivalente a la distancia angular pedida, y lo
+     * frena (STOP) al terminar. Nunca se le pide a la rueda "llegar" a un
+     * ángulo — solo arrancar en un sentido y pararse después de un rato,
+     * que es lo único que el motor real sabe hacer.
+     *
+     * El repeat/yoyo de gsap no tiene sentido para un motor DC (no hay
+     * "ida y vuelta" continua con ease, es arrancar/parar), así que acá
+     * se interpretan como: correr el mismo tramo (repeat + 1) veces, y si
+     * yoyo es true, alternar el sentido en cada repetición.
+     * @param {{partName: string, angle: number}} step
+     * @param {number} repeat
+     * @param {boolean} yoyo
+     * @returns {Promise<void>}
+     */
+    async _runWheelStep(step, repeat, yoyo) {
+        const { partName, angle: angleDelta } = step;
+        const passes = repeat + 1;
+
+        for (let i = 0; i < passes; i++) {
+            // Sentido de esta pasada: si yoyo, alterna en cada repetición
+            // (igual que gsap con yoyo:true); si no, siempre el mismo.
+            const passSign = yoyo && i % 2 === 1 ? -1 : 1;
+            const requestedSign = Math.sign(angleDelta) * passSign || 1;
+
+            // Ojo: acá solo se decide FORWARD/BACKWARD "pedido" (el signo
+            // visual). NO se combina con WHEEL_MOTOR_CONFIG.direction acá
+            // — eso ya lo hace partsController.runMotor() internamente
+            // (forwardSign * directionSign). Hacerlo también acá
+            // duplicaría el signo y giraría la rueda al revés de lo pedido.
+            const direction = requestedSign >= 0
+                ? MotorDirection.FORWARD
+                : MotorDirection.BACKWARD;
+
+            const durationMs = wheelDurationMs(angleDelta);
+
+            this.partsController.runMotor(partName, direction);
+
+            if (durationMs > 0) {
+                await this._runWait(durationMs);
+            }
+
+            this.partsController.stopMotor(partName);
+        }
     }
 
     /**

@@ -2,7 +2,9 @@ from enum import Enum, auto
 
 class PacketId(Enum):
     SYSTEM_OPTION = 1
-    JOYSTICK = 2
+    JOYSTICK = 2,
+    GET_PARTS = 3,
+    MOVE_PART = 4
 
 DECODERS = {}
 
