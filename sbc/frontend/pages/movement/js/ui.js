@@ -1,6 +1,6 @@
 import { selectPart, runMotor, stopMotor, playAnimation } from "./movement.js";
-import { MotorDirection, NODE_LABELS, PARTS_CONFIG } from "./partsConfig.js";
 import { setPartAngle, getPivotAngle } from "./movement.js";
+import { MotorDirection, NODE_LABELS, PARTS_CONFIG } from "../../../shared/js/movement/partsConfig.js";;
 import { input, InputAction } from "../../../shared/js/inputController.js";
 
 let partButtonIndex = 2;
@@ -59,10 +59,10 @@ function updateFocusedButton(array, prevIndex, newIndex) {
     if (prevIndex !== undefined) {
         array[prevIndex].classList.remove('hovered');
     }
-    
+
     const currentBtn = array[newIndex];
     currentBtn.classList.add('hovered');
-    
+
     currentBtn.scrollIntoView({
         behavior: "smooth",
         block: "nearest",
@@ -85,7 +85,7 @@ input.on(InputAction.DOWN, () => {
             updateFocusedButton(animationButtons, animationButtonIndex, ++animationButtonIndex);
         }
     }, animationPanel.context);
-    
+
     input.on(InputAction.CONFIRM, () => {
         const btn = animationButtons[animationButtonIndex];
         const type = btn.getAttribute("data-animation");

@@ -5,6 +5,22 @@ html, body {
   z-index: -2;
 }
 
+/*
+ * Evita el flash de contenido sin estilizar (FOUC) de los custom elements.
+ * Hasta que el módulo JS ejecuta customElements.define(...), <side-panel>
+ * (y cualquier otro custom element) se comporta como un <span> genérico:
+ * su contenido liviano (los botones grandes) se renderiza en el flujo
+ * normal del documento, ocupando espacio y empujando el resto del layout.
+ * Con :not(:defined) lo ocultamos por completo hasta que el componente
+ * se registre; a partir de ahí, el propio shadow DOM (display: contents
+ * en el :host + position: fixed en el panel interno) se encarga de que
+ * nunca vuelva a ocupar espacio ni a afectar el layout de abajo.
+ */
+side-panel:not(:defined),
+range-slider:not(:defined) {
+  display: none;
+}
+
 #canvas-container {
   width: 100%;
   height: 100vh;
@@ -27,13 +43,13 @@ html, body {
   box-sizing: border-box;
 
   border-radius: 50%;
-  border: 4px solid transparent; 
-  
+  border: 4px solid transparent;
+
   display: inline-flex;
   justify-content: center;
   align-items: center;
   padding: 24px;
-  
+
   background: transparent;
   cursor: pointer;
   transition: background-color var(--duration-fast) ease, border-color var(--duration-fast) ease;
@@ -61,7 +77,7 @@ html, body {
   justify-content: flex-start;
   align-items: center;
   gap: 16px;
-  overflow-x: auto; 
+  overflow-x: auto;
   scroll-behavior: smooth;
   padding-left: 16px;
   padding-right: 16px;
@@ -97,7 +113,7 @@ html, body {
   padding-left: 8px;
   padding-right: 8px;
   position: absolute;
-  bottom: 8px; 
+  bottom: 8px;
 }
 
 /* Contenedor del widget del motor */
@@ -109,7 +125,7 @@ html, body {
   align-items: center;
   gap: 20px;
   /* Transición suave al cambiar de posición */
-  transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+  transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1),
               right 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 

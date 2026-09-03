@@ -1,4 +1,4 @@
-import { PARTS_CONFIG, DEFAULT_PART_CONFIG, WHEEL_MOTOR_CONFIG, WHEEL_MOTOR_SPEED_DEG_PER_SEC, MotorDirection } from "./partsConfig.js";
+import { PARTS_CONFIG, DEFAULT_PART_CONFIG, WHEEL_MOTOR_CONFIG, WHEEL_MOTOR_SPEED_DEG_PER_SEC, MotorDirection } from "../../../shared/js/movement/partsConfig.js";
 import { findPivotInNode } from "./modelLoader.js";
 
 export class PartsController {
@@ -103,7 +103,7 @@ export class PartsController {
 
         this.requestRender();
     }
-    
+
     getPivotAngle(partName) {
         return this.pivotAngles[partName];
     }
