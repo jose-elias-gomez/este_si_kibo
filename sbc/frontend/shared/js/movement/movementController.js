@@ -1,4 +1,4 @@
-// websocketAnimator.js
+// MovementController.js
 // Implementación de "controller" de piezas que, en vez de mover el
 // modelo 3D localmente (como PartsController), habla directamente el
 // protocolo real del robot por WebSocket (ver movement_connector.py).
@@ -68,7 +68,7 @@ function toWheelCommand(partName, direction) {
     return signedDirection >= 0 ? WheelCommand.LEFT : WheelCommand.RIGHT;
 }
 
-class WebsocketAnimator {
+class MovementController {
     constructor() {
         /** @type {Map<string, number>} último ángulo conocido, por partName (solo piezas tipo servo) */
         this.partAngles = new Map();
@@ -111,6 +111,7 @@ class WebsocketAnimator {
     /**
      * Mueve un servo a un ángulo objetivo real, vía el packet MOVE_PART.
      * No usar con ruedas (ver runMotor/stopMotor para eso) — movement_connector
+     *
      * rechaza un ángulo en los campos left_wheel/right_wheel.
      * @param {string} partName - 'Head' | 'LeftArm' | 'RightArm'
      * @param {number} angleDegrees
@@ -189,5 +190,4 @@ class WebsocketAnimator {
     }
 }
 
-const instance = new WebsocketAnimator();
-export default instance;
+export const movementController = new MovementController();

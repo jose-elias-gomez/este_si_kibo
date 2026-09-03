@@ -1,9 +1,8 @@
 import { SceneEngine } from "./sceneEngine.js";
 import { CameraViewController, CameraView } from "./cameraViews.js";
 import { loadGltfModel } from "./modelLoader.js";
-import { PartsController } from "./partsController.js";
+import { WrappedMovementPartController } from "./partsController.js";
 import { AnimationBuilder, buildAnimation } from "../../../shared/js/movement/animationBuilder.js";
-
 const MODEL_URL = 'assets/kibo_model.glb';
 const modelCenter = new THREE.Vector3(0, 0.8, 0);
 let cameraDistance = 3.5;
@@ -40,7 +39,7 @@ async function init3D() {
     sceneEngine.scene.add(modelRoot);
     sceneEngine.requestRender(); // el modelo recién agregado tiene que pintarse
 
-    partsController = new PartsController(modelRoot, () => sceneEngine.requestRender());
+    partsController = new WrappedMovementPartController(modelRoot, () => sceneEngine.requestRender());
 
     fitCameraToModel(modelRoot);
 
@@ -160,5 +159,6 @@ export function playAnimation(animationName, followWithCamera = false) {
 export { CameraView };
 
 window.onload = () => {
+    console.log("?");
     init3D();
 };

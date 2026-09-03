@@ -1,7 +1,8 @@
 import { PARTS_CONFIG, DEFAULT_PART_CONFIG, WHEEL_MOTOR_CONFIG, WHEEL_MOTOR_SPEED_DEG_PER_SEC, MotorDirection } from "../../../shared/js/movement/partsConfig.js";
 import { findPivotInNode } from "./modelLoader.js";
+import { movementController } from "../../../shared/js/movement/movementController.js";
 
-export class PartsController {
+export class WrappedMovementPartController  {
     /**
      * @param {THREE.Object3D} modelRoot - raíz del modelo ya cargado en escena
      * @param {() => void} [requestRender] - callback para pedir un nuevo frame (p.ej. sceneEngine.requestRender)
@@ -13,8 +14,12 @@ export class PartsController {
         /** @type {Record<string, THREE.Euler>} rotación inicial de cada pivote, tal como viene del GLTF */
         this.initialRotations = {};
 
-        /** @type {Record<string, number>} ángulo actual (en grados) aplicado a cada pieza */
-        this.pivotAngles = {};
+        // El ángulo "actual" de cada pieza ya no se guarda acá: es
+        // movementController (shared/js/movement/movementController.js)
+        // quien lleva ese estado, tanto en debug (valores locales) como
+        // contra el robot real (sincronizado vía GET_PARTS/MOVE_PART).
+        // Esta clase solo se encarga de reflejar ese ángulo en el pivote
+        // 3D — no de guardarlo por su cuenta.
 
         // Caché de pivotes ya resueltos: findPivotInNode() hace dos
         // traverse() completos del árbol del modelo, así que resolverlo
@@ -57,7 +62,6 @@ export class PartsController {
             if (pivotMesh) {
                 this.initialRotations[partName] = pivotMesh.rotation.clone();
             }
-            this.pivotAngles[partName] = 0;
         });
     }
 
@@ -93,7 +97,9 @@ export class PartsController {
         pivotMesh.rotation.copy(baseRotation);
         pivotMesh.rotation[config.axis] = baseRotation[config.axis] + radiansOffset;
 
-        this.pivotAngles[partName] = angleDegrees;
+        // movementController es ahora la única fuente de verdad del
+        // ángulo de cada pieza (ver nota en el constructor).
+        movementController.setAngleForPart(partName, angleDegrees);
 
         // Si la pieza afectada es la actualmente seleccionada, mantener
         // activePivotMesh sincronizado para que setAngle() siga funcionando bien.
@@ -105,7 +111,7 @@ export class PartsController {
     }
 
     getPivotAngle(partName) {
-        return this.pivotAngles[partName];
+        return movementController.getAngleForPart(partName);
     }
 
     /**
@@ -114,7 +120,7 @@ export class PartsController {
      * @returns {number}
      */
     getAngleForPart(partName) {
-        return this.pivotAngles[partName] || 0;
+        return movementController.getAngleForPart(partName);
     }
 
     /**
@@ -128,7 +134,7 @@ export class PartsController {
 
         return {
             config: this.getConfig(partName),
-            currentAngle: this.pivotAngles[partName] || 0
+            currentAngle: movementController.getAngleForPart(partName)
         };
     }
 
@@ -150,7 +156,7 @@ export class PartsController {
         this.activePivotMesh.rotation.copy(baseRotation);
         this.activePivotMesh.rotation[config.axis] = baseRotation[config.axis] + radiansOffset;
 
-        this.pivotAngles[this.selectedPartName] = angleDegrees;
+        movementController.setAngleForPart(this.selectedPartName, angleDegrees);
 
         this.requestRender();
     }
@@ -184,9 +190,12 @@ export class PartsController {
         // pidió ahora" (directionSign, forward/backward).
         const signedDirection = forwardSign * directionSign;
 
-        // Arranca desde el ángulo actual de la rueda (si venía de una
-        // posición manual, por ejemplo), no desde 0.
-        const proxy = { angle: this.pivotAngles[partName] || 0 };
+        // Arranca desde el ángulo actual reportado por movementController
+        // (si venía de una posición manual, por ejemplo). Para ruedas
+        // movementController.getAngleForPart() siempre devuelve 0 (no
+        // tiene sentido un "ángulo real" en un motor DC — ver ese
+        // archivo), así que en la práctica esto siempre arranca en 0.
+        const proxy = { angle: movementController.getAngleForPart(partName) };
 
         const tween = gsap.to(proxy, {
             angle: `+=${360 * signedDirection}`,
@@ -197,12 +206,10 @@ export class PartsController {
                 pivotMesh.rotation.copy(baseRotation);
                 pivotMesh.rotation[config.axis] = baseRotation[config.axis] + THREE.MathUtils.degToRad(proxy.angle);
 
-                // Se guarda acotado a una vuelta para que el número no
-                // crezca sin límite en sesiones largas (no afecta al
-                // giro: solo es el valor que quedaría reflejado si algo
-                // lee getAngleForPart mientras el motor está corriendo).
-                this.pivotAngles[partName] = proxy.angle % 360;
-
+                // No se persiste proxy.angle en movementController: para
+                // ruedas ese ángulo no tiene un correlato real (es un
+                // motor DC, no un servo), así que el giro visual queda
+                // como estado puramente local de este tween.
                 this.requestRender();
             }
         });
@@ -240,7 +247,11 @@ export class PartsController {
     resetAll() {
         Object.keys(PARTS_CONFIG).forEach((partName) => {
             this.stopMotor(partName); // no tiene sentido resetear una rueda que sigue girando
-            this.pivotAngles[partName] = 0;
+
+            // Para ruedas, movementController.setAngleForPart() sólo
+            // loguea un warning y no hace nada (ver ese archivo) — no
+            // hace falta filtrarlas acá aparte.
+            movementController.setAngleForPart(partName, 0);
 
             const pivotMesh = this._getPivot(partName);
             if (pivotMesh && this.initialRotations[partName]) {
