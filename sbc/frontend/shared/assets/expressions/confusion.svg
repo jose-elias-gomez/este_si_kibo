@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 756 756" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+<svg width="100%" height="100%" viewBox="0 0 756 756" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
     <path d="M377.348,655.159C377.348,655.159 21.063,710.916 44.369,424.368C59.842,234.125 146.78,146.699 207.91,122.662C298.529,87.03 377.801,97.63 377.801,97.63M378.254,655.159C378.254,655.159 734.863,710.916 711.536,424.368C696.048,234.125 609.032,146.699 547.846,122.662C457.144,87.03 377.801,97.63 377.801,97.63" style="fill:rgb(17,17,17);"/>
     <path d="M222.588,496.395L551.513,486.954L404.83,659.536L352.488,659.536" style="fill:rgb(235,235,235);"/>
     <path d="M377.801,659.535C851.011,672.088 699.192,129.882 476.668,209.556C464.585,213.882 400.839,233.289 377.801,234.841M377.801,659.535C-94.979,672.088 56.702,129.882 279.024,209.556C291.095,213.882 354.772,233.285 377.794,234.841L377.801,234.841" style="fill:rgb(235,235,235);"/>
@@ -14,4 +14,7 @@
         <path d="M395.144,278.302L300.783,631.431L336.745,636.554L440.812,278.302" style="fill:white;fill-opacity:0.05;"/>
     </g>
     <path d="M234.723,290.631L143.952,378" style="fill:none;"/>
+    <g transform="matrix(0.849014,0,0,0.743091,64.888309,148.357224)">
+        <path d="M269.847,539.036C283.391,529.3 296.927,508.961 310.479,509.83C324.031,510.699 336.439,543.556 351.158,544.251C365.877,544.946 384.246,513.77 398.791,514.002C413.336,514.234 428.113,543.961 438.427,545.642C448.62,547.302 460.324,529.641 467.742,522.455" style="fill:rgb(255,213,0);fill-opacity:0;stroke:rgb(255,213,0);stroke-width:25.07px;"/>
+    </g>
 </svg>

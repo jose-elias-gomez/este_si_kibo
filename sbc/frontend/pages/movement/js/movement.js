@@ -35,7 +35,11 @@ async function init3D() {
 
     sceneEngine.start();
 
-    const modelRoot = await loadGltfModel(MODEL_URL);
+    const modelRoot = await loadGltfModel(MODEL_URL).catch(err => {
+        console.error("FALLÓ LA CARGA DEL MODELO:", err);
+        throw err;
+    });
+    console.log("SI TU MARIDO NO TE QUIERE BAB Y");
     sceneEngine.scene.add(modelRoot);
     sceneEngine.requestRender(); // el modelo recién agregado tiene que pintarse
 
