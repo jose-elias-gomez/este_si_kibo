@@ -3,7 +3,6 @@ import { API_BASE_URL, DEBUG_MODE } from "./common.js";
 export const PACKET_ID = {
   SYSTEM_OPTION: 1,
   JOYSTICK: 2,
-
   GET_PARTS: 3,
   MOVE_PART: 4
 };
@@ -59,6 +58,36 @@ function connect() {
 
 if (!DEBUG_MODE) {
   connect();
+}
+
+export function onConnect(timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    // Si ya está abierto, resolvemos al instante
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      return resolve();
+    }
+
+    if (DEBUG_MODE) {
+      return resolve();
+    }
+
+    const timer = setTimeout(() => {
+      reject(new Error("Timeout esperando la conexión del WebSocket"));
+    }, timeout);
+
+    // Revisamos periódicamente la conexión
+    const checkConnection = setInterval(() => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        clearInterval(checkConnection);
+        clearTimeout(timer);
+        resolve();
+      } else if (socket && socket.readyState === WebSocket.CLOSED) {
+        clearInterval(checkConnection);
+        clearTimeout(timer);
+        reject(new Error("El WebSocket se cerró antes de conectarse"));
+      }
+    }, 50);
+  });
 }
 
 /**

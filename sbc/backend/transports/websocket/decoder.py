@@ -19,7 +19,7 @@ def decode(packet):
         raise PacketDecodeError(
             f"Packet ${packet_id} fuera de rango, debe estar entre {MIN_PACKET_ID} y {MAX_PACKET_ID}")
 
-    decoder = DECODERS[packet_id]
+    decoder = DECODERS.get(packet_id)
     if not decoder:
         raise PacketDecodeError(f"Packet ${packet_id} no tiene un decodificador registrado")
 

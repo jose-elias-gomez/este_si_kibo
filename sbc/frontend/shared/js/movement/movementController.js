@@ -1,29 +1,7 @@
-// MovementController.js
-// Implementación de "controller" de piezas que, en vez de mover el
-// modelo 3D localmente (como PartsController), habla directamente el
-// protocolo real del robot por WebSocket (ver movement_connector.py).
-//
-// Expone la misma interfaz mínima que usa AnimationBuilder
-// (getAngleForPart / setAngleForPart / runMotor / stopMotor), para poder
-// pasarse como reemplazo de PartsController sin tocar el builder.
-//
-// OJO con la diferencia de protocolo entre piezas:
-//   - Head/LeftArm/RightArm son servos: el packet MOVE_PART espera un
-//     ángulo (int) en los campos head/left_arm/right_arm.
-//   - LeftWheel/RightWheel son motores DC: el packet MOVE_PART NO acepta
-//     ángulo para estos campos — solo el comando LEFT/RIGHT/STOP en los
-//     campos left_wheel/right_wheel (ver _as_motor_command en
-//     movement_connector.py). Mandarles un ángulo hace que
-//     PacketDecodeError reviente del lado del server.
-//
-// Todo esto solo corre si DEBUG_MODE está desactivado: en debug no hay
-// servidor real del otro lado, así que no tiene sentido abrir el socket
-// ni mandar comandos (ver sendPacket en client.js, que ya no-opea en
-// DEBUG_MODE, pero acá directamente evitamos construir mal los packets).
 
-import { PACKET_ID, sendPacket } from "../api/client.js";
+import { PACKET_ID, sendPacket, onConnect } from "../api/client.js";
 import { DEBUG_MODE } from "../api/common.js";
-import { WHEEL_MOTOR_CONFIG, MotorDirection } from "./partsConfig.js";
+import { WHEEL_MOTOR_CONFIG, MotorDirection, PARTS_CONFIG } from "./partsConfig.js";
 
 // partName (tal como lo usa el modelo 3D / PARTS_CONFIG) -> nombre de
 // campo del packet MOVE_PART / respuesta de GET_PARTS.
@@ -76,14 +54,14 @@ class MovementController {
         /** @type {Set<string>} ruedas actualmente corriendo (para isMotorRunning) */
         this._runningMotors = new Set();
 
-        if (!DEBUG_MODE) {
-            this._fetchInitialAngles();
-        }
+        onConnect()
+            .then(() => this._fetchInitialAngles())
+            .catch(err => console.error("No se pudo obtener el estado inicial de las partes", err));
     }
 
     async _fetchInitialAngles() {
         try {
-            const parts = await sendPacket({ id: PACKET_ID.GET_PARTS }, true);
+            const parts = await sendPacket({ "id": PACKET_ID.GET_PARTS }, true);
             // decode_get_parts() devuelve un dict plano, p.ej.
             // { left_arm: 0, right_arm: 0, head: 0 } — no una lista.
             Object.entries(parts || {}).forEach(([field, value]) => {
@@ -111,6 +89,7 @@ class MovementController {
     /**
      * Mueve un servo a un ángulo objetivo real, vía el packet MOVE_PART.
      * No usar con ruedas (ver runMotor/stopMotor para eso) — movement_connector
+     * Como el HAL del robot funciona con algulo 0->180 tenemos que mapear esto
      *
      * rechaza un ángulo en los campos left_wheel/right_wheel.
      * @param {string} partName - 'Head' | 'LeftArm' | 'RightArm'
@@ -132,9 +111,31 @@ class MovementController {
 
         if (DEBUG_MODE) return;
 
+        const config = PARTS_CONFIG[partName];
+        if (!config) {
+            console.warn(`Error en la configuracion (no existe la parte): ${partName}`);
+            return;
+        }
+
+        // Mapeo dinámico: transforma [min, max] de la config al rango del HAL [0, 180]
+        let halAngle = angleDegrees;
+        if (config && typeof config.min === "number" && typeof config.max === "number") {
+            const min = config.min;
+            const max = config.max;
+            
+            // Aseguramos no dividir por cero en caso de mala configuración
+            const range = max - min;
+            if (range !== 0) {
+                // Mapea proporcionalmente el ángulo ingresado a 0 -> 180
+                halAngle = ((angleDegrees - min) / range) * 180;
+            }
+        }
+
+        // Clamp de seguridad para garantizar que el HAL nunca reciba valores fuera de 0 -> 180
+        halAngle = Math.max(0, Math.min(180, halAngle));
         sendPacket({
             id: PACKET_ID.MOVE_PART,
-            [field]: Math.round(angleDegrees)
+            [field]: Math.round(halAngle)
         });
     }
 

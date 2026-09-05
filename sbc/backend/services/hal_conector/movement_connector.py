@@ -1,21 +1,3 @@
-"""
-Conector de WebSocket para el paquete de movimiento (MOVE_PART) y para la
-consulta de posición de las partes (GET_PARTS).
-
-Sigue el mismo patrón que transports/websocket/system_options
-(websocket_connector.py): se registra un decoder contra un PacketId, y ese
-decoder arma el resultado a partir del payload recibido por WebSocket.
-
-A diferencia de system_options, este conector necesita una instancia de
-SerialRobotClient ya conectada para poder reenviar el comando al Arduino,
-así que `register` la recibe como parámetro en vez de importarla directamente.
-
-Al registrarse, se envía un paquete inicial que lleva brazos y cabeza a 0° y
-detiene ambas ruedas. Ese estado (sin contar las ruedas) queda cacheado en
-`_cached_angles`, que es lo que responde GET_PARTS sin tener que
-preguntarle al Arduino cada vez.
-"""
-
 from transports.serial.packet import MovementPacket
 from transports.serial.serial_client import SerialRobotClient
 from transports.serial.enums import MotorCommand
@@ -27,10 +9,8 @@ from transports.serial.errors import (
 )
 from transports.websocket.packet_registry import register_decoder, PacketId
 from decoder import PacketDecodeError
+from transports.serial.client import robot_client
 
-_serial_client: SerialRobotClient | None = None
-
-# Caché de ángulos de las partes que NO son ruedas (0..180)
 _cached_angles = {
     "left_arm": 0,
     "right_arm": 0,
@@ -51,10 +31,7 @@ _WHEEL_FIELDS = (
 )
 
 
-def register(serial_client: SerialRobotClient) -> None:
-    global _serial_client
-    _serial_client = serial_client
-
+def register() -> None:
     print("register movement")
     register_decoder(PacketId.MOVE_PART, decode)
     register_decoder(PacketId.GET_PARTS, decode_get_parts)
@@ -63,7 +40,7 @@ def register(serial_client: SerialRobotClient) -> None:
 
 
 def decode(data):
-    if _serial_client is None:
+    if robot_client is None:
         raise PacketDecodeError(
             "El conector de movimiento no fue inicializado con un SerialRobotClient"
         )
@@ -76,7 +53,7 @@ def decode(data):
     return {"status": "OK"}
 
 
-def decode_get_parts():
+def decode_get_parts(data=None):
     return dict(_cached_angles)
 
 
@@ -91,13 +68,20 @@ def _reset_parts() -> None:
         .right_wheel(MotorCommand.STOP)
     )
 
-    _send_packet(packet)
+    try:
+        _send_packet(packet)
+    except Exception as exc:
+        print(exc)
+
     _cached_angles.update({"left_arm": 0, "right_arm": 0, "head": 0})
 
 
 def _send_packet(packet: MovementPacket):
+    if robot_client is None:
+        raise PacketDecodeError("El puerto serial no está conectado")
+
     try:
-        status = _serial_client.send(packet.build())
+        status = robot_client.send(packet.build())
     except ProtocolDecodeError as exc:
         raise PacketDecodeError(
             f"El Arduino rechazó el paquete de movimiento: {exc}"

@@ -8,6 +8,7 @@ from fastapi import (
 
 from decoder import decode
 from services.system_options.websocket.websocket_connector import register as register_system_options_packets
+from services.hal_conector.movement_connector import register as register_hal_connector_packets
 
 logger = logging.getLogger(__name__)
 router = APIRouter(
@@ -16,6 +17,7 @@ router = APIRouter(
 )
 
 register_system_options_packets()
+register_hal_connector_packets()
 clients = []
 
 async def broadcast(packet):
