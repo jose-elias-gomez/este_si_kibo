@@ -62,12 +62,27 @@ class MovementController {
     async _fetchInitialAngles() {
         try {
             const parts = await sendPacket({ "id": PACKET_ID.GET_PARTS }, true);
-            // decode_get_parts() devuelve un dict plano, p.ej.
-            // { left_arm: 0, right_arm: 0, head: 0 } — no una lista.
             Object.entries(parts || {}).forEach(([field, value]) => {
                 const partName = Object.keys(PART_FIELD).find((name) => PART_FIELD[name] === field);
                 if (partName) {
-                    this.partAngles.set(partName, value);
+                    let degrees = value; // Valor que viene del HAL [0, 180]
+                    const config = PARTS_CONFIG[partName];
+
+                    // Mapeo dinámico inverso: transforma [0, 180] del HAL al rango [min, max]
+                    if (config && typeof config.min === "number" && typeof config.max === "number") {
+                        const min = config.min;
+                        const max = config.max;
+                        
+                        // Mapea proporcionalmente el valor del HAL [0, 180] al rango [min, max]
+                        degrees = min + (value / 180) * (max - min);
+
+                        // Clamp de seguridad para asegurar que no quede fuera de los límites de la config
+                        const lower = Math.min(min, max);
+                        const upper = Math.max(min, max);
+                        degrees = Math.max(lower, Math.min(upper, degrees));
+                    }
+
+                    this.partAngles.set(partName, Math.round(degrees));
                 }
             });
         } catch (err) {

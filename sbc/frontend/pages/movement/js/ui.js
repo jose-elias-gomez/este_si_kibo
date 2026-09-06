@@ -150,7 +150,6 @@ input.on(InputAction.UP, () => {
             return;
         }
 
-        // 1. Mostrar con transición usando la clase
         input.pushContext("manual-slider");
         manualSlider.classList.add("visible");
         manualSlider.setTitle(NODE_LABELS[partName]);
@@ -171,7 +170,6 @@ input.on(InputAction.UP, () => {
         }, "manual-slider");
 
         input.on(InputAction.BACK, () => {
-            // 2. Ocultar con transición removiendo la clase
             manualSlider.classList.remove("visible");
             input.popContext();
         }, "manual-slider");
