@@ -1,9 +1,14 @@
+import json
 from pathlib import Path
 
 import cv2
 import numpy as np
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    WebSocket,
+    WebSocketDisconnect,
+)
 
 from services.translator.translator import SignTranslator
 
@@ -14,15 +19,8 @@ router = APIRouter(
 )
 
 
-# ============================================================
-# RUTAS
-# ============================================================
-
 BASE_DIR = (
-    Path(__file__)
-    .resolve()
-    .parent
-    .parent
+    Path(__file__).resolve().parent.parent
 )
 
 MODEL_PATH = (
@@ -33,15 +31,10 @@ MODEL_PATH = (
 )
 
 
-# ============================================================
-# MODELO
-# ============================================================
-
 translator = None
 
 
 def load_translator():
-
     global translator
 
     translator = SignTranslator(
@@ -49,15 +42,13 @@ def load_translator():
     )
 
 
-# ============================================================
-# WEBSOCKET
-# ============================================================
+load_translator()
+
 
 @router.websocket("/ws")
 async def translator_ws(
     websocket: WebSocket,
 ):
-
     await websocket.accept()
 
     print(
@@ -65,7 +56,6 @@ async def translator_ws(
     )
 
     if translator is None:
-
         await websocket.send_json({
             "type": "error",
             "message": (
@@ -75,27 +65,62 @@ async def translator_ws(
         })
 
         await websocket.close()
-
         return
 
     translator.reset()
 
     try:
-
         while True:
 
-            # ----------------------------------------------
-            # RECIBIR FRAME
-            # ----------------------------------------------
+            data = await websocket.receive()
 
-            data = await websocket.receive_bytes()
+            # -----------------------------
+            # Commands from frontend
+            # -----------------------------
 
-            # ----------------------------------------------
-            # JPEG → NUMPY
-            # ----------------------------------------------
+            if "text" in data:
+
+                try:
+                    command = json.loads(
+                        data["text"]
+                    )
+
+                    command_type = command.get(
+                        "command"
+                    )
+
+                    if command_type == "SPACE":
+                        translator.add_space()
+
+                    elif command_type == "DELETE":
+                        translator.delete_last()
+
+                    elif command_type == "CLEAR":
+                        translator.clear_word()
+
+                    await websocket.send_json({
+                        "type": "word",
+                        "word": translator.word,
+                    })
+
+                except Exception as error:
+                    print(
+                        "[TRANSLATOR] "
+                        "Command error:",
+                        repr(error),
+                    )
+
+                continue
+
+            # -----------------------------
+            # Image frame
+            # -----------------------------
+
+            if "bytes" not in data:
+                continue
 
             image_array = np.frombuffer(
-                data,
+                data["bytes"],
                 dtype=np.uint8,
             )
 
@@ -105,7 +130,6 @@ async def translator_ws(
             )
 
             if frame is None:
-
                 await websocket.send_json({
                     "type": "error",
                     "message": (
@@ -116,38 +140,32 @@ async def translator_ws(
 
                 continue
 
-            # ----------------------------------------------
-            # PROCESAR
-            # ----------------------------------------------
-
-            result = translator.process_frame(
-                frame
-            )
-
-            # ----------------------------------------------
-            # RESPUESTA
-            # ----------------------------------------------
+            result = translator.process_frame(frame)
 
             await websocket.send_json({
                 "type": "prediction",
                 **result,
+                "word": translator.word,
             })
 
-    except WebSocketDisconnect:
+            if result.get("confirmed"):
+                await websocket.send_json({
+                    "type": "word",
+                    "word": translator.word,
+                })
 
+    except WebSocketDisconnect:
         print(
             "[TRANSLATOR] WebSocket desconectado."
         )
 
     except Exception as error:
-
         print(
             "[TRANSLATOR] Error:",
             repr(error),
         )
 
         try:
-
             await websocket.send_json({
                 "type": "error",
                 "message": str(error),

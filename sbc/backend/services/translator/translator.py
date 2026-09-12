@@ -1,4 +1,5 @@
 import pickle
+
 from collections import deque
 
 import cv2
@@ -15,7 +16,6 @@ STABLE_FRAMES = 3
 class SignTranslator:
 
     def __init__(self, model_path: str):
-
         print()
         print("=" * 60)
         print("CARGANDO TRADUCTOR DE SEÑAS")
@@ -47,6 +47,13 @@ class SignTranslator:
 
         self.last_stable_prediction = None
 
+        # Word being built
+        self.word = ""
+
+        # Prevents the same held sign from being added
+        # multiple times
+        self.letter_locked = False
+
         print("[TRANSLATOR] Traductor listo.")
         print("=" * 60)
         print()
@@ -59,13 +66,11 @@ class SignTranslator:
         self,
         hand_landmarks,
     ):
-
         landmarks = []
 
         wrist = hand_landmarks.landmark[0]
 
         for landmark in hand_landmarks.landmark:
-
             x = landmark.x - wrist.x
             y = landmark.y - wrist.y
             z = landmark.z - wrist.z
@@ -82,13 +87,57 @@ class SignTranslator:
         )
 
         if max_value > 0:
-
             landmarks = [
                 value / max_value
                 for value in landmarks
             ]
 
         return landmarks
+
+    # ========================================================
+    # WORD
+    # ========================================================
+
+    def add_letter(self, letter):
+        if not letter:
+            return
+
+        self.word += str(letter)
+
+        print(
+            f"[TRANSLATOR] Letra confirmada: "
+            f"{letter} -> {self.word}"
+        )
+
+    def delete_last(self):
+        if self.word:
+            self.word = self.word[:-1]
+
+        print(
+            f"[TRANSLATOR] DELETE -> {self.word}"
+        )
+
+    def add_space(self):
+        if self.word and not self.word.endswith(" "):
+            self.word += " "
+
+        print(
+            f"[TRANSLATOR] SPACE -> '{self.word}'"
+        )
+
+    def clear_word(self):
+        self.word = ""
+
+        print("[TRANSLATOR] CLEAR")
+
+    # ========================================================
+    # CLEAR PREDICTION
+    # ========================================================
+
+    def clear_prediction_history(self):
+        self.probability_history.clear()
+        self.prediction_history.clear()
+        self.last_stable_prediction = None
 
     # ========================================================
     # PROCESAR FRAME
@@ -98,7 +147,6 @@ class SignTranslator:
         self,
         frame,
     ):
-
         rgb_frame = cv2.cvtColor(
             frame,
             cv2.COLOR_BGR2RGB,
@@ -113,9 +161,10 @@ class SignTranslator:
         # ----------------------------------------------------
 
         if not results.multi_hand_landmarks:
+            self.clear_prediction_history()
 
-            self.probability_history.clear()
-            self.prediction_history.clear()
+            # Unlock the next letter
+            self.letter_locked = False
 
             return {
                 "detected": False,
@@ -123,6 +172,11 @@ class SignTranslator:
                 "confidence": 0.0,
                 "margin": 0.0,
                 "stable": False,
+                "stable_prediction": None,
+                "confirmed": False,
+                "confirmed_letter": None,
+                "locked": False,
+                "word": self.word,
             }
 
         # ----------------------------------------------------
@@ -237,13 +291,10 @@ class SignTranslator:
         )
 
         if prediction_is_good:
-
             self.prediction_history.append(
                 average_prediction
             )
-
         else:
-
             self.prediction_history.clear()
 
         # ----------------------------------------------------
@@ -257,7 +308,6 @@ class SignTranslator:
             len(self.prediction_history)
             >= STABLE_FRAMES
         ):
-
             values = list(
                 self.prediction_history
             )
@@ -272,7 +322,6 @@ class SignTranslator:
             )
 
             if count >= STABLE_FRAMES:
-
                 stable = True
 
                 stable_prediction = (
@@ -282,6 +331,32 @@ class SignTranslator:
                 self.last_stable_prediction = (
                     most_common
                 )
+
+        # ----------------------------------------------------
+        # CONFIRMAR LETRA
+        # ----------------------------------------------------
+
+        confirmed = False
+        confirmed_letter = None
+
+        if (
+            stable
+            and stable_prediction is not None
+            and not self.letter_locked
+        ):
+            confirmed = True
+
+            confirmed_letter = str(
+                stable_prediction
+            )
+
+            self.add_letter(
+                confirmed_letter
+            )
+
+            # Lock the letter while the
+            # hand is still visible
+            self.letter_locked = True
 
         # ----------------------------------------------------
         # RESULTADO
@@ -315,6 +390,16 @@ class SignTranslator:
             "second_confidence": (
                 average_second_confidence
             ),
+
+            "confirmed": confirmed,
+
+            "confirmed_letter": (
+                confirmed_letter
+            ),
+
+            "locked": self.letter_locked,
+
+            "word": self.word,
         }
 
     # ========================================================
@@ -322,16 +407,16 @@ class SignTranslator:
     # ========================================================
 
     def reset(self):
+        self.clear_prediction_history()
 
-        self.probability_history.clear()
-        self.prediction_history.clear()
+        self.word = ""
 
-        self.last_stable_prediction = None
+        self.letter_locked = False
 
     # ========================================================
     # CLOSE
     # ========================================================
 
     def close(self):
-
         self.hands.close()
+

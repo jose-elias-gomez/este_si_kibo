@@ -14,6 +14,12 @@ import {
 
   const CONTEXT = "TRANSLATOR";
 
+  const WS_URL =
+    "ws://localhost:25566/api/translator/ws";
+
+  const FRAME_INTERVAL = 80;
+  const JPEG_QUALITY = 0.65;
+
 
   /* =========================================================
      ELEMENTOS
@@ -40,14 +46,24 @@ import {
   const currentGlyph =
     document.getElementById("currentGlyph");
 
+  const translatorWord =
+    document.getElementById("translatorWord");
+
 
   /* =========================================================
      ESTADO
      ========================================================= */
 
   let mediaStream = null;
-
   let panelOpen = false;
+
+  let socket = null;
+  let socketReady = false;
+
+  let canvas = null;
+  let sendTimer = null;
+
+  let currentWord = "";
 
 
   /* =========================================================
@@ -62,14 +78,9 @@ import {
         "[TRANSLATOR] Solicitando cámara..."
       );
 
-
       signalLabel.textContent =
         "Solicitando acceso…";
 
-
-      /*
-       * Verificación de compatibilidad.
-       */
 
       if (
         !navigator.mediaDevices ||
@@ -83,10 +94,6 @@ import {
       }
 
 
-      /*
-       * Solicitar cámara.
-       */
-
       mediaStream =
         await navigator.mediaDevices.getUserMedia({
 
@@ -99,40 +106,21 @@ import {
         });
 
 
-      /*
-       * Conectar stream al video.
-       */
-
       cameraFeed.srcObject =
         mediaStream;
 
-
       cameraFeed.muted = true;
-
       cameraFeed.autoplay = true;
-
       cameraFeed.playsInline = true;
 
 
-      /*
-       * Iniciar reproducción.
-       */
-
       await cameraFeed.play();
 
-
-      /*
-       * Mostrar cámara.
-       */
 
       cameraFrame.classList.add(
         "is-active"
       );
 
-
-      /*
-       * Mostrar estado activo.
-       */
 
       signalDot.classList.add(
         "is-tracking"
@@ -146,6 +134,9 @@ import {
       console.log(
         "[TRANSLATOR] Cámara iniciada correctamente."
       );
+
+
+      startCanvas();
 
     }
 
@@ -161,10 +152,6 @@ import {
         "is-tracking"
       );
 
-
-      /*
-       * Mensajes específicos.
-       */
 
       switch (error.name) {
 
@@ -213,31 +200,81 @@ import {
 
 
   /* =========================================================
+     CANVAS
+     ========================================================= */
+
+  function startCanvas() {
+
+    canvas =
+      document.createElement("canvas");
+
+    canvas.width =
+      cameraFeed.videoWidth || 640;
+
+    canvas.height =
+      cameraFeed.videoHeight || 480;
+
+    startSendingFrames();
+
+  }
+
+
+  /* =========================================================
      DETENER CÁMARA
      ========================================================= */
 
   function stopCamera() {
 
-    if (!mediaStream) {
+    if (sendTimer) {
 
-      return;
+      clearInterval(
+        sendTimer
+      );
+
+      sendTimer = null;
 
     }
 
 
-    mediaStream
-      .getTracks()
-      .forEach((track) => {
+    if (socket) {
 
-        track.stop();
+      try {
 
-      });
+        socket.close();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+      }
+
+      socket = null;
+
+    }
 
 
-    mediaStream = null;
+    socketReady = false;
 
 
-    cameraFeed.srcObject = null;
+    if (mediaStream) {
+
+      mediaStream
+        .getTracks()
+        .forEach((track) => {
+
+          track.stop();
+
+        });
+
+      mediaStream = null;
+
+    }
+
+
+    cameraFeed.srcObject =
+      null;
 
 
     cameraFrame.classList.remove(
@@ -306,7 +343,9 @@ import {
 
         closePanel();
 
-      } else {
+      }
+
+      else {
 
         openPanel();
 
@@ -318,16 +357,7 @@ import {
 
   /* =========================================================
      MOSTRAR SEÑA
-     =========================================================
-
-     Esta función queda preparada para conectar
-     el modelo real de reconocimiento.
-
-     Ejemplo:
-
-       window.showSign("A");
-
-  ========================================================= */
+     ========================================================= */
 
   function showSign(sign) {
 
@@ -346,10 +376,6 @@ import {
       sign;
 
 
-    /*
-     * Reiniciar animación.
-     */
-
     currentGlyph.classList.remove(
       "is-fresh"
     );
@@ -365,20 +391,326 @@ import {
   }
 
 
-  /*
-   * Hacer disponible para el modelo
-   * de reconocimiento.
-   */
-
   window.showSign =
     showSign;
 
 
   /* =========================================================
-     INICIO AUTOMÁTICO
+     ACTUALIZAR PALABRA
+     ========================================================= */
+
+  function updateWord(word) {
+  currentWord = word || "";
+
+  console.log(
+    "[TRANSLATOR] Mostrando palabra:",
+    currentWord
+  );
+
+  if (!translatorWord) {
+    console.error(
+      "[TRANSLATOR] No existe #translatorWord"
+    );
+    return;
+  }
+
+  translatorWord.textContent = currentWord;
+}
+
+
+  /* =========================================================
+     WEBSOCKET
+     ========================================================= */
+
+  function connectSocket() {
+
+    if (
+      socket &&
+      socket.readyState === WebSocket.OPEN
+    ) {
+
+      return;
+
+    }
+
+
+    console.log(
+      "[TRANSLATOR] Conectando WebSocket..."
+    );
+
+
+    socket =
+      new WebSocket(WS_URL);
+
+
+    socket.binaryType =
+      "arraybuffer";
+
+
+    socket.onopen = () => {
+
+      console.log(
+        "[TRANSLATOR] WebSocket conectado."
+      );
+
+      socketReady = true;
+
+    };
+
+
+    socket.onmessage = (event) => {
+
+      try {
+
+        const data =
+          JSON.parse(event.data);
+
+        handleBackendMessage(
+          data
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "[TRANSLATOR] Error JSON:",
+          error
+        );
+
+      }
+
+    };
+
+
+    socket.onerror = (error) => {
+
+      console.error(
+        "[TRANSLATOR] WebSocket error:",
+        error
+      );
+
+      socketReady = false;
+
+    };
+
+
+    socket.onclose = () => {
+
+      console.log(
+        "[TRANSLATOR] WebSocket cerrado."
+      );
+
+      socketReady = false;
+
+    };
+
+  }
+
+
+  /* =========================================================
+     MENSAJES DEL BACKEND
+     ========================================================= */
+
+  function handleBackendMessage(data) {
+  console.log("[TRANSLATOR] Backend:", data);
+
+  if (data.type === "error") {
+    console.error(
+      "[TRANSLATOR] Backend error:",
+      data.message
+    );
+    return;
+  }
+
+  if (data.type === "word") {
+    console.log(
+      "[TRANSLATOR] WORD:",
+      data.word
+    );
+
+    updateWord(data.word);
+    return;
+  }
+
+  if (data.type !== "prediction") {
+    return;
+  }
+
+  if (data.prediction) {
+    showSign(data.prediction);
+  }
+
+  if (
+    data.confirmed &&
+    data.confirmed_letter
+  ) {
+    console.log(
+      "[TRANSLATOR] LETRA CONFIRMADA:",
+      data.confirmed_letter
+    );
+
+    showSign(data.confirmed_letter);
+  }
+
+  if (
+    typeof data.word === "string"
+  ) {
+    console.log(
+      "[TRANSLATOR] PALABRA:",
+      data.word
+    );
+
+    updateWord(data.word);
+  }
+}
+
+
+  /* =========================================================
+     COMANDOS
+     ========================================================= */
+
+  function sendCommand(command) {
+
+    if (
+      !socket ||
+      socket.readyState !== WebSocket.OPEN
+    ) {
+
+      return;
+
+    }
+
+
+    socket.send(
+      JSON.stringify({
+        command: command
+      })
+    );
+
+  }
+
+
+  function addSpace() {
+
+    sendCommand(
+      "SPACE"
+    );
+
+  }
+
+
+  function deleteLast() {
+
+    sendCommand(
+      "DELETE"
+    );
+
+  }
+
+
+  function clearWord() {
+
+    sendCommand(
+      "CLEAR"
+    );
+
+  }
+
+
+  /* =========================================================
+     ENVIAR FRAMES
+     ========================================================= */
+
+  function startSendingFrames() {
+
+    if (sendTimer) {
+
+      clearInterval(
+        sendTimer
+      );
+
+    }
+
+
+    sendTimer =
+      setInterval(
+        sendFrame,
+        FRAME_INTERVAL
+      );
+
+  }
+
+
+  function sendFrame() {
+
+    if (
+      !mediaStream ||
+      !socketReady ||
+      !socket ||
+      socket.readyState !== WebSocket.OPEN ||
+      !canvas
+    ) {
+
+      return;
+
+    }
+
+
+    const context =
+      canvas.getContext("2d");
+
+
+    context.drawImage(
+      cameraFeed,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+
+    canvas.toBlob(
+
+      (blob) => {
+
+        if (!blob) {
+
+          return;
+
+        }
+
+
+        if (
+          socket &&
+          socket.readyState ===
+            WebSocket.OPEN
+        ) {
+
+          socket.send(
+            blob
+          );
+
+        }
+
+      },
+
+      "image/jpeg",
+
+      JPEG_QUALITY
+
+    );
+
+  }
+
+
+  /* =========================================================
+     INICIO
      ========================================================= */
 
   startCamera();
+
+  connectSocket();
 
 
   /* =========================================================
@@ -390,12 +722,6 @@ import {
   );
 
 
-  /*
-   * UP
-   *
-   * Abrir/cerrar panel.
-   */
-
   input.on(
 
     InputAction.UP,
@@ -406,7 +732,9 @@ import {
 
         closePanel();
 
-      } else {
+      }
+
+      else {
 
         openPanel();
 
@@ -418,12 +746,6 @@ import {
 
   );
 
-
-  /*
-   * DOWN
-   *
-   * Cerrar panel.
-   */
 
   input.on(
 
@@ -439,12 +761,6 @@ import {
 
   );
 
-
-  /*
-   * BACK
-   *
-   * Salir.
-   */
 
   input.on(
 
