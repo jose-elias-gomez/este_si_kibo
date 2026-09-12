@@ -6,7 +6,7 @@ from fastapi import (
     WebSocketDisconnect,
 )
 
-from decoder import decode
+from .decoder import decode
 from services.system_options.websocket.websocket_connector import register as register_system_options_packets
 from services.hal_conector.movement_connector import register as register_hal_connector_packets
 

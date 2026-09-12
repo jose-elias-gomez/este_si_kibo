@@ -8,7 +8,7 @@ from transports.serial.errors import (
     UnknownProtocolStatusError,
 )
 from transports.websocket.packet_registry import register_decoder, PacketId
-from decoder import PacketDecodeError
+from transports.websocket.decoder import PacketDecodeError
 from transports.serial.client import robot_client
 
 _cached_angles = {

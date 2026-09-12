@@ -1,5 +1,4 @@
-
-from decoder import PacketDecodeError
+from transports.websocket.decoder import PacketDecodeError
 from transports.websocket.packet_registry import register_decoder, DECODERS, PacketId
 from services.system_options.power import shutdown_computer
 from services.system_options.sound_editor import set_volume, get_volume
