@@ -36,8 +36,6 @@ def register() -> None:
     register_decoder(PacketId.MOVE_PART, decode)
     register_decoder(PacketId.GET_PARTS, decode_get_parts)
 
-    _reset_parts()
-
 
 def decode(data):
     if robot_client is None:
@@ -55,26 +53,6 @@ def decode(data):
 
 def decode_get_parts(data=None):
     return dict(_cached_angles)
-
-
-def _reset_parts() -> None:
-    """Al iniciar el servicio: brazos y cabeza a 0°, ruedas detenidas."""
-    packet = (
-        MovementPacket()
-        .left_arm(0)
-        .right_arm(0)
-        .head(0)
-        .left_wheel(MotorCommand.STOP)
-        .right_wheel(MotorCommand.STOP)
-    )
-
-    try:
-        _send_packet(packet)
-    except Exception as exc:
-        print(exc)
-
-    _cached_angles.update({"left_arm": 0, "right_arm": 0, "head": 0})
-
 
 def _send_packet(packet: MovementPacket):
     if robot_client is None:

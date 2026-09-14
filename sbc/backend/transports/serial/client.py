@@ -4,16 +4,16 @@ from transports.serial.serial_client import SerialRobotClient
 
 robot_client: SerialRobotClient | None = None
 
-def start_serialconnection(
-  port = "/dev/ttyUSB0",
-  baudrate = 9600,
-):
-  global robot_client
-  robot_client = SerialRobotClient(port, baudrate)
-  robot_client.__enter__()
-
-  # Registramos la función para que se ejecute al salir del runtime
-  atexit.register(cleanup)
+def start_serialconnection(port="/dev/ttyACM0", baudrate=9600):
+    global robot_client
+    robot_client = SerialRobotClient(port, baudrate)
+    try:
+        robot_client.__enter__()
+        print(f"✅ Conectado a {port}, is_open={robot_client.connection.is_open}")
+    except Exception as e:
+        print(f"❌ Falló la conexión: {type(e).__name__}: {e}")
+        raise
+    atexit.register(cleanup)
 
 def cleanup():
     if robot_client:

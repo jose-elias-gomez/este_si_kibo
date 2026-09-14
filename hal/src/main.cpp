@@ -1,15 +1,40 @@
 #include <Arduino.h>
 #include "protocol.h"
 #include "actuators.h"
+#include "touch.h"
 
 constexpr uint32_t SERIAL_BAUD_RATE = 9600;
 constexpr uint16_t SERIAL_TIMEOUT_MS = 25;
 
 static RobotActuators robot;
+static TouchSensors touchSensors;
 static uint8_t buffer[MAX_PACKET_SIZE];
 
 static void writeStatus(DecodeStatus status) {
-    Serial.write(static_cast<uint8_t>(status));
+    const uint8_t packet[2] = {
+        static_cast<uint8_t>(PacketId::DECODED),
+        static_cast<uint8_t>(status)
+    };
+    Serial.write(packet, sizeof(packet));
+}
+
+static void sendTouchEvent(const TouchChange& change) {
+    const uint8_t packet[3] = {
+        static_cast<uint8_t>(PacketId::TOUCH),
+        static_cast<uint8_t>(change.type),
+        static_cast<uint8_t>(change.event)
+    };
+
+    Serial.write(packet, sizeof(packet));
+}
+
+static void processTouchSensors() {
+    TouchChange changes[3];
+    const uint8_t numChanges = touchSensors.update(changes);
+
+    for (uint8_t i = 0; i < numChanges; i++) {
+        sendTouchEvent(changes[i]);
+    }
 }
 
 static bool readExactBytes(uint8_t* destination, uint8_t length) {
@@ -86,8 +111,10 @@ void setup() {
     Serial.setTimeout(SERIAL_TIMEOUT_MS);
 
     robot.begin();
+    touchSensors.begin();
 }
 
 void loop() {
     processSerialPacket();
+    processTouchSensors();
 }

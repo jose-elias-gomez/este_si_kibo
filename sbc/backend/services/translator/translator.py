@@ -12,6 +12,12 @@ MIN_CONFIDENCE = 0.4
 MIN_MARGIN = 0.1
 STABLE_FRAMES = 3
 
+# Tiene que coincidir EXACTAMENTE con CAMERA_ROTATION y
+# CAMERA_MIRROR de capture_data.py, si no el modelo predice
+# sobre una imagen orientada distinto a como fue entrenado.
+CAMERA_ROTATION = cv2.ROTATE_90_COUNTERCLOCKWISE
+CAMERA_MIRROR = False
+
 
 class SignTranslator:
 
@@ -147,6 +153,12 @@ class SignTranslator:
         self,
         frame,
     ):
+        if CAMERA_ROTATION is not None:
+            frame = cv2.rotate(frame, CAMERA_ROTATION)
+
+        if CAMERA_MIRROR:
+            frame = cv2.flip(frame, 1)
+
         rgb_frame = cv2.cvtColor(
             frame,
             cv2.COLOR_BGR2RGB,
@@ -419,4 +431,3 @@ class SignTranslator:
 
     def close(self):
         self.hands.close()
-

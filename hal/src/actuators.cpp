@@ -1,20 +1,20 @@
-#include "actuators.h"
 #include "pins.h"
-
 using namespace Pins;
 
+#include "actuators.h"
+
 void RobotActuators::begin() {
-    head.attach(HEAD_SERVO);
-    leftArm.attach(LEFT_ARM_SERVO);
-    rightArm.attach(RIGHT_ARM_SERVO);
+    head.attach(Pins::HEAD_SERVO);
+    leftArm.attach(Pins::LEFT_ARM_SERVO);
+    rightArm.attach(Pins::RIGHT_ARM_SERVO);
 
-    pinMode(ENA, OUTPUT);
-    pinMode(IN1, OUTPUT);
-    pinMode(IN2, OUTPUT);
+    pinMode(Pins::ENA, OUTPUT);
+    pinMode(Pins::IN1, OUTPUT);
+    pinMode(Pins::IN2, OUTPUT);
 
-    pinMode(ENB, OUTPUT);
-    pinMode(IN3, OUTPUT);
-    pinMode(IN4, OUTPUT);
+    pinMode(Pins::ENB, OUTPUT);
+    pinMode(Pins::IN3, OUTPUT);
+    pinMode(Pins::IN4, OUTPUT);
 
     stopAllMotors();
 }
@@ -76,22 +76,22 @@ void RobotActuators::handleWheel(PartId part, MotorCommand command) {
 void RobotActuators::setLeftWheel(MotorCommand command) {
     switch (command) {
         case MotorCommand::Left:
-            digitalWrite(ENA, HIGH);
-            digitalWrite(IN1, LOW);
-            digitalWrite(IN2, HIGH);
+            digitalWrite(Pins::ENA, HIGH);
+            digitalWrite(Pins::IN1, LOW);
+            digitalWrite(Pins::IN2, HIGH);
             break;
 
         case MotorCommand::Right:
-            digitalWrite(ENA, HIGH);
-            digitalWrite(IN1, HIGH);
-            digitalWrite(IN2, LOW);
+            digitalWrite(Pins::ENA, HIGH);
+            digitalWrite(Pins::IN1, HIGH);
+            digitalWrite(Pins::IN2, LOW);
             break;
 
         case MotorCommand::Stop:
         default:
-            digitalWrite(ENA, LOW);
-            digitalWrite(IN1, LOW);
-            digitalWrite(IN2, LOW);
+            digitalWrite(Pins::ENA, LOW);
+            digitalWrite(Pins::IN1, LOW);
+            digitalWrite(Pins::IN2, LOW);
             break;
     }
 }
@@ -99,22 +99,22 @@ void RobotActuators::setLeftWheel(MotorCommand command) {
 void RobotActuators::setRightWheel(MotorCommand command) {
     switch (command) {
         case MotorCommand::Left:
-            digitalWrite(ENB, HIGH);
-            digitalWrite(IN3, LOW);
-            digitalWrite(IN4, HIGH);
+            digitalWrite(Pins::ENB, HIGH);
+            digitalWrite(Pins::IN3, LOW);
+            digitalWrite(Pins::IN4, HIGH);
             break;
 
         case MotorCommand::Right:
-            digitalWrite(ENB, HIGH);
-            digitalWrite(IN3, HIGH);
-            digitalWrite(IN4, LOW);
+            digitalWrite(Pins::ENB, HIGH);
+            digitalWrite(Pins::IN3, HIGH);
+            digitalWrite(Pins::IN4, LOW);
             break;
 
         case MotorCommand::Stop:
         default:
-            digitalWrite(ENB, LOW);
-            digitalWrite(IN3, LOW);
-            digitalWrite(IN4, LOW);
+            digitalWrite(Pins::ENB, LOW);
+            digitalWrite(Pins::IN3, LOW);
+            digitalWrite(Pins::IN4, LOW);
             break;
     }
 }
