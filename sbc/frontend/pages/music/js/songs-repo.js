@@ -1,5 +1,68 @@
 export const SONGS = [
     {
+        title: "Me llama",
+        author: "Tito Calderón (Momo)",
+        audio: "audio/tetengoalladoymesientosolo.mp3",
+        cover: "covers/momo.jpg",
+        lyrics:
+        `[00:22.11] Te tengo al lado y me siento solo
+[00:24.32] El miedo me come y no entiendo cómo
+[00:26.82] Razones no faltan para querer irme, pero si me voy quizás falte todo
+[00:32.40] Ella me llama, y me llama, y no sé qué hacer
+[00:36.00] Llama, y me llama, y si volveré
+[00:39.26] Porque tú eres mi pasado y lo mejor que me había pasado, también
+[00:43.66] Y me llama, me llama, y no sé qué hacer
+[00:46.64] Llama, y me llama, y si volveré
+[00:49.91] El no poder entendernos es lo que no logro entender
+[00:55.27] ¿Cómo voy a darte mi mundo entero?
+[00:57.71] Si no estoy entero para darte el mundo
+[01:00.32] ¿Cómo pedirle milagros al tiempo?
+[01:03.04] Si tú me cambiabas en un segundo
+[01:05.74] Te digo "para", y me pones peros
+[01:08.22] Separados, nunca y tampoco juntos
+[01:11.05] Entonces, tú dime enserio, ¿Qué hacemos?
+[01:13.78] Te lo pregunto
+[01:15.23] Porque ella me llama, y me llama, y no sé qué hacer
+[01:18.56] Llama, y me llama, y si volveré
+[01:21.85] Porque tú eres mi pasado y lo mejor que me había pasado, también
+[01:26.29] Y me llama, me llama, y no sé qué hacer
+[01:29.12] Llama, y me llama, y si volveré
+[01:32.66] El no poder entendernos es lo que no logro entender
+[01:37.27] Vivo refugiado en mi pasado
+[01:40.25] A veces la luz no hace verlo claro
+[01:42.96] Y si yo no te hubiera conocido, te prometo que te hubiera inventado
+[01:48.10] Todo por delante, contigo al lado
+[01:50.87] Viviendo un sueño, pero drogado
+[01:53.63] Expertos en transformar todo lo fácil en complicado
+[01:57.90] Porque tu te quedarás, solo por el miedo a nunca verme más
+[02:02.57] Me dice que hacemos y olvidar, te digo olvidar
+[02:05.75] Ojalá que el tiempo nos sepa juntar
+[02:08.32] Y los meses pasarán, pero no por dentro y tú me cambiarás
+[02:13.10] Por otra persona y ya no será igual
+[02:15.86] Si todo lo echamos a perder, ¿Qué voy a encontrar?
+[02:19.31] Porque ella me llama, y me llama, y no sé qué hacer
+[02:22.67] Llama, y me llama, y si volveré
+[02:26.01] Porque tú eres mi pasado y lo mejor que me había pasado, también
+[02:30.36] Y me llama, me llama, y no sé qué hacer
+[02:33.28] Llama, y me llama, y si volveré
+[02:36.69] El no poder entendernos es lo que no logro entender
+[02:41.97] ¿Cómo voy a darte mi mundo entero?
+[02:44.30] Si no estoy entero para darte el mundo
+[02:46.93] ¿Cómo pedirle milagros al tiempo?
+[02:49.71] Si tú me cambiabas en un segundo
+[02:52.41] Las nubes se posan sobre mi cielo
+[02:54.98] Volando en tu llanto, y en lo más profundo
+[02:57.60] Entonces, tú dime enserio, ¿Qué hacemos?
+[03:00.35] No encuentro el rumbo (No encuentro el rumbo)
+[03:02.95] Y me llama, me llama, y no sé qué hacer
+[03:05.25] Llama, y me llama, y si volveré
+[03:08.75] El no poder entendernos es lo que no logro entender
+[03:12.48] Porque ella me llama, me llama, y no sé qué hacer
+[03:15.72] Llama, me llama y no volveré
+[03:19.82] 
+        ` 
+    },
+    {
         title: "Osito gominola",
         author: "Christian Schneider",
         audio: "audio/Osito.mp3",
