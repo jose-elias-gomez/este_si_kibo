@@ -3,7 +3,7 @@ import time
 from evdev import InputDevice, ecodes
 
 # Mapeo según la prueba en tu Orange Pi 5 Pro
-DEV_PATH = '/dev/input/event19'
+DEV_PATH = '/dev/input/event12'
 
 # Códigos de evdev
 BTN_CONFIRM = 308  # BTN_WEST

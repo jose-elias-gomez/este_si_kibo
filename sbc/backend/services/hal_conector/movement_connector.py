@@ -1,5 +1,4 @@
-from transports.serial.packet import MovementPacket
-from transports.serial.serial_client import SerialRobotClient
+from transports.serial import client
 from transports.serial.enums import MotorCommand
 from transports.serial.errors import (
     ProtocolDecodeError,
@@ -7,9 +6,9 @@ from transports.serial.errors import (
     SerialTimeoutError,
     UnknownProtocolStatusError,
 )
-from transports.websocket.packet_registry import register_decoder, PacketId
+from transports.serial.packet import MovementPacket
 from transports.websocket.decoder import PacketDecodeError
-from transports.serial.client import robot_client
+from transports.websocket.packet_registry import PacketId, register_decoder
 
 _cached_angles = {
     "left_arm": 0,
@@ -38,7 +37,7 @@ def register() -> None:
 
 
 def decode(data):
-    if robot_client is None:
+    if client.robot_client is None:
         raise PacketDecodeError(
             "El conector de movimiento no fue inicializado con un SerialRobotClient"
         )
@@ -54,12 +53,13 @@ def decode(data):
 def decode_get_parts(data=None):
     return dict(_cached_angles)
 
+
 def _send_packet(packet: MovementPacket):
-    if robot_client is None:
+    if client.robot_client is None:
         raise PacketDecodeError("El puerto serial no está conectado")
 
     try:
-        status = robot_client.send(packet.build())
+        status = client.robot_client.send(packet.build())
     except ProtocolDecodeError as exc:
         raise PacketDecodeError(
             f"El Arduino rechazó el paquete de movimiento: {exc}"
