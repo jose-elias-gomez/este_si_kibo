@@ -1,3 +1,11 @@
+import warnings
+
+warnings.filterwarnings(
+    "ignore",
+    message=r".*SymbolDatabase.GetPrototype\(\) is deprecated.*",
+    category=UserWarning,
+)
+
 import pickle
 
 from collections import deque
@@ -8,14 +16,14 @@ import numpy as np
 
 
 HISTORY_SIZE = 12
-MIN_CONFIDENCE = 0.4
-MIN_MARGIN = 0.1
-STABLE_FRAMES = 3
+MIN_CONFIDENCE = 0.2
+MIN_MARGIN = 0.03
+STABLE_FRAMES = 2
 
 # Tiene que coincidir EXACTAMENTE con CAMERA_ROTATION y
 # CAMERA_MIRROR de capture_data.py, si no el modelo predice
 # sobre una imagen orientada distinto a como fue entrenado.
-CAMERA_ROTATION = cv2.ROTATE_90_COUNTERCLOCKWISE
+CAMERA_ROTATION = cv2.ROTATE_180
 CAMERA_MIRROR = False
 
 

@@ -26,7 +26,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 #
 # Si la imagen se ve "del otro lado" (invertida en espejo),
 # cambiá CAMERA_MIRROR a False.
-CAMERA_ROTATION = cv2.ROTATE_90_COUNTERCLOCKWISE
+CAMERA_ROTATION = cv2.ROTATE_180
 CAMERA_MIRROR = False
 
 # Letras que vamos a reconocer inicialmente
