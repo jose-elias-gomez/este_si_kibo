@@ -1,5 +1,57 @@
 export const SONGS = [
     {
+        title: "Osito gominola",
+        author: "Christian Schneider",
+        audio: "audio/Osito.mp3",
+        cover: "covers/gominola.webp",
+        lyrics: `
+[00:00.44] Yo soy tu gominola, yo soy tu gominola
+[00:04.14] Osito gomi, gomi, gomi, gomi, gominola
+[00:07.99] Yo soy tu gominola, yo soy tu gominola
+[00:11.67] Osito gomi, gomi, dulce gomi, gominola, oleo
+[00:16.03] Gomi, gomi
+[00:17.17] Gomi, gomi, gominola
+[00:19.93] Gomi, gomi
+[00:20.86] Gomi, gomi, gominola
+[00:23.81] Baile and gomi fiesta, party and gomi fiesta
+[00:27.37] Ready and gomi fiesta, fiesta pop
+[00:31.03] Baile and gomi fiesta, party and gomi fiesta
+[00:34.87] Ready and gomi fiesta, fiesta pop
+[00:37.86] Yo soy tu gominola, yo soy tu gominola
+[00:41.52] Osito gomi, gomi, gomi, gomi, gominola
+[00:45.49] Yo soy tu gominola, yo soy tu gominola
+[00:49.14] Osito gomi, gomi, dulce gomi, gominola, oleo
+[00:53.82] Pa-pa, virovirovirulo; pa-pa virovirovirulo
+[00:57.67] Pa-pa virovirovirulo, tres besitos dulces
+[01:01.23] Pa-pa, virovirovirulo; pa-pa virovirovirulo
+[01:05.04] Pa-pa virovirovirulo, tres besitos dulces
+[01:08.75] Gomi, gomi
+[01:09.53] Gomi, gomi, gominola
+[01:12.30] Gomi, gomi
+[01:13.40] Gomi, gomi, gominola
+[01:16.29] Baile and gomi fiesta, party and gomi fiesta
+[01:19.76] Ready and gomi fiesta, fiesta pop
+[01:23.47] Baile and gomi fiesta, party and gomi fiesta
+[01:27.14] Ready and gomi fiesta, fiesta pop
+[01:30.25] Yo soy tu gominola, yo soy tu gominola
+[01:34.14] Osito gomi, gomi, gomi, gomi, gominola
+[01:37.93] Yo soy tu gominola, yo soy tu gominola
+[01:41.58] Osito gomi, gomi, dulce gomi, gominola, oleo
+[01:45.49] Yo soy tu gominola, yo soy tu gominola
+[01:49.11] Osito gomi, gomi, gomi, gomi, gominola
+[01:52.85] Yo soy tu gominola, yo soy tu gominola
+[01:56.50] Osito gomi, gomi, gomi, gomi, gominola
+[02:00.38] Yo soy tu gominola, yo soy tu gominola
+[02:04.17] Osito gomi, gomi, gomi, gomi, gominola
+[02:07.88] Yo soy tu gominola, yo soy tu gominola
+[02:11.57] Osito gomi, gomi, dulce gomi, gominola, oleo
+[02:17.94] Fiesta pop
+[02:21.90] Fiesta pop
+[02:25.53] Fiesta pop
+[02:27.50] 
+        `
+    },
+    {
         title: "El polito pio",
         author: "Bruno Benvenuti",
         audio: "audio/PULCINO PIO - El Pollito Pio.mp3",
