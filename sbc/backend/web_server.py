@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import uvicorn
 
 from fastapi import FastAPI, Request
@@ -19,12 +20,27 @@ from routers.translator import (
     router as translator_router,
 )
 
+# Instancia del servicio de Joystick
+joystick_service = JoystickService()
+
+# Manejador del ciclo de vida de la app
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # --- AL ARRANCAR EL SERVIDOR ---
+    print("[SERVER] Iniciando JoystickService...")
+    joystick_service.start()
+    
+    yield
+    
+    # --- AL APAGAR EL SERVIDOR ---
+    print("[SERVER] Deteniendo JoystickService...")
+    joystick_service.stop()
+
 app = FastAPI(
     title="Web server",
     version="1.0.0",
+    lifespan=lifespan,
 )
-
-joystick_service = JoystickService()
 
 app.add_middleware(
     CORSMiddleware,
@@ -70,7 +86,7 @@ def start_webserver(
     port: int = 25566,
 ):
     uvicorn.run(
-        "web_server:app",
+        app,  # Pasamos el objeto app directamente para asegurar que reconozca el lifespan
         host=host,
         port=port,
         reload=False,

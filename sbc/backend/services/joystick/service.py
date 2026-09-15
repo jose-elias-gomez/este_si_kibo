@@ -1,5 +1,4 @@
 import asyncio
-
 from transports.websocket.packet_registry import PacketId
 from services.joystick.joystick import Joystick
 from transports.websocket.server import broadcast
@@ -8,49 +7,35 @@ from transports.websocket.server import broadcast
 class JoystickService:
 
     def __init__(self):
-
         self.loop = None
         self.joystick = None
 
     def start(self):
-
         self.loop = asyncio.get_running_loop()
 
         try:
-
             self.joystick = Joystick(
                 on_input=self._on_input
             )
-
             self.joystick.start()
-
             print("[JOYSTICK SERVICE] Iniciado")
 
         except Exception as e:
-
-            print(
-                "[JOYSTICK SERVICE] Controller no disponible:",
-                e
-            )
-
+            print(f"[JOYSTICK SERVICE] Controller no disponible: {e}")
             self.joystick = None
 
     def stop(self):
-
         if self.joystick:
-
             self.joystick.stop()
-
             self.joystick = None
 
     def _on_input(self, action):
-
         if self.loop is None:
             return
 
         asyncio.run_coroutine_threadsafe(
             broadcast({
-              "id": PacketId.SYSTEM_OPTION.value,
+              "id": PacketId.JOYSTICK.value,  # <--- Cambiado a JOYSTICK (ID 2)
               "action": action
             }),
             self.loop
