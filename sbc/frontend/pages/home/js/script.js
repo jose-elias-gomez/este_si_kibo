@@ -13,6 +13,7 @@ const APPS = [
   { id: "movement", title: "Movimiento", bg: "#3ad0c9", glow: "rgba(58,208,201,0.45)", cover: "assets/apps/motion.png", icon: null },
   { id: "translator", title: "Traducción", bg: "#c47a3a", glow: "rgba(196,122,58,0.45)", cover: "assets/apps/translator.jpg", icon: null },
   { id: "assistant", title: "Asistente", bg: "#8fa3ba", glow: "rgba(143,163,186,0.45)", cover: "assets/apps/chat.png", icon: null },
+  { id: "music", title: "Musica", bg: "#8fa3ba", glow: "rgba(143,163,186,0.45)", cover: "assets/apps/music.jpg", icon: null },
   { id: "camera", title: "Cámara", bg: "#66a8dd", glow: "rgba(102,168,221,0.45)", cover: "assets/apps/camera.png", icon: null },
 ]
 

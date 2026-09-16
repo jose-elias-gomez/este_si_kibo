@@ -1,0 +1,313 @@
+:root{
+  /* acento propio de esta pantalla, no toca global.css */
+  --accent: #E7B24C;
+  --accent-soft: rgba(231, 178, 76, 0.18);
+}
+
+#app{
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------- */
+/* Vistas (carrusel / reproductor) — una tapa a la otra  */
+/* ---------------------------------------------------- */
+.view{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-panel) var(--ease-panel);
+}
+
+.view.is-active{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ---------------------------------------------------- */
+/* Vista: Carrusel                                       */
+/* ---------------------------------------------------- */
+.app-title{
+  margin: var(--space-lg) 0 var(--space-sm);
+  text-align: center;
+}
+
+.carousel-stage{
+  position: relative;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.carousel-track{
+  position: relative;
+  width: 100%;
+  height: 320px;
+}
+
+.carousel-item{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    transform var(--duration-panel) var(--ease-slide),
+    opacity var(--duration-base) ease;
+}
+
+.carousel-cover{
+  width: 320px;
+  height: 320px;
+  background-color: var(--overlay-first);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-cover{
+  font-size: 3rem;
+  color: var(--color-h2);
+}
+
+.carousel-title{
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.carousel-author{
+  font-size: var(--font-size-sm);
+  color: var(--color-h2);
+}
+
+.carousel-item:not(.is-active) .carousel-title,
+.carousel-item:not(.is-active) .carousel-author{
+  opacity: 0.7;
+}
+
+.carousel-arrow{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-pill);
+  background: var(--overlay-first);
+  color: var(--color-text);
+  font-size: 1.6rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 200;
+  transition:
+    background var(--duration-fast) ease,
+    opacity var(--duration-fast) ease;
+}
+
+.carousel-arrow:hover{
+  background: var(--overlay-first-selected);
+}
+
+.carousel-arrow:disabled{
+  opacity: 0.25;
+  cursor: default;
+}
+
+.carousel-arrow--left{ left: 2rem; }
+.carousel-arrow--right{ right: 2rem; }
+
+.carousel-hint{
+  margin: var(--space-sm) 0 var(--space-lg);
+  color: var(--color-h2);
+  font-size: var(--font-size-sm);
+}
+
+.carousel-hint strong{
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------- */
+/* Vista: Reproductor                                     */
+/* ---------------------------------------------------- */
+.back-btn{
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  background: var(--overlay-first);
+  color: var(--color-text);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast) ease;
+}
+
+.back-btn:hover{
+  background: var(--overlay-first-selected);
+}
+
+#player-view{
+  background: #000;
+}
+
+.karaoke{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* -- cabecera chica: portada + título/artista -- */
+.karaoke-header{
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-md) 0;
+  width: 100%;
+  max-width: 700px;
+}
+
+.mini-cover{
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  background: var(--overlay-first);
+  flex-shrink: 0;
+}
+
+.mini-meta{ min-width: 0; }
+
+.mini-title{
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-author{
+  font-size: var(--font-size-sm);
+  color: var(--color-h2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* -- letra, ocupando casi toda la pantalla -- */
+.lyrics-stage{
+  flex: 1;
+  width: 100%;
+  max-width: 900px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.6rem;
+  padding: 34vh var(--space-lg);
+  scroll-behavior: smooth;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+}
+
+.lyrics-stage::-webkit-scrollbar{ display: none; }
+
+.lyric-line{
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: clamp(1.1rem, 3vw, 1.7rem);
+  color: rgba(255, 255, 255, 0.35);
+  text-align: center;
+  line-height: 1.35;
+  opacity: 0.7;
+  transition:
+    color var(--duration-base) ease,
+    font-size var(--duration-base) var(--ease-slide),
+    opacity var(--duration-base) ease;
+}
+
+.lyric-line.is-active{
+  color: var(--accent);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 5.2vw, 3.4rem);
+  opacity: 1;
+}
+
+/* -- barra de tiempo, abajo de todo -- */
+.time-bar{
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 700px;
+  padding: 0 var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.time-label{
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.55);
+  width: 2.8em;
+}
+
+.time-label--end{
+  text-align: right;
+}
+
+.time-track{
+  position: relative;
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+}
+
+.time-fill{
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* ---------------------------------------------------- */
+/* Responsive                                             */
+/* ---------------------------------------------------- */
+@media (max-width: 640px){
+  .carousel-item{ width: 200px; }
+  .carousel-cover{ width: 200px; height: 200px; }
+  .carousel-arrow--left{ left: 0.75rem; }
+  .carousel-arrow--right{ right: 0.75rem; }
+  .player-cover{ width: 220px; height: 220px; }
+}

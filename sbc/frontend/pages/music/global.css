@@ -1,0 +1,146 @@
+
+
+:root {
+  --font-fallback:
+    system-ui, -apple-system, blinkmacsystemfont, "Segoe UI", "Noto Sans",
+    helvetica, arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* ---- Neutros (fondos, superficies, bordes, texto) ---- */
+  --color-bg: #1E1E1E; /* fondo general de la app */
+  --color-bg-light: #e1e1e1; /* fondo general de la app */
+  --color-text: #FFFFFF; /* texto general */ 
+  --color-text-light: #111;
+  --color-h1: rgba(255, 255, 255, 0.6); /* títulos grandes */
+  --color-h2: rgba(255, 255, 255, 0.4); /* títulos grandes */
+
+  --color-border: #444444; /* líneas y bordes */
+  --color-highlight: #383838; /* color de acento y resaltado */
+
+  --color-disabled: rgba(0, 0, 0, 0.2); /* texto y elementos deshabilitados */
+  --color-disabled-bg: rgba(0, 0, 0, 0.05); /* fondo de elementos deshabilitados */
+  --color-enabled: rgba(255, 255, 255, 0.8); /* texto y elementos habilitados */
+  
+  /* ---- Overlays ---- */
+  --overlay-first: #2C2C2C;
+  --overlay-first-selected: #383838;
+  --overlay-backdrop: rgba(0, 0, 0, 0.75);
+
+  /* ---- Tipografía ---- */
+  --font-body: "Fredoka", sans-serif; /* texto general */
+  --font-heading: "Fredoka", sans-serif; /* títulos grandes */
+  --font-ui: "Fredoka", sans-serif; /* footer, labels, popups */
+  --font-size-sm: 0.75rem; /* 12px */
+  --font-size-md: 0.875rem; /* 14px */
+  --font-size-lg: 1rem; /* 16px */
+  --font-size-xl: 1.125rem; /* 18px */
+  --font-size-xxl: 1.5rem; /* 24px */
+  --font-size-xxxl: 2rem; /* 32px */
+
+  /* ---- Radios ---- */
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-pill: 999px;
+
+  /* ---- Espaciado ---- */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+
+  /* ---- Transiciones ---- */
+  --ease-panel: cubic-bezier(
+    0.22,
+    0.8,
+    0.25,
+    1
+  ); /* paneles que se abren/cierran */
+  --ease-slide: cubic-bezier(
+    0.22,
+    1,
+    0.36,
+    1
+  ); /* deslizamientos (carrusel, escalas) */
+  --duration-fast: 0.15s;
+  --duration-medium: 0.2s;
+  --duration-base: 0.35s;
+  --duration-panel: 0.7s;
+  --duration-carousel: 500ms;
+
+  /* ---- Capas ---- */
+  --z-popup: 100;
+
+  /* Disable text selection */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Standard syntax */
+}
+html,
+body {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  /* Disable overscroll behavior */
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+}
+
+p, span, h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  color: var(--color-text);
+}
+
+h1 {
+  color: var(--color-h1);
+  font-size: var(--font-size-xxl);
+  letter-spacing: 0.1rem;
+}
+
+h2 {
+  color: var(--color-h2);
+  font-size: var(--font-size-xl);
+  letter-spacing: 0.1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  margin-left: 0.5rem;
+}
+
+/* Firefox */
+* {
+  box-sizing: border-box;
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+}
+
+html {
+  font-weight: 500;
+  font-family: "Fredoka", var(--font-fallback);
+  text-transform: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.uppercase-text {
+  text-transform: uppercase;
+  text-rendering: optimizeLegibility;
+  letter-spacing: 0.4rem;
+}
