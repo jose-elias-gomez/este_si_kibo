@@ -3,6 +3,11 @@
 #include <Arduino.h>
 #include <stdint.h>
 
+enum class PacketId : uint8_t {
+    DECODED = 0,
+    TOUCH = 1,
+};
+
 enum class PartId : uint8_t {
     LeftArm    = 0,
     RightArm   = 1,
@@ -34,7 +39,7 @@ struct ProtocolCommand {
 };
 
 constexpr uint8_t MAX_COMMANDS = 5;
-constexpr uint8_t MAX_PACKET_SIZE = 1 + (MAX_COMMANDS * 2);
+constexpr uint8_t MAX_PACKET_SIZE = 1 + 1 + (MAX_COMMANDS * 2);
 
 struct ProtocolPacket {
     uint8_t parts = 0;

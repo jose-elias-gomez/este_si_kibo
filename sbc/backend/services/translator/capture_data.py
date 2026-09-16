@@ -13,6 +13,22 @@ DATA_FILE = os.path.join(DATA_DIR, "landmarks.csv")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
+# Rotación y espejo de la cámara.
+# IMPORTANTE: estos valores tienen que ser IDÉNTICOS
+# a los que se usan en translator.py, si no, el modelo
+# entrena con una orientación y predice con otra.
+#
+# CAMERA_ROTATION opciones:
+#   cv2.ROTATE_90_CLOCKWISE
+#   cv2.ROTATE_90_COUNTERCLOCKWISE
+#   cv2.ROTATE_180
+#   None (no rotar)
+#
+# Si la imagen se ve "del otro lado" (invertida en espejo),
+# cambiá CAMERA_MIRROR a False.
+CAMERA_ROTATION = cv2.ROTATE_180
+CAMERA_MIRROR = False
+
 # Letras que vamos a reconocer inicialmente
 CLASSES = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
@@ -163,8 +179,11 @@ while True:
         print("No se pudo leer el frame.")
         continue
 
-    frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-    frame = cv2.flip(frame, 1)
+    if CAMERA_ROTATION is not None:
+        frame = cv2.rotate(frame, CAMERA_ROTATION)
+
+    if CAMERA_MIRROR:
+        frame = cv2.flip(frame, 1)
 
     rgb_frame = cv2.cvtColor(
         frame,
