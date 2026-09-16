@@ -1,0 +1,256 @@
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at center,
+            #102027 0%,
+            #071015 45%,
+            #020607 100%
+        );
+
+    font-family: "Fredoka", sans-serif;
+    color: white;
+}
+
+body {
+    position: relative;
+}
+
+canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* =========================================================
+   UI
+   ========================================================= */
+
+#vr-ui {
+    position: fixed;
+    inset: 0;
+
+    pointer-events: none;
+
+    z-index: 10;
+}
+
+.vr-header {
+    position: absolute;
+
+    top: 28px;
+    left: 32px;
+    right: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.kibo-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-ring {
+    width: 28px;
+    height: 28px;
+
+    border: 2px solid rgba(80, 220, 220, 0.8);
+    border-radius: 50%;
+
+    box-shadow:
+        0 0 10px rgba(80, 220, 220, 0.5),
+        inset 0 0 8px rgba(80, 220, 220, 0.3);
+
+    position: relative;
+}
+
+.logo-ring::after {
+    content: "";
+
+    position: absolute;
+
+    width: 8px;
+    height: 8px;
+
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    background: #6ce7e7;
+    border-radius: 50%;
+
+    box-shadow:
+        0 0 10px #6ce7e7;
+}
+
+.logo-text {
+    font-size: 22px;
+    font-weight: 600;
+
+    letter-spacing: 0.35em;
+
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.vr-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    font-size: 13px;
+    letter-spacing: 0.15em;
+
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #64e6dc;
+
+    box-shadow:
+        0 0 10px #64e6dc;
+}
+
+/* =========================================================
+   Mensaje central
+   ========================================================= */
+
+.vr-message {
+    position: absolute;
+
+    left: 50%;
+    bottom: 105px;
+
+    transform: translateX(-50%);
+
+    padding: 10px 20px;
+
+    border: 1px solid rgba(120, 230, 230, 0.15);
+
+    border-radius: 999px;
+
+    background: rgba(5, 15, 18, 0.55);
+
+    backdrop-filter: blur(10px);
+
+    font-size: 13px;
+    letter-spacing: 0.08em;
+
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* =========================================================
+   Botón VR
+   ========================================================= */
+
+.enter-vr {
+    pointer-events: auto;
+
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+
+    padding: 18px 30px;
+
+    border: 1px solid rgba(100, 230, 220, 0.45);
+    border-radius: 16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(50, 160, 160, 0.18),
+            rgba(30, 80, 90, 0.1)
+        );
+
+    color: white;
+
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+
+    letter-spacing: 0.12em;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 0 30px rgba(70, 220, 220, 0.08),
+        inset 0 0 20px rgba(70, 220, 220, 0.04);
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.enter-vr:hover {
+    transform: translate(-50%, -50%) scale(1.04);
+
+    border-color: rgba(100, 230, 220, 0.9);
+
+    box-shadow:
+        0 0 35px rgba(70, 220, 220, 0.2),
+        inset 0 0 20px rgba(70, 220, 220, 0.08);
+}
+
+.enter-vr-icon {
+    margin-right: 10px;
+
+    color: #70e7e0;
+
+    text-shadow:
+        0 0 10px #70e7e0;
+}
+
+/* =========================================================
+   Controles
+   ========================================================= */
+
+.vr-controls {
+    position: absolute;
+
+    bottom: 32px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    font-size: 12px;
+
+    letter-spacing: 0.08em;
+
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.vr-controls span:nth-child(2),
+.vr-controls span:nth-child(3) {
+    margin-right: 25px;
+}
+
+/* =========================================================
+   Ocultar UI cuando estamos dentro de VR
+   ========================================================= */
+
+body.in-vr #vr-ui {
+    display: none;
+}

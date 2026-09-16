@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
+
+    <meta
+        name="theme-color"
+        content="#020607"
+    >
+
+    <title>Kibo VR</title>
+
+    <!-- Estilos globales de Kibo -->
+    <link
+        rel="stylesheet"
+        href="../../shared/css/global.css"
+    >
+
+    <!-- Estilos específicos del menú VR -->
+    <link
+        rel="stylesheet"
+        href="home-vr.css"
+    >
+
+    <!--
+        Three.js
+
+        Si después querés que Kibo funcione completamente
+        sin Internet, podemos descargar Three.js y utilizarlo
+        localmente.
+    -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
+        }
+    }
+    </script>
+
+    <!-- Menú VR -->
+    <script
+        type="module"
+        src="js/vr-menu.js"
+    ></script>
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+         INTERFAZ 2D DE PREPARACIÓN
+         Esta interfaz desaparece al entrar en RV.
+         ===================================================== -->
+
+    <div id="vr-ui">
+
+        <!-- =================================================
+             HEADER
+             ================================================= -->
+
+        <header class="vr-header">
+
+            <div class="kibo-logo">
+
+                <div
+                    class="logo-ring"
+                    aria-hidden="true"
+                ></div>
+
+                <div class="logo-text">
+                    KIBO
+                </div>
+
+            </div>
+
+
+            <div class="vr-status">
+
+                <span
+                    class="status-dot"
+                    aria-hidden="true"
+                ></span>
+
+                <span>
+                    SISTEMA VR
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <!-- =================================================
+             MENSAJE
+             ================================================= -->
+
+        <div
+            id="vr-message"
+            class="vr-message"
+            role="status"
+            aria-live="polite"
+        >
+
+            <span id="vr-message-text">
+                Preparando entorno virtual...
+            </span>
+
+        </div>
+
+
+        <!-- =================================================
+             BOTÓN PARA ENTRAR EN RV
+             ================================================= -->
+
+        <button
+            id="enter-vr"
+            class="enter-vr"
+            type="button"
+        >
+
+            <span
+                class="enter-vr-icon"
+                aria-hidden="true"
+            >
+                ◉
+            </span>
+
+            <span>
+                ENTRAR EN RV
+            </span>
+
+        </button>
+
+
+        <!-- =================================================
+             CONTROLES
+             ================================================= -->
+
+        <div class="vr-controls">
+
+            <span>
+                ← →
+            </span>
+
+            <span>
+                SELECCIONAR
+            </span>
+
+
+            <span>
+                ●
+            </span>
+
+            <span>
+                CONFIRMAR
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!--
+        Three.js insertará automáticamente el canvas aquí.
+
+        No hace falta poner:
+
+        <canvas></canvas>
+
+        manualmente.
+    -->
+
+
+</body>
+
+</html>
