@@ -19,9 +19,7 @@ router = APIRouter(
 )
 
 
-BASE_DIR = (
-    Path(__file__).resolve().parent.parent
-)
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 MODEL_PATH = (
     BASE_DIR
@@ -30,6 +28,10 @@ MODEL_PATH = (
     / "model.pkl"
 )
 
+
+# ============================================================
+# MODELO
+# ============================================================
 
 translator = None
 
@@ -45,6 +47,10 @@ def load_translator():
 load_translator()
 
 
+# ============================================================
+# WEBSOCKET
+# ============================================================
+
 @router.websocket("/ws")
 async def translator_ws(
     websocket: WebSocket,
@@ -56,27 +62,79 @@ async def translator_ws(
     )
 
     if translator is None:
-        await websocket.send_json({
-            "type": "error",
-            "message": (
-                "El traductor todavía "
-                "no está cargado."
-            ),
-        })
+        try:
+            await websocket.send_json({
+                "type": "error",
+                "message": (
+                    "El traductor todavía "
+                    "no está cargado."
+                ),
+            })
 
-        await websocket.close()
+            await websocket.close()
+
+        except Exception:
+            pass
+
         return
+
+    # --------------------------------------------------------
+    # Estado nuevo para esta conexión
+    # --------------------------------------------------------
 
     translator.reset()
 
+    connected = True
+
     try:
-        while True:
 
-            data = await websocket.receive()
+        while connected:
 
-            # -----------------------------
-            # Commands from frontend
-            # -----------------------------
+            # =================================================
+            # RECIBIR
+            # =================================================
+
+            try:
+                data = await websocket.receive()
+
+            except WebSocketDisconnect:
+                connected = False
+
+                print(
+                    "[TRANSLATOR] "
+                    "WebSocket desconectado."
+                )
+
+                break
+
+            except RuntimeError as error:
+                connected = False
+
+                print(
+                    "[TRANSLATOR] "
+                    "WebSocket cerrado:",
+                    repr(error),
+                )
+
+                break
+
+            # -------------------------------------------------
+            # FastAPI puede indicar explícitamente disconnect
+            # -------------------------------------------------
+
+            if data.get("type") == "websocket.disconnect":
+                connected = False
+
+                print(
+                    "[TRANSLATOR] "
+                    "WebSocket desconectado."
+                )
+
+                break
+
+            # =================================================
+            # COMMANDS FROM FRONTEND
+            # =================================================
 
             if "text" in data:
 
@@ -90,20 +148,56 @@ async def translator_ws(
                     )
 
                     if command_type == "SPACE":
+
                         translator.add_space()
 
                     elif command_type == "DELETE":
+
                         translator.delete_last()
 
                     elif command_type == "CLEAR":
+
                         translator.clear_word()
 
-                    await websocket.send_json({
-                        "type": "word",
-                        "word": translator.word,
-                    })
+                    else:
+                        continue
+
+                    # -----------------------------------------
+                    # Solo enviar si seguimos conectados
+                    # -----------------------------------------
+
+                    if connected:
+
+                        await websocket.send_json({
+                            "type": "word",
+                            "word": translator.word,
+                        })
+
+                except WebSocketDisconnect:
+                    connected = False
+
+                    print(
+                        "[TRANSLATOR] "
+                        "WebSocket desconectado "
+                        "durante comando."
+                    )
+
+                    break
+
+                except RuntimeError as error:
+                    connected = False
+
+                    print(
+                        "[TRANSLATOR] "
+                        "WebSocket cerrado "
+                        "durante comando:",
+                        repr(error),
+                    )
+
+                    break
 
                 except Exception as error:
+
                     print(
                         "[TRANSLATOR] "
                         "Command error:",
@@ -112,9 +206,9 @@ async def translator_ws(
 
                 continue
 
-            # -----------------------------
-            # Image frame
-            # -----------------------------
+            # =================================================
+            # IMAGE FRAME
+            # =================================================
 
             if "bytes" not in data:
                 continue
@@ -130,46 +224,160 @@ async def translator_ws(
             )
 
             if frame is None:
-                await websocket.send_json({
-                    "type": "error",
-                    "message": (
-                        "No se pudo decodificar "
-                        "el frame."
-                    ),
-                })
+
+                if not connected:
+                    break
+
+                try:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": (
+                            "No se pudo decodificar "
+                            "el frame."
+                        ),
+                    })
+
+                except (
+                    WebSocketDisconnect,
+                    RuntimeError,
+                ) as error:
+
+                    connected = False
+
+                    print(
+                        "[TRANSLATOR] "
+                        "WebSocket cerrado "
+                        "enviando error:",
+                        repr(error),
+                    )
+
+                    break
 
                 continue
 
-            result = translator.process_frame(frame)
+            # =================================================
+            # PROCESAR TRADUCCIÓN
+            # =================================================
 
-            await websocket.send_json({
-                "type": "prediction",
-                **result,
-                "word": translator.word,
-            })
+            result = translator.process_frame(
+                frame
+            )
 
-            if result.get("confirmed"):
+            # =================================================
+            # ENVIAR PREDICCIÓN
+            # =================================================
+
+            if not connected:
+                break
+
+            try:
+
                 await websocket.send_json({
-                    "type": "word",
+                    "type": "prediction",
+                    **result,
                     "word": translator.word,
                 })
 
+            except WebSocketDisconnect:
+                connected = False
+
+                print(
+                    "[TRANSLATOR] "
+                    "WebSocket desconectado "
+                    "enviando predicción."
+                )
+
+                break
+
+            except RuntimeError as error:
+                connected = False
+
+                print(
+                    "[TRANSLATOR] "
+                    "WebSocket cerrado "
+                    "enviando predicción:",
+                    repr(error),
+                )
+
+                break
+
+            # =================================================
+            # LETRA CONFIRMADA
+            # =================================================
+
+            if result.get("confirmed"):
+
+                if not connected:
+                    break
+
+                try:
+
+                    await websocket.send_json({
+                        "type": "word",
+                        "word": translator.word,
+                    })
+
+                except WebSocketDisconnect:
+                    connected = False
+
+                    print(
+                        "[TRANSLATOR] "
+                        "WebSocket desconectado "
+                        "enviando palabra."
+                    )
+
+                    break
+
+                except RuntimeError as error:
+                    connected = False
+
+                    print(
+                        "[TRANSLATOR] "
+                        "WebSocket cerrado "
+                        "enviando palabra:",
+                        repr(error),
+                    )
+
+                    break
+
+    # ========================================================
+    # DESCONEXIÓN NORMAL
+    # ========================================================
+
     except WebSocketDisconnect:
+
         print(
-            "[TRANSLATOR] WebSocket desconectado."
+            "[TRANSLATOR] "
+            "WebSocket desconectado."
         )
 
+    # ========================================================
+    # ERROR INESPERADO
+    # ========================================================
+
     except Exception as error:
+
         print(
             "[TRANSLATOR] Error:",
             repr(error),
         )
 
-        try:
-            await websocket.send_json({
-                "type": "error",
-                "message": str(error),
-            })
+        # IMPORTANTE:
+        # NO intentar websocket.send_json() aquí.
+        #
+        # Si llegamos a este bloque por un problema de socket,
+        # el socket puede estar ya cerrado.
+        #
+        # Intentar enviar otro mensaje es precisamente lo que
+        # provoca los:
+        #
+        # socket.send() raised exception.
 
-        except Exception:
-            pass
+    finally:
+
+        connected = False
+
+        print(
+            "[TRANSLATOR] "
+            "Sesión del WebSocket finalizada."
+        )

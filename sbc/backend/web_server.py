@@ -47,19 +47,15 @@ async def lifespan(app: FastAPI):
     # --------------------------------------------------------
     print()
     print("[SERVER] Cargando asistente de voz...")
-
-    # DESCOMENTAR PARA USAR
-
-    # try:
-    #    load_assistant()
-    # except Exception as error:
-    #    print()
-    #    print("=" * 60)
-    #    print("[SERVER] ERROR CARGANDO ASISTENTE")
-    #    print("=" * 60)
-    #    print(error)
-    #    print("=" * 60)
-
+    try:
+     load_assistant()
+    except Exception as error:
+     print()
+     print("=" * 60)
+     print("[SERVER] ERROR CARGANDO ASISTENTE")
+     print("=" * 60)
+     print(error)
+     print("=" * 60)
     print()
     print()
     print("=" * 60)
