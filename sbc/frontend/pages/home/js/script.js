@@ -284,6 +284,9 @@ input.on(InputAction.UP, () => {
     goToApps();
   }
 });
+input.on(InputAction.RELOAD, () => {
+  window.location.reload();
+});
 input.on(InputAction.CONFIRM, () => {
   if (mode === "apps") {
     openItem(currentItems()[index].id);

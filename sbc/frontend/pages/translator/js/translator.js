@@ -7,26 +7,20 @@ import {
   "use strict";
 
   /* =========================================================
-     CONTEXTO
+     CONTEXTO Y CONFIGURACIÓN
      ========================================================= */
 
   const CONTEXT = "TRANSLATOR";
   const WS_URL = "ws://localhost:25566/api/translator/ws";
 
-  // Tiempo entre frames.
-  // 80 ms ≈ 12.5 FPS
   const FRAME_INTERVAL = 80;
-
-  // Calidad JPEG.
   const JPEG_QUALITY = 0.65;
-
-  // Resolución enviada al backend.
   const FRAME_WIDTH = 640;
   const FRAME_HEIGHT = 480;
 
 
   /* =========================================================
-     ELEMENTOS
+     ELEMENTOS DEL DOM
      ========================================================= */
 
   const cameraFrame = document.getElementById("cameraFrame");
@@ -40,7 +34,7 @@ import {
 
 
   /* =========================================================
-     ESTADO
+     ESTADO LOCAL
      ========================================================= */
 
   let mediaStream = null;
@@ -52,11 +46,9 @@ import {
   let sendTimer = null;
   let currentWord = "";
 
-  // Evita mandar varios frames simultáneamente.
   let frameProcessing = false;
-
-  // Evita iniciar varias veces el envío.
   let sendingFrames = false;
+  let isNavigating = false;
 
 
   /* =========================================================
@@ -66,7 +58,7 @@ import {
   async function startCamera() {
     try {
       console.log("[TRANSLATOR] Solicitando cámara...");
-      signalLabel.textContent = "Solicitando acceso…";
+      if (signalLabel) signalLabel.textContent = "Solicitando acceso…";
 
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("getUserMedia no está disponible");
@@ -77,38 +69,37 @@ import {
         audio: false
       });
 
-      cameraFeed.srcObject = mediaStream;
-      cameraFeed.muted = true;
-      cameraFeed.autoplay = true;
-      cameraFeed.playsInline = true;
+      if (cameraFeed) {
+        cameraFeed.srcObject = mediaStream;
+        cameraFeed.muted = true;
+        cameraFeed.autoplay = true;
+        cameraFeed.playsInline = true;
+        await cameraFeed.play();
+      }
 
-      await cameraFeed.play();
-
-      cameraFrame.classList.add("is-active");
-      signalDot.classList.add("is-tracking");
-      signalLabel.textContent = "Cámara activa";
+      if (cameraFrame) cameraFrame.classList.add("is-active");
+      if (signalDot) signalDot.classList.add("is-tracking");
+      if (signalLabel) signalLabel.textContent = "Cámara activa";
 
       console.log("[TRANSLATOR] Cámara iniciada correctamente.");
       startCanvas();
     } catch (error) {
       console.error("[TRANSLATOR] Error de cámara:", error);
-      signalDot.classList.remove("is-tracking");
-
-      switch (error.name) {
-        case "NotAllowedError":
-          signalLabel.textContent = "Permiso de cámara rechazado";
-          break;
-        case "NotFoundError":
-          signalLabel.textContent = "No se encontró una cámara";
-          break;
-        case "NotReadableError":
-          signalLabel.textContent = "La cámara está siendo usada";
-          break;
-        case "SecurityError":
-          signalLabel.textContent = "Acceso a cámara bloqueado";
-          break;
-        default:
-          signalLabel.textContent = "No se pudo acceder a la cámara";
+      if (signalDot) signalDot.classList.remove("is-tracking");
+      if (signalLabel) {
+        switch (error.name) {
+          case "NotAllowedError":
+            signalLabel.textContent = "Permiso de cámara rechazado";
+            break;
+          case "NotFoundError":
+            signalLabel.textContent = "No se encontró una cámara";
+            break;
+          case "NotReadableError":
+            signalLabel.textContent = "La cámara está siendo usada";
+            break;
+          default:
+            signalLabel.textContent = "No se pudo acceder a la cámara";
+        }
       }
     }
   }
@@ -120,9 +111,6 @@ import {
 
   function startCanvas() {
     canvas = document.createElement("canvas");
-
-    // No usamos la resolución nativa de la cámara.
-    // Reducimos el frame antes de mandarlo a Python.
     canvas.width = FRAME_WIDTH;
     canvas.height = FRAME_HEIGHT;
 
@@ -138,7 +126,7 @@ import {
 
 
   /* =========================================================
-     DETENER CÁMARA
+     DETENER CÁMARA Y WEBSOCKET
      ========================================================= */
 
   function stopCamera() {
@@ -150,9 +138,21 @@ import {
       sendTimer = null;
     }
 
+    if (mediaStream) {
+      mediaStream.getTracks().forEach((track) => track.stop());
+      mediaStream = null;
+    }
+
     if (socket) {
       try {
-        socket.close();
+        socket.onopen = null;
+        socket.onmessage = null;
+        socket.onerror = null;
+        socket.onclose = null;
+
+        if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+          socket.close(1000, "Salida del módulo");
+        }
       } catch (error) {
         console.error("[TRANSLATOR] Error cerrando WebSocket:", error);
       }
@@ -161,84 +161,53 @@ import {
 
     socketReady = false;
 
-    if (mediaStream) {
-      mediaStream.getTracks().forEach((track) => {
-        track.stop();
-      });
-      mediaStream = null;
-    }
-
-    cameraFeed.srcObject = null;
-    cameraFrame.classList.remove("is-active");
-    signalDot.classList.remove("is-tracking");
-    signalLabel.textContent = "Cámara detenida";
+    if (cameraFeed) cameraFeed.srcObject = null;
+    if (cameraFrame) cameraFrame.classList.remove("is-active");
+    if (signalDot) signalDot.classList.remove("is-tracking");
   }
 
 
   /* =========================================================
-     PANEL
+     PANEL Y VISTA
      ========================================================= */
 
   function openPanel() {
     panelOpen = true;
-    captionDock.classList.add("is-open");
-    peekHandle.classList.add("is-hidden");
+    if (captionDock) captionDock.classList.add("is-open");
+    if (peekHandle) peekHandle.classList.add("is-hidden");
   }
 
   function closePanel() {
     panelOpen = false;
-    captionDock.classList.remove("is-open");
-    peekHandle.classList.remove("is-hidden");
+    if (captionDock) captionDock.classList.remove("is-open");
+    if (peekHandle) peekHandle.classList.remove("is-hidden");
+  }
+
+  if (peekHandle) {
+    peekHandle.addEventListener("click", () => {
+      if (panelOpen) closePanel();
+      else openPanel();
+    });
   }
 
 
   /* =========================================================
-     FLECHA
-     ========================================================= */
-
-  peekHandle.addEventListener("click", () => {
-    if (panelOpen) {
-      closePanel();
-    } else {
-      openPanel();
-    }
-  });
-
-
-  /* =========================================================
-     MOSTRAR SEÑA
+     INTERFAZ Y LETRAS
      ========================================================= */
 
   function showSign(sign) {
-    if (sign === null || sign === undefined || sign === "") {
-      return;
-    }
-
+    if (!sign || !currentGlyph) return;
     currentGlyph.textContent = sign;
     currentGlyph.classList.remove("is-fresh");
-
-    // Fuerza el reinicio de la animación.
     void currentGlyph.offsetWidth;
-
     currentGlyph.classList.add("is-fresh");
   }
 
-  window.showSign = showSign;
-
-
-  /* =========================================================
-     ACTUALIZAR PALABRA
-     ========================================================= */
-
   function updateWord(word) {
     currentWord = word || "";
-
-    if (!translatorWord) {
-      console.error("[TRANSLATOR] No existe #translatorWord");
-      return;
+    if (translatorWord) {
+      translatorWord.textContent = currentWord;
     }
-
-    translatorWord.textContent = currentWord;
   }
 
 
@@ -258,7 +227,7 @@ import {
     socket.onopen = () => {
       console.log("[TRANSLATOR] WebSocket conectado.");
       socketReady = true;
-      signalLabel.textContent = "Traductor conectado";
+      if (signalLabel) signalLabel.textContent = "Traductor conectado";
     };
 
     socket.onmessage = (event) => {
@@ -281,66 +250,17 @@ import {
     };
   }
 
-
-  /* =========================================================
-     MENSAJES DEL BACKEND
-     ========================================================= */
-
   function handleBackendMessage(data) {
-    if (data.type === "error") {
-      console.error("[TRANSLATOR] Backend error:", data.message);
-      return;
-    }
-
+    if (data.type === "error") return;
     if (data.type === "word") {
       updateWord(data.word);
       return;
     }
+    if (data.type !== "prediction") return;
 
-    if (data.type !== "prediction") {
-      return;
-    }
-
-    if (data.prediction) {
-      showSign(data.prediction);
-    }
-
-    if (data.confirmed && data.confirmed_letter) {
-      showSign(data.confirmed_letter);
-    }
-
-    if (typeof data.word === "string") {
-      updateWord(data.word);
-    }
-  }
-
-
-  /* =========================================================
-     COMANDOS
-     ========================================================= */
-
-  function sendCommand(command) {
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-      return;
-    }
-
-    socket.send(
-      JSON.stringify({
-        command: command
-      })
-    );
-  }
-
-  function addSpace() {
-    sendCommand("SPACE");
-  }
-
-  function deleteLast() {
-    sendCommand("DELETE");
-  }
-
-  function clearWord() {
-    sendCommand("CLEAR");
+    if (data.prediction) showSign(data.prediction);
+    if (data.confirmed && data.confirmed_letter) showSign(data.confirmed_letter);
+    if (typeof data.word === "string") updateWord(data.word);
   }
 
 
@@ -349,24 +269,15 @@ import {
      ========================================================= */
 
   function startSendingFrames() {
-    if (sendingFrames) {
-      return;
-    }
-
+    if (sendingFrames) return;
     sendingFrames = true;
     frameProcessing = false;
-
     sendFrame();
   }
 
   function scheduleNextFrame() {
-    if (!sendingFrames) {
-      return;
-    }
-
-    if (sendTimer) {
-      clearTimeout(sendTimer);
-    }
+    if (!sendingFrames) return;
+    if (sendTimer) clearTimeout(sendTimer);
 
     sendTimer = setTimeout(() => {
       sendTimer = null;
@@ -375,9 +286,7 @@ import {
   }
 
   function sendFrame() {
-    if (!sendingFrames) {
-      return;
-    }
+    if (!sendingFrames) return;
 
     if (
       !mediaStream ||
@@ -391,7 +300,6 @@ import {
       return;
     }
 
-    // Nunca dejamos que se acumulen varios frames al mismo tiempo.
     if (frameProcessing) {
       scheduleNextFrame();
       return;
@@ -404,6 +312,11 @@ import {
 
       canvas.toBlob(
         (blob) => {
+          if (!sendingFrames) {
+            frameProcessing = false;
+            return;
+          }
+
           if (blob && socket && socket.readyState === WebSocket.OPEN) {
             try {
               socket.send(blob);
@@ -427,7 +340,7 @@ import {
 
 
   /* =========================================================
-     INICIO
+     INICIALIZACIÓN
      ========================================================= */
 
   startCamera();
@@ -435,19 +348,29 @@ import {
 
 
   /* =========================================================
-     INPUT CONTROLLER
+     INPUT CONTROLLER Y SALIDA LIMPIA
      ========================================================= */
+
+  function destroyTranslatorView() {
+    isNavigating = true;
+    stopCamera();
+
+    try {
+      input.off(CONTEXT);
+      input.popContext();
+    } catch (e) {
+      console.warn("[TRANSLATOR] Error al destruir contexto:", e);
+    }
+  }
 
   input.pushContext(CONTEXT);
 
   input.on(
     InputAction.UP,
     () => {
-      if (panelOpen) {
-        closePanel();
-      } else {
-        openPanel();
-      }
+      if (isNavigating) return;
+      if (panelOpen) closePanel();
+      else openPanel();
     },
     CONTEXT
   );
@@ -455,6 +378,7 @@ import {
   input.on(
     InputAction.DOWN,
     () => {
+      if (isNavigating) return;
       closePanel();
     },
     CONTEXT
@@ -463,10 +387,24 @@ import {
   input.on(
     InputAction.BACK,
     () => {
-      stopCamera();
-      input.popContext();
-      window.location.href = "../home/home.html";
+      if (isNavigating) return;
+      destroyTranslatorView();
+      window.location.replace("../home/home.html");
     },
     CONTEXT
   );
+
+  input.on(
+    InputAction.RELOAD,
+    () => {
+      if (isNavigating) return;
+      destroyTranslatorView();
+      window.location.reload();
+    },
+    CONTEXT
+  );
+
+  window.addEventListener("beforeunload", () => {
+    destroyTranslatorView();
+  });
 })();

@@ -72,54 +72,42 @@ async def remove_client(websocket):
 # ============================================================
 # BROADCAST
 # ============================================================
+# En server.py
 
 async def broadcast(packet):
-
+    # 1. Copiar rápidamente los clientes bajo el Lock y liberarlo DE INMEDIATO
     async with clients_lock:
         current_clients = list(clients)
 
+    if not current_clients:
+        return
+
     disconnected = []
 
+    # 2. Enviar datos a cada cliente sin mantener el Lock retenido
     for client in current_clients:
-
         try:
-
-            await client.send_json(packet)
+            # Enviar con timeout corto individual por cliente
+            await asyncio.wait_for(client.send_json(packet), timeout=0.3)
 
         except (
             WebSocketDisconnect,
             RuntimeError,
             ConnectionError,
+            asyncio.TimeoutError
         ) as error:
-
-            logger.info(
-                "Cliente WebSocket desconectado "
-                "durante broadcast: %s",
-                error,
-            )
-
+            logger.info("Cliente WebSocket desconectado/bloqueado en broadcast: %s", error)
             disconnected.append(client)
 
         except Exception as error:
-
-            logger.warning(
-                "Error enviando broadcast: %s",
-                error,
-            )
-
+            logger.warning("Error enviando broadcast: %s", error)
             disconnected.append(client)
 
-    # ---------------------------------------------
-    # LIMPIAR CLIENTES MUERTOS
-    # ---------------------------------------------
-
+    # 3. Limpiar conexiones muertas recuperando el Lock brevemente
     if disconnected:
-
         async with clients_lock:
-
             for client in disconnected:
                 clients.discard(client)
-
 
 # ============================================================
 # WEBSOCKET PRINCIPAL

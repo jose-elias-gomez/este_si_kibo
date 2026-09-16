@@ -29,14 +29,27 @@ class JoystickService:
             self.joystick.stop()
             self.joystick = None
 
+# En service.py
+
     def _on_input(self, action):
-        if self.loop is None:
+        if self.loop is None or not self.loop.is_running():
             return
 
-        asyncio.run_coroutine_threadsafe(
-            broadcast({
-              "id": PacketId.JOYSTICK.value,  # <--- Cambiado a JOYSTICK (ID 2)
-              "action": action
-            }),
-            self.loop
-        )
+        # Función auxiliar para ejecutar broadcast sin bloquear el hilo
+        async def send_action():
+            try:
+                # Timeout estricto de 200ms para evitar que se quede esperando sockets colgados
+                await asyncio.wait_for(
+                    broadcast({
+                        "id": PacketId.JOYSTICK.value,
+                        "action": action
+                    }),
+                    timeout=0.2
+                )
+            except asyncio.TimeoutError:
+                print("[JOYSTICK SERVICE] Broadcast descartado por timeout (socket bloqueado)")
+            except Exception as e:
+                print(f"[JOYSTICK SERVICE] Error enviando acción: {e}")
+
+        # Programar la tarea asíncrona de forma independiente
+        asyncio.run_coroutine_threadsafe(send_action(), self.loop)
