@@ -67,6 +67,7 @@
   gap: var(--space-xs);
   text-align: center;
   cursor: pointer;
+
   transition:
     transform var(--duration-panel) var(--ease-slide),
     opacity var(--duration-base) ease;
@@ -81,6 +82,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 28px;
 }
 
 .no-cover{

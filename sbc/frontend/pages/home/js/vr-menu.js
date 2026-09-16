@@ -44,6 +44,13 @@ const APPS = [
         title: "Cámara",
         cover: "assets/apps/camera.png",
         color: 0x66a8dd
+    }, 
+    
+    {
+        id: "music",
+        title: "Música",
+        cover: "assets/apps/music.png",
+        color: 0x9c3a3a
     }
 ];
 
