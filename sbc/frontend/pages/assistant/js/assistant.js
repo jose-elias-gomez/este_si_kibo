@@ -8,6 +8,7 @@ import {
   getApiUrl
 } from "../../../shared/js/api/common.js";
 
+
 (() => {
 
   "use strict";
@@ -53,6 +54,7 @@ import {
 
   let isRecording = false;
   let isProcessing = false;
+  let isStarting = false;
 
 
   /* =========================================================
@@ -99,42 +101,76 @@ import {
 
 
   /* =========================================================
-     ACCIONES PRINCIPALES
+     TOGGLE GRABACIÓN
      ========================================================= */
 
-  /* =========================================================
-     ACCIONES PRINCIPALES
-     ========================================================= */
+  function toggleRecording() {
 
-  async function toggleRecording() {
+    /*
+     * Si está procesando la respuesta del asistente,
+     * no hacemos nada.
+     */
 
     if (isProcessing) {
+
+      console.log(
+        "[ASSISTANT] Todavía procesando..."
+      );
+
       return;
+
     }
+
+
+    /*
+     * Si todavía está solicitando el micrófono,
+     * ignoramos otro Enter/click.
+     */
+
+    if (isStarting) {
+
+      console.log(
+        "[ASSISTANT] Esperando micrófono..."
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * Si está grabando, el mismo botón/Enter
+     * detiene la grabación.
+     */
 
     if (isRecording) {
 
       stopRecording();
 
-    } else {
-
-      await startRecording();
+      return;
 
     }
+
+
+    /*
+     * Si no está grabando, comienza.
+     */
+
+    startRecording();
 
   }
 
 
-  // Evento directo con Mouse/Touch
+  /* =========================================================
+     CLICK DEL BOTÓN
+     ========================================================= */
+
   micButton.addEventListener(
     "click",
-    (event) => {
-      // Si el evento fue provocado por el teclado (Enter/Espacio), 
-      // lo ignoramos aquí porque ya lo manejará el InputController.
-      if (event.detail === 0) {
-        return;
-      }
+    () => {
+
       toggleRecording();
+
     }
   );
 
@@ -148,7 +184,10 @@ import {
   );
 
 
-  // Botón Confirmar (A / Enter / Joystick)
+  /* =========================================================
+     CONFIRMAR
+     ========================================================= */
+
   input.on(
 
     InputAction.CONFIRM,
@@ -164,7 +203,10 @@ import {
   );
 
 
-  // Botón Atrás (B / Escape / Back)
+  /* =========================================================
+     ATRÁS
+     ========================================================= */
+
   input.on(
 
     InputAction.BACK,
@@ -193,13 +235,6 @@ import {
 
   );
 
-  micButton.addEventListener(
-    "click",
-    () => {
-      toggleRecording();
-    }
-  );
-
 
   /* =========================================================
      INICIAR GRABACIÓN
@@ -207,11 +242,26 @@ import {
 
   async function startRecording() {
 
+    if (
+      isProcessing ||
+      isStarting ||
+      isRecording
+    ) {
+
+      return;
+
+    }
+
+
+    isStarting = true;
+
+
     try {
 
       console.log(
         "[ASSISTANT] Solicitando micrófono..."
       );
+
 
       mediaStream =
         await navigator.mediaDevices.getUserMedia({
@@ -223,7 +273,12 @@ import {
       audioChunks = [];
 
 
+      /* =====================================================
+         MIME TYPE
+         ===================================================== */
+
       let mimeType = "";
+
 
       if (
         MediaRecorder.isTypeSupported(
@@ -255,15 +310,25 @@ import {
       }
 
 
+      /* =====================================================
+         MEDIA RECORDER
+         ===================================================== */
+
       mediaRecorder = mimeType
         ? new MediaRecorder(
             mediaStream,
-            { mimeType }
+            {
+              mimeType
+            }
           )
         : new MediaRecorder(
             mediaStream
           );
 
+
+      /* =====================================================
+         DATOS DEL AUDIO
+         ===================================================== */
 
       mediaRecorder.ondataavailable =
         (event) => {
@@ -282,8 +347,17 @@ import {
         };
 
 
+      /* =====================================================
+         STOP
+         ===================================================== */
+
       mediaRecorder.onstop =
         async () => {
+
+          console.log(
+            "[ASSISTANT] MediaRecorder terminó."
+          );
+
 
           stopMediaTracks();
 
@@ -309,7 +383,16 @@ import {
           );
 
 
+          /*
+           * Ya no necesitamos mantener el recorder.
+           */
+
+          mediaRecorder = null;
+
+
           if (audioBlob.size === 0) {
+
+            isProcessing = false;
 
             setIdle();
 
@@ -318,14 +401,22 @@ import {
           }
 
 
-          await sendAudio(audioBlob);
+          await sendAudio(
+            audioBlob
+          );
 
         };
 
 
+      /* =====================================================
+         START
+         ===================================================== */
+
       mediaRecorder.start();
 
+
       isRecording = true;
+      isStarting = false;
 
 
       assistant.classList.add(
@@ -345,6 +436,7 @@ import {
         "[ASSISTANT] Grabación iniciada"
       );
 
+
     } catch (error) {
 
       console.error(
@@ -352,9 +444,13 @@ import {
         error
       );
 
+
       stopMediaTracks();
 
+
       isRecording = false;
+      isStarting = false;
+
 
       setIdle();
 
@@ -369,8 +465,14 @@ import {
 
   function stopRecording() {
 
+    if (!mediaRecorder) {
+
+      return;
+
+    }
+
+
     if (
-      !mediaRecorder ||
       mediaRecorder.state === "inactive"
     ) {
 
@@ -379,7 +481,16 @@ import {
     }
 
 
+    /*
+     * BLOQUEAMOS INMEDIATAMENTE.
+     *
+     * Antes isProcessing se activaba recién cuando
+     * sendAudio() comenzaba. Ahora queda bloqueado
+     * desde el mismo Enter que detiene la grabación.
+     */
+
     isRecording = false;
+    isProcessing = true;
 
 
     assistant.classList.remove(
@@ -395,44 +506,63 @@ import {
       "Procesando tu mensaje...";
 
 
-    mediaRecorder.stop();
-
-
     console.log(
       "[ASSISTANT] Grabación detenida"
     );
 
+
+    /*
+     * Detenemos el MediaRecorder.
+     *
+     * Esto dispara onstop(), que después enviará
+     * el audio al backend.
+     */
+
+    mediaRecorder.stop();
+
   }
 
 
   /* =========================================================
-     DETENER TRACKS DE MEDIA
+     DETENER TRACKS
      ========================================================= */
 
   function stopMediaTracks() {
 
-    if (mediaStream) {
+    if (!mediaStream) {
 
-      mediaStream
-        .getTracks()
-        .forEach((track) => {
+      return;
+
+    }
+
+
+    mediaStream
+      .getTracks()
+      .forEach(
+        (track) => {
 
           track.stop();
 
-        });
+        }
+      );
 
-      mediaStream = null;
 
-    }
+    mediaStream = null;
 
   }
 
 
   /* =========================================================
-     ENVIAR AUDIO AL BACKEND
+     ENVIAR AUDIO
      ========================================================= */
 
-  async function sendAudio(audioBlob) {
+  async function sendAudio(
+    audioBlob
+  ) {
+
+    /*
+     * isProcessing ya se activa en stopRecording().
+     */
 
     isProcessing = true;
 
@@ -451,7 +581,9 @@ import {
 
 
       const apiUrl =
-        getApiUrl("assistant/talk");
+        getApiUrl(
+          "assistant/talk"
+        );
 
 
       console.log(
@@ -470,15 +602,23 @@ import {
         );
 
 
+      console.log(
+        "[ASSISTANT] Respuesta HTTP:",
+        response.status
+      );
+
+
       if (!response.ok) {
 
         let errorMessage =
           "Error procesando el audio.";
 
+
         try {
 
           const errorData =
             await response.json();
+
 
           if (
             typeof errorData.detail ===
@@ -517,7 +657,13 @@ import {
       );
 
 
-      if (data.transcription) {
+      /* =====================================================
+         TRANSCRIPCIÓN
+         ===================================================== */
+
+      if (
+        data.transcription
+      ) {
 
         addMessage(
           data.transcription,
@@ -527,7 +673,13 @@ import {
       }
 
 
-      if (data.reply) {
+      /* =====================================================
+         RESPUESTA
+         ===================================================== */
+
+      if (
+        data.reply
+      ) {
 
         addMessage(
           data.reply,
@@ -539,6 +691,7 @@ import {
 
       setIdle();
 
+
     } catch (error) {
 
       console.error(
@@ -549,12 +702,13 @@ import {
 
       addMessage(
         error.message ||
-          "No pude procesar tu mensaje.",
+        "No pude procesar tu mensaje.",
         "assistant"
       );
 
 
       setIdle();
+
 
     } finally {
 
@@ -566,13 +720,18 @@ import {
 
 
   /* =========================================================
-     MENSAJES EN PANTALLA
+     MENSAJES
      ========================================================= */
 
-  function addMessage(text, type) {
+  function addMessage(
+    text,
+    type
+  ) {
 
     if (!text) {
+
       return;
+
     }
 
 
@@ -585,14 +744,20 @@ import {
 
 
     const message =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
+
 
     message.className =
       `message message--${type}`;
 
 
     const bubble =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
+
 
     bubble.className =
       "message__bubble";
@@ -625,6 +790,8 @@ import {
   function setIdle() {
 
     isRecording = false;
+    isProcessing = false;
+    isStarting = false;
 
 
     assistant.classList.remove(
@@ -657,62 +824,12 @@ import {
 
 
   /* =========================================================
-     INPUT CONTROLLER
+     DEBUG
      ========================================================= */
-
-  input.pushContext(
-    CONTEXT
-  );
-
-
-  // Botón Confirmar (A / Enter / Click)
-  input.on(
-
-    InputAction.CONFIRM,
-
-    () => {
-
-      toggleRecording();
-
-    },
-
-    CONTEXT
-
-  );
-
-
-  // Botón Atrás (B / Escape / Back)
-  input.on(
-
-    InputAction.BACK,
-
-    () => {
-
-      if (isRecording) {
-
-        stopRecording();
-
-      }
-
-
-      stopMediaTracks();
-
-
-      input.popContext();
-
-
-      window.location.href =
-        "../home/home.html";
-
-    },
-
-    CONTEXT
-
-  );
-
 
   console.log(
     "[ASSISTANT] Assistant JS cargado correctamente."
   );
+
 
 })();
