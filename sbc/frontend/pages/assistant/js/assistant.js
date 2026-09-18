@@ -1,605 +1,835 @@
 import {
-    setupBackHandler
-} from "../../../shared/components/backHandler.js";
+  input,
+  InputAction
+} from "../../../shared/js/inputController.js";
 
 import {
-    DEBUG_MODE,
-    getApiUrl
+  DEBUG_MODE,
+  getApiUrl
 } from "../../../shared/js/api/common.js";
 
+
 (() => {
-    "use strict";
 
-    const CONTEXT = "ASSISTANT";
-
-    const assistant = document.getElementById("assistant");
-    const micButton = document.getElementById("micButton");
-    const voiceLabel = document.getElementById("voiceLabel");
-    const conversation = document.getElementById("conversation");
-    const welcome = document.getElementById("welcome");
-    const statusText = document.getElementById("statusText");
-
-    let mediaRecorder = null;
-    let mediaStream = null;
-    let audioChunks = [];
-
-    let isRecording = false;
-    let isProcessing = false;
+  "use strict";
 
 
-    // =========================================================
-    // VALIDAR ELEMENTOS
-    // =========================================================
+  /* =========================================================
+     CONTEXTO
+     ========================================================= */
+
+  const CONTEXT = "ASSISTANT";
+
+
+  /* =========================================================
+     ELEMENTOS
+     ========================================================= */
+
+  const assistant =
+    document.getElementById("assistant");
+
+  const micButton =
+    document.getElementById("micButton");
+
+  const voiceLabel =
+    document.getElementById("voiceLabel");
+
+  const conversation =
+    document.getElementById("conversation");
+
+  const welcome =
+    document.getElementById("welcome");
+
+  const statusText =
+    document.getElementById("statusText");
+
+
+  /* =========================================================
+     ESTADO
+     ========================================================= */
+
+  let mediaRecorder = null;
+  let mediaStream = null;
+  let audioChunks = [];
+
+  let isRecording = false;
+  let isProcessing = false;
+  let isStarting = false;
+
+
+  /* =========================================================
+     VALIDAR ELEMENTOS
+     ========================================================= */
+
+  if (
+    !assistant ||
+    !micButton ||
+    !voiceLabel ||
+    !conversation ||
+    !statusText
+  ) {
+
+    console.error(
+      "[ASSISTANT] Faltan elementos HTML necesarios."
+    );
+
+    return;
+
+  }
+
+
+  /* =========================================================
+     SOPORTE DEL MICRÓFONO
+     ========================================================= */
+
+  if (
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia
+  ) {
+
+    statusText.textContent =
+      "No disponible";
+
+    voiceLabel.textContent =
+      "El navegador no permite usar el micrófono.";
+
+    micButton.disabled = true;
+
+    return;
+
+  }
+
+
+  /* =========================================================
+     TOGGLE GRABACIÓN
+     ========================================================= */
+
+  function toggleRecording() {
+
+    /*
+     * Si está procesando la respuesta del asistente,
+     * no hacemos nada.
+     */
+
+    if (isProcessing) {
+
+      console.log(
+        "[ASSISTANT] Todavía procesando..."
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * Si todavía está solicitando el micrófono,
+     * ignoramos otro Enter/click.
+     */
+
+    if (isStarting) {
+
+      console.log(
+        "[ASSISTANT] Esperando micrófono..."
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * Si está grabando, el mismo botón/Enter
+     * detiene la grabación.
+     */
+
+    if (isRecording) {
+
+      stopRecording();
+
+      return;
+
+    }
+
+
+    /*
+     * Si no está grabando, comienza.
+     */
+
+    startRecording();
+
+  }
+
+
+  /* =========================================================
+     CLICK DEL BOTÓN
+     ========================================================= */
+
+  micButton.addEventListener(
+    "click",
+    () => {
+
+      toggleRecording();
+
+    }
+  );
+
+
+  /* =========================================================
+     INPUT CONTROLLER
+     ========================================================= */
+
+  input.pushContext(
+    CONTEXT
+  );
+
+
+  /* =========================================================
+     CONFIRMAR
+     ========================================================= */
+
+  input.on(
+
+    InputAction.CONFIRM,
+
+    () => {
+
+      toggleRecording();
+
+    },
+
+    CONTEXT
+
+  );
+
+
+  /* =========================================================
+     ATRÁS
+     ========================================================= */
+
+  input.on(
+
+    InputAction.BACK,
+
+    () => {
+
+      if (isRecording) {
+
+        stopRecording();
+
+      }
+
+
+      stopMediaTracks();
+
+
+      input.popContext();
+
+
+      window.location.href =
+        "../home/home.html";
+
+    },
+
+    CONTEXT
+
+  );
+
+
+  /* =========================================================
+     INICIAR GRABACIÓN
+     ========================================================= */
+
+  async function startRecording() {
 
     if (
-        !assistant ||
-        !micButton ||
-        !voiceLabel ||
-        !conversation ||
-        !statusText
+      isProcessing ||
+      isStarting ||
+      isRecording
     ) {
-        console.error(
-            "[ASSISTANT] Faltan elementos HTML necesarios."
-        );
-        return;
+
+      return;
+
     }
 
 
-    // =========================================================
-    // SOPORTE DEL MICRÓFONO
-    // =========================================================
-
-    if (!navigator.mediaDevices?.getUserMedia) {
-
-        statusText.textContent = "No disponible";
-
-        voiceLabel.textContent =
-            "El navegador no permite usar el micrófono.";
-
-        micButton.disabled = true;
-
-        return;
-    }
+    isStarting = true;
 
 
-    // =========================================================
-    // BOTÓN DEL MICRÓFONO
-    // =========================================================
+    try {
 
-    micButton.addEventListener("click", async () => {
-
-        if (isProcessing) {
-            return;
-        }
-
-        if (isRecording) {
-            stopRecording();
-        } else {
-            await startRecording();
-        }
-
-    });
+      console.log(
+        "[ASSISTANT] Solicitando micrófono..."
+      );
 
 
-    // =========================================================
-    // INICIAR GRABACIÓN
-    // =========================================================
-
-    async function startRecording() {
-
-        try {
-
-            mediaStream =
-                await navigator.mediaDevices.getUserMedia({
-                    audio: true,
-                    video: false
-                });
+      mediaStream =
+        await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: false
+        });
 
 
-            audioChunks = [];
+      audioChunks = [];
 
 
-            // -------------------------------------------------
-            // Elegir formato compatible
-            // -------------------------------------------------
+      /* =====================================================
+         MIME TYPE
+         ===================================================== */
 
-            let mimeType = "";
+      let mimeType = "";
 
-            if (
-                MediaRecorder.isTypeSupported(
-                    "audio/webm;codecs=opus"
-                )
-            ) {
 
-                mimeType =
-                    "audio/webm;codecs=opus";
+      if (
+        MediaRecorder.isTypeSupported(
+          "audio/webm;codecs=opus"
+        )
+      ) {
 
-            } else if (
-                MediaRecorder.isTypeSupported(
-                    "audio/webm"
-                )
-            ) {
+        mimeType =
+          "audio/webm;codecs=opus";
 
-                mimeType =
-                    "audio/webm";
+      } else if (
+        MediaRecorder.isTypeSupported(
+          "audio/webm"
+        )
+      ) {
 
-            } else if (
-                MediaRecorder.isTypeSupported(
-                    "audio/ogg;codecs=opus"
-                )
-            ) {
+        mimeType =
+          "audio/webm";
 
-                mimeType =
-                    "audio/ogg;codecs=opus";
+      } else if (
+        MediaRecorder.isTypeSupported(
+          "audio/ogg;codecs=opus"
+        )
+      ) {
+
+        mimeType =
+          "audio/ogg;codecs=opus";
+
+      }
+
+
+      /* =====================================================
+         MEDIA RECORDER
+         ===================================================== */
+
+      mediaRecorder = mimeType
+        ? new MediaRecorder(
+            mediaStream,
+            {
+              mimeType
             }
+          )
+        : new MediaRecorder(
+            mediaStream
+          );
 
 
-            mediaRecorder = mimeType
-                ? new MediaRecorder(
-                    mediaStream,
-                    { mimeType }
-                )
-                : new MediaRecorder(mediaStream);
+      /* =====================================================
+         DATOS DEL AUDIO
+         ===================================================== */
 
+      mediaRecorder.ondataavailable =
+        (event) => {
 
-            // -------------------------------------------------
-            // Datos de audio
-            // -------------------------------------------------
+          if (
+            event.data &&
+            event.data.size > 0
+          ) {
 
-            mediaRecorder.ondataavailable =
-                (event) => {
-
-                    if (
-                        event.data &&
-                        event.data.size > 0
-                    ) {
-
-                        audioChunks.push(
-                            event.data
-                        );
-                    }
-                };
-
-
-            // -------------------------------------------------
-            // Grabación terminada
-            // -------------------------------------------------
-
-            mediaRecorder.onstop =
-                async () => {
-
-                    // Liberar micrófono
-                    if (mediaStream) {
-
-                        mediaStream
-                            .getTracks()
-                            .forEach(track => {
-                                track.stop();
-                            });
-
-                        mediaStream = null;
-                    }
-
-
-                    const actualMimeType =
-                        mediaRecorder.mimeType ||
-                        "audio/webm";
-
-
-                    const audioBlob =
-                        new Blob(
-                            audioChunks,
-                            {
-                                type: actualMimeType
-                            }
-                        );
-
-
-                    console.log(
-                        "[ASSISTANT] Audio grabado:",
-                        audioBlob.size,
-                        "bytes"
-                    );
-
-
-                    if (audioBlob.size === 0) {
-
-                        setIdle();
-                        return;
-                    }
-
-
-                    await sendAudio(audioBlob);
-                };
-
-
-            // -------------------------------------------------
-            // Comenzar
-            // -------------------------------------------------
-
-            mediaRecorder.start();
-
-            isRecording = true;
-
-            assistant.classList.add(
-                "is-listening"
+            audioChunks.push(
+              event.data
             );
 
-            statusText.textContent =
-                "Escuchando";
+          }
 
-            voiceLabel.textContent =
-                "Hablá... tocá nuevamente para terminar";
+        };
 
 
-            console.log(
-                "[ASSISTANT] Grabación iniciada"
-            );
+      /* =====================================================
+         STOP
+         ===================================================== */
 
-        } catch (error) {
+      mediaRecorder.onstop =
+        async () => {
 
-            console.error(
-                "[ASSISTANT] Error accediendo al micrófono:",
-                error
-            );
-
-            if (mediaStream) {
-
-                mediaStream
-                    .getTracks()
-                    .forEach(track => {
-                        track.stop();
-                    });
-
-                mediaStream = null;
-            }
-
-            isRecording = false;
-
-            setIdle();
-        }
-    }
+          console.log(
+            "[ASSISTANT] MediaRecorder terminó."
+          );
 
 
-    // =========================================================
-    // DETENER GRABACIÓN
-    // =========================================================
-
-    function stopRecording() {
-
-        if (
-            !mediaRecorder ||
-            mediaRecorder.state === "inactive"
-        ) {
-            return;
-        }
+          stopMediaTracks();
 
 
-        isRecording = false;
-
-        assistant.classList.remove(
-            "is-listening"
-        );
-
-        statusText.textContent =
-            "Procesando";
-
-        voiceLabel.textContent =
-            "Procesando tu mensaje...";
+          const actualMimeType =
+            mediaRecorder.mimeType ||
+            "audio/webm";
 
 
-        mediaRecorder.stop();
-
-
-        console.log(
-            "[ASSISTANT] Grabación detenida"
-        );
-    }
-
-
-    // =========================================================
-    // ENVIAR AUDIO AL BACKEND
-    // =========================================================
-
-    async function sendAudio(audioBlob) {
-
-        isProcessing = true;
-
-
-        try {
-
-            const formData =
-                new FormData();
-
-
-            formData.append(
-                "audio",
-                audioBlob,
-                "voice.webm"
+          const audioBlob =
+            new Blob(
+              audioChunks,
+              {
+                type: actualMimeType
+              }
             );
 
 
-            const apiUrl =
-                getApiUrl("assistant/talk");
+          console.log(
+            "[ASSISTANT] Audio grabado:",
+            audioBlob.size,
+            "bytes"
+          );
 
 
-            console.log(
-                "[ASSISTANT] Enviando audio a:",
-                apiUrl
-            );
+          /*
+           * Ya no necesitamos mantener el recorder.
+           */
+
+          mediaRecorder = null;
 
 
-            const response =
-                await fetch(
-                    apiUrl,
-                    {
-                        method: "POST",
-                        body: formData
-                    }
-                );
-
-
-            console.log(
-                "[ASSISTANT] HTTP:",
-                response.status
-            );
-
-
-            // -------------------------------------------------
-            // Error HTTP
-            // -------------------------------------------------
-
-            if (!response.ok) {
-
-                let errorMessage =
-                    "Error procesando el audio.";
-
-                try {
-
-                    const errorData =
-                        await response.json();
-
-                    if (
-                        typeof errorData.detail ===
-                        "string"
-                    ) {
-
-                        errorMessage =
-                            errorData.detail;
-
-                    } else if (
-                        errorData.detail?.message
-                    ) {
-
-                        errorMessage =
-                            errorData.detail.message;
-                    }
-
-                } catch (_) {
-                    // El backend no devolvió JSON
-                }
-
-
-                throw new Error(
-                    errorMessage
-                );
-            }
-
-
-            // -------------------------------------------------
-            // Respuesta
-            // -------------------------------------------------
-
-            const data =
-                await response.json();
-
-
-            console.log(
-                "[ASSISTANT] Respuesta backend:",
-                data
-            );
-
-
-            // -------------------------------------------------
-            // Transcripción
-            // -------------------------------------------------
-
-            if (data.transcription) {
-
-                addMessage(
-                    data.transcription,
-                    "user"
-                );
-            }
-
-
-            // -------------------------------------------------
-            // Respuesta del asistente
-            // -------------------------------------------------
-
-            if (data.reply) {
-
-                addMessage(
-                    data.reply,
-                    "assistant"
-                );
-            }
-
-
-            // -------------------------------------------------
-            // Si no recibimos nada
-            // -------------------------------------------------
-
-            if (
-                !data.transcription &&
-                !data.reply
-            ) {
-
-                console.warn(
-                    "[ASSISTANT] El backend respondió pero no devolvió transcription/reply."
-                );
-            }
-
-
-            setIdle();
-
-        } catch (error) {
-
-            console.error(
-                "[ASSISTANT] Error:",
-                error
-            );
-
-
-            addMessage(
-                error.message ||
-                "No pude procesar tu mensaje.",
-                "assistant"
-            );
-
-
-            setIdle();
-
-        } finally {
+          if (audioBlob.size === 0) {
 
             isProcessing = false;
-        }
-    }
 
+            setIdle();
 
-    // =========================================================
-    // AGREGAR MENSAJE
-    // =========================================================
-
-    function addMessage(text, type) {
-
-        if (!text) {
             return;
-        }
+
+          }
 
 
-        if (welcome) {
-            welcome.style.display =
-                "none";
-        }
+          await sendAudio(
+            audioBlob
+          );
+
+        };
 
 
-        const message =
-            document.createElement("div");
+      /* =====================================================
+         START
+         ===================================================== */
 
-        message.className =
-            `message message--${type}`;
-
-
-        const bubble =
-            document.createElement("div");
-
-        bubble.className =
-            "message__bubble";
+      mediaRecorder.start();
 
 
-        bubble.textContent =
-            text;
+      isRecording = true;
+      isStarting = false;
 
 
-        message.appendChild(
-            bubble
-        );
+      assistant.classList.add(
+        "is-listening"
+      );
 
 
-        conversation.appendChild(
-            message
-        );
+      statusText.textContent =
+        "Escuchando";
 
 
-        conversation.scrollTop =
-            conversation.scrollHeight;
+      voiceLabel.textContent =
+        "Hablá... tocá nuevamente para terminar";
+
+
+      console.log(
+        "[ASSISTANT] Grabación iniciada"
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "[ASSISTANT] Error de micrófono:",
+        error
+      );
+
+
+      stopMediaTracks();
+
+
+      isRecording = false;
+      isStarting = false;
+
+
+      setIdle();
+
+    }
+
+  }
+
+
+  /* =========================================================
+     DETENER GRABACIÓN
+     ========================================================= */
+
+  function stopRecording() {
+
+    if (!mediaRecorder) {
+
+      return;
+
     }
 
 
-    // =========================================================
-    // ESTADO IDLE
-    // =========================================================
+    if (
+      mediaRecorder.state === "inactive"
+    ) {
 
-    function setIdle() {
+      return;
 
-        isRecording = false;
-
-        assistant.classList.remove(
-            "is-listening"
-        );
-
-        statusText.textContent =
-            "Listo";
-
-        voiceLabel.textContent =
-            "Tocá para hablar";
     }
 
 
-    // =========================================================
-    // LIMPIAR AL SALIR
-    // =========================================================
+    /*
+     * BLOQUEAMOS INMEDIATAMENTE.
+     *
+     * Antes isProcessing se activaba recién cuando
+     * sendAudio() comenzaba. Ahora queda bloqueado
+     * desde el mismo Enter que detiene la grabación.
+     */
 
-    window.addEventListener(
-        "beforeunload",
-        () => {
+    isRecording = false;
+    isProcessing = true;
 
-            if (mediaStream) {
 
-                mediaStream
-                    .getTracks()
-                    .forEach(track => {
-                        track.stop();
-                    });
-            }
-        }
+    assistant.classList.remove(
+      "is-listening"
     );
 
 
-    // =========================================================
-    // BOTÓN ATRÁS
-    // =========================================================
-
-    setupBackHandler({
-
-        context: CONTEXT,
-
-        onBack: () => {
-
-            if (isProcessing) {
-                return;
-            }
+    statusText.textContent =
+      "Procesando";
 
 
-            if (isRecording) {
-
-                stopRecording();
-                return;
-            }
-
-
-            if (mediaStream) {
-
-                mediaStream
-                    .getTracks()
-                    .forEach(track => {
-                        track.stop();
-                    });
-
-                mediaStream = null;
-            }
-
-
-            window.location.href =
-                "../home/home.html";
-        }
-
-    });
+    voiceLabel.textContent =
+      "Procesando tu mensaje...";
 
 
     console.log(
-        "[ASSISTANT] Assistant JS cargado correctamente."
+      "[ASSISTANT] Grabación detenida"
     );
+
+
+    /*
+     * Detenemos el MediaRecorder.
+     *
+     * Esto dispara onstop(), que después enviará
+     * el audio al backend.
+     */
+
+    mediaRecorder.stop();
+
+  }
+
+
+  /* =========================================================
+     DETENER TRACKS
+     ========================================================= */
+
+  function stopMediaTracks() {
+
+    if (!mediaStream) {
+
+      return;
+
+    }
+
+
+    mediaStream
+      .getTracks()
+      .forEach(
+        (track) => {
+
+          track.stop();
+
+        }
+      );
+
+
+    mediaStream = null;
+
+  }
+
+
+  /* =========================================================
+     ENVIAR AUDIO
+     ========================================================= */
+
+  async function sendAudio(
+    audioBlob
+  ) {
+
+    /*
+     * isProcessing ya se activa en stopRecording().
+     */
+
+    isProcessing = true;
+
+
+    try {
+
+      const formData =
+        new FormData();
+
+
+      formData.append(
+        "audio",
+        audioBlob,
+        "voice.webm"
+      );
+
+
+      const apiUrl =
+        getApiUrl(
+          "assistant/talk"
+        );
+
+
+      console.log(
+        "[ASSISTANT] Enviando audio a:",
+        apiUrl
+      );
+
+
+      const response =
+        await fetch(
+          apiUrl,
+          {
+            method: "POST",
+            body: formData
+          }
+        );
+
+
+      console.log(
+        "[ASSISTANT] Respuesta HTTP:",
+        response.status
+      );
+
+
+      if (!response.ok) {
+
+        let errorMessage =
+          "Error procesando el audio.";
+
+
+        try {
+
+          const errorData =
+            await response.json();
+
+
+          if (
+            typeof errorData.detail ===
+            "string"
+          ) {
+
+            errorMessage =
+              errorData.detail;
+
+          } else if (
+            errorData.detail?.message
+          ) {
+
+            errorMessage =
+              errorData.detail.message;
+
+          }
+
+        } catch (_) {}
+
+
+        throw new Error(
+          errorMessage
+        );
+
+      }
+
+
+      const data =
+        await response.json();
+
+
+      console.log(
+        "[ASSISTANT] Respuesta backend:",
+        data
+      );
+
+
+      /* =====================================================
+         TRANSCRIPCIÓN
+         ===================================================== */
+
+      if (
+        data.transcription
+      ) {
+
+        addMessage(
+          data.transcription,
+          "user"
+        );
+
+      }
+
+
+      /* =====================================================
+         RESPUESTA
+         ===================================================== */
+
+      if (
+        data.reply
+      ) {
+
+        addMessage(
+          data.reply,
+          "assistant"
+        );
+
+      }
+
+
+      setIdle();
+
+
+    } catch (error) {
+
+      console.error(
+        "[ASSISTANT] Error:",
+        error
+      );
+
+
+      addMessage(
+        error.message ||
+        "No pude procesar tu mensaje.",
+        "assistant"
+      );
+
+
+      setIdle();
+
+
+    } finally {
+
+      isProcessing = false;
+
+    }
+
+  }
+
+
+  /* =========================================================
+     MENSAJES
+     ========================================================= */
+
+  function addMessage(
+    text,
+    type
+  ) {
+
+    if (!text) {
+
+      return;
+
+    }
+
+
+    if (welcome) {
+
+      welcome.style.display =
+        "none";
+
+    }
+
+
+    const message =
+      document.createElement(
+        "div"
+      );
+
+
+    message.className =
+      `message message--${type}`;
+
+
+    const bubble =
+      document.createElement(
+        "div"
+      );
+
+
+    bubble.className =
+      "message__bubble";
+
+
+    bubble.textContent =
+      text;
+
+
+    message.appendChild(
+      bubble
+    );
+
+
+    conversation.appendChild(
+      message
+    );
+
+
+    conversation.scrollTop =
+      conversation.scrollHeight;
+
+  }
+
+
+  /* =========================================================
+     ESTADO IDLE
+     ========================================================= */
+
+  function setIdle() {
+
+    isRecording = false;
+    isProcessing = false;
+    isStarting = false;
+
+
+    assistant.classList.remove(
+      "is-listening"
+    );
+
+
+    statusText.textContent =
+      "Listo";
+
+
+    voiceLabel.textContent =
+      "Tocá para hablar";
+
+  }
+
+
+  /* =========================================================
+     LIMPIAR AL SALIR
+     ========================================================= */
+
+  window.addEventListener(
+    "beforeunload",
+    () => {
+
+      stopMediaTracks();
+
+    }
+  );
+
+
+  /* =========================================================
+     DEBUG
+     ========================================================= */
+
+  console.log(
+    "[ASSISTANT] Assistant JS cargado correctamente."
+  );
+
 
 })();

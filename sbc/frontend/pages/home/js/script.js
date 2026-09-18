@@ -11,8 +11,10 @@ const ICONS = {
 const APPS = [
   { id: "games", title: "Juegos", bg: "#132d4d", glow: "rgba(19,45,77,0.45)", cover: "assets/apps/games.png", icon: null },
   { id: "movement", title: "Movimiento", bg: "#3ad0c9", glow: "rgba(58,208,201,0.45)", cover: "assets/apps/motion.png", icon: null },
-  { id: "translator", title: "Traducción", bg: "#c47a3a", glow: "rgba(196,122,58,0.45)", cover: "assets/apps/translator.jpg", icon: null },
   { id: "assistant", title: "Asistente", bg: "#8fa3ba", glow: "rgba(143,163,186,0.45)", cover: "assets/apps/chat.png", icon: null },
+  { id: "music", title: "Musica", bg: "#8fa3ba", glow: "rgba(143,163,186,0.45)", cover: "assets/apps/music.jpg", icon: null },
+  { id: "translator", title: "Traducción", bg: "#c47a3a", glow: "rgba(196,122,58,0.45)", cover: "assets/apps/translator.jpg", icon: null },
+  { id: "lsa", title: "Enseñanza", bg: "#8fa3ba", glow: "rgba(143,163,186,0.45)", cover: "assets/apps/lsa.jpg", icon: null },
   { id: "camera", title: "Cámara", bg: "#66a8dd", glow: "rgba(102,168,221,0.45)", cover: "assets/apps/camera.png", icon: null },
 ]
 
@@ -31,6 +33,21 @@ const itemsTrack = document.getElementById("itemsTrack")
 const dotsEl = document.getElementById("dots")
 const btnUp = document.getElementById("btnUp")
 const btnDown = document.getElementById("btnDown")
+const timeEl = document.querySelector(".time")
+
+function updateClock() {
+  if (!timeEl) return
+
+  const now = new Date()
+  const hours = now.getHours() % 12 || 12
+  const minutes = String(now.getMinutes()).padStart(2, "0")
+  const ampm = now.getHours() >= 12 ? "PM" : "AM"
+
+  timeEl.innerHTML = `${hours}:${minutes} <span class="ampm">${ampm}</span>`
+}
+
+updateClock()
+setInterval(updateClock, 1000)
 
 function currentItems() {
   return mode === "apps" ? APPS : SYSTEM
@@ -266,6 +283,9 @@ input.on(InputAction.UP, () => {
   if (mode === "system") {
     goToApps();
   }
+});
+input.on(InputAction.RELOAD, () => {
+  window.location.reload();
 });
 input.on(InputAction.CONFIRM, () => {
   if (mode === "apps") {

@@ -19,31 +19,67 @@ function connect() {
   };
 
   socket.onmessage = function (event) {
-    let data;
-    try {
-      data = JSON.parse(event.data);
-    } catch (err) {
-      console.error("Mensaje no es JSON válido:", event.data, err);
-      return;
-    }
+  console.log("[WS CLIENT] MENSAJE RECIBIDO:", event.data);
 
-    if (data.error) {
-      console.error("Error del servidor:", data.error);
-      return;
-    }
+  let data;
 
-    // 1. ¿Hay un request pendiente esperando esta respuesta?
-    if (data.id !== undefined && pendingRequests.has(data.id)) {
-      const { resolve } = pendingRequests.get(data.id);
-      pendingRequests.delete(data.id);
-      resolve(data.payload ?? data);
-    }
+  try {
+    data = JSON.parse(event.data);
+  } catch (err) {
+    console.error(
+      "[WS CLIENT] Mensaje no es JSON válido:",
+      event.data,
+      err
+    );
+    return;
+  }
 
-    // 2. Handlers suscritos a este tipo de paquete (respuesta o push del server)
-    if (data.id !== undefined && listeners.has(data.id)) {
-      listeners.get(data.id).forEach((cb) => cb(data.payload ?? data));
-    }
-  };
+  console.log("[WS CLIENT] JSON:", data);
+
+  if (data.error) {
+    console.error("[WS CLIENT] Error del servidor:", data.error);
+    return;
+  }
+
+  // Request pendiente
+  if (data.id !== undefined && pendingRequests.has(data.id)) {
+    const { resolve } = pendingRequests.get(data.id);
+
+    pendingRequests.delete(data.id);
+
+    console.log(
+      "[WS CLIENT] Resolviendo request:",
+      data.id,
+      data.payload ?? data
+    );
+
+    resolve(data.payload ?? data);
+  }
+
+  // Broadcast / listeners
+  if (data.id !== undefined && listeners.has(data.id)) {
+    console.log(
+      "[WS CLIENT] Ejecutando listeners para packet:",
+      data.id,
+      "listeners:",
+      listeners.get(data.id).size
+    );
+
+    listeners.get(data.id).forEach((cb) => {
+      console.log(
+        "[WS CLIENT] Ejecutando callback con:",
+        data.payload ?? data
+      );
+
+      cb(data.payload ?? data);
+    });
+  } else {
+    console.log(
+      "[WS CLIENT] No hay listeners para packet:",
+      data.id
+    );
+  }
+};
 
   socket.onclose = function () {
     pendingRequests.forEach(({ reject }) => reject(new Error("Websocket closed")));

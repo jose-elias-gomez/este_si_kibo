@@ -1,5 +1,4 @@
-from transports.serial.packet import MovementPacket
-from transports.serial.serial_client import SerialRobotClient
+from transports.serial import client
 from transports.serial.enums import MotorCommand
 from transports.serial.errors import (
     ProtocolDecodeError,
@@ -7,9 +6,9 @@ from transports.serial.errors import (
     SerialTimeoutError,
     UnknownProtocolStatusError,
 )
-from transports.websocket.packet_registry import register_decoder, PacketId
-from decoder import PacketDecodeError
-from transports.serial.client import robot_client
+from transports.serial.packet import MovementPacket
+from transports.websocket.decoder import PacketDecodeError
+from transports.websocket.packet_registry import PacketId, register_decoder
 
 _cached_angles = {
     "left_arm": 0,
@@ -36,11 +35,9 @@ def register() -> None:
     register_decoder(PacketId.MOVE_PART, decode)
     register_decoder(PacketId.GET_PARTS, decode_get_parts)
 
-    _reset_parts()
-
 
 def decode(data):
-    if robot_client is None:
+    if client.robot_client is None:
         raise PacketDecodeError(
             "El conector de movimiento no fue inicializado con un SerialRobotClient"
         )
@@ -57,31 +54,12 @@ def decode_get_parts(data=None):
     return dict(_cached_angles)
 
 
-def _reset_parts() -> None:
-    """Al iniciar el servicio: brazos y cabeza a 0°, ruedas detenidas."""
-    packet = (
-        MovementPacket()
-        .left_arm(0)
-        .right_arm(0)
-        .head(0)
-        .left_wheel(MotorCommand.STOP)
-        .right_wheel(MotorCommand.STOP)
-    )
-
-    try:
-        _send_packet(packet)
-    except Exception as exc:
-        print(exc)
-
-    _cached_angles.update({"left_arm": 0, "right_arm": 0, "head": 0})
-
-
 def _send_packet(packet: MovementPacket):
-    if robot_client is None:
+    if client.robot_client is None:
         raise PacketDecodeError("El puerto serial no está conectado")
 
     try:
-        status = robot_client.send(packet.build())
+        status = client.robot_client.send(packet.build())
     except ProtocolDecodeError as exc:
         raise PacketDecodeError(
             f"El Arduino rechazó el paquete de movimiento: {exc}"

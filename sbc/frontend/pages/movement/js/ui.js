@@ -1,6 +1,6 @@
 import { selectPart, runMotor, stopMotor, playAnimation } from "./movement.js";
 import { setPartAngle, getPivotAngle } from "./movement.js";
-import { MotorDirection, NODE_LABELS, PARTS_CONFIG } from "../../../shared/js/movement/partsConfig.js";;
+import { MotorDirection, NODE_LABELS, PARTS_CONFIG } from "../../../shared/js/movement/partsConfig.js";
 import { input, InputAction } from "../../../shared/js/inputController.js";
 
 let partButtonIndex = 2;
@@ -174,4 +174,17 @@ input.on(InputAction.UP, () => {
             input.popContext();
         }, "manual-slider");
     }, movementPanel.context);
+});
+
+// Listener global para volver a Home cuando estás en la sección principal
+input.on(InputAction.BACK, () => {
+    // Si un panel está abierto, lo cierra en lugar de salir a Home
+    if (movementPanel.classList.contains("open") || animationPanel.classList.contains("open")) {
+        movementPanel.close();
+        animationPanel.close();
+        return;
+    }
+
+    // Redirección a la vista Home (ajusta la ruta según la estructura de tus archivos)
+    window.location.href = "../home/home.html";
 });

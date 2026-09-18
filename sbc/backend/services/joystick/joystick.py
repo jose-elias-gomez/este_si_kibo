@@ -1,157 +1,153 @@
-import hid
 import threading
 import time
 
+from evdev import InputDevice, ecodes, list_devices
 
-VID = 0x05AC
-PID = 0x022C
+# -----------------------------------------
+# IDENTIFICACIÓN DEL CONTROL
+# -----------------------------------------
 
+VENDOR_ID = 0x05AC
+PRODUCT_ID = 0x022C
 
-# Botones
-BUTTON_B = 1
-BUTTON_D = 2
-BUTTON_C = 8
-BUTTON_A = 16
+# -----------------------------------------
+# CÓDIGOS DEL CONTROL
+# -----------------------------------------
 
+BTN_CONFIRM = 308
+BTN_BACK = 304
+BTN_RELOAD = 307  # Botón asignado para reiniciar (F5)
 
-# Palanquita
-DIRECTION_CENTER = 0
-DIRECTION_RIGHT = 1
-DIRECTION_DOWN = 3
-DIRECTION_LEFT = 5
-DIRECTION_UP = 7
+ABS_X_CODE = 16
+ABS_Y_CODE = 17
+
+# Tiempo mínimo entre pulsaciones (evita ráfagas)
+DEBOUNCE_INTERVAL = 0.25
 
 
 class Joystick:
 
     def __init__(self, on_input=None):
-
         self.on_input = on_input
-
         self.device = None
         self.running = False
         self.thread = None
+        self._last_emit_time = 0
 
-        self.previous_direction = DIRECTION_CENTER
-        self.previous_buttons = 0
-
-        self._connect()
+    def _find_device(self):
+        for path in list_devices():
+            try:
+                device = InputDevice(path)
+                if (
+                    device.info.vendor == VENDOR_ID
+                    and device.info.product == PRODUCT_ID
+                ):
+                    print(
+                        f"[JOYSTICK] Control encontrado: "
+                        f"{device.name} -> {path}"
+                    )
+                    return device
+                device.close()
+            except Exception:
+                pass
+        return None
 
     def _connect(self):
+        device = self._find_device()
+        if device is None:
+            return False
 
-        for device in hid.enumerate(VID, PID):
-
-            if (
-                device["usage_page"] == 0x01
-                and device["usage"] == 0x05
-            ):
-
-                self.device = hid.device()
-                self.device.open_path(device["path"])
-
-                print(
-                    "[JOYSTICK] Conectado:",
-                    device["product_string"]
-                )
-
-                return
-
-        raise RuntimeError(
-            "[JOYSTICK] No se encontró el gamepad"
-        )
+        self.device = device
+        print(f"[JOYSTICK] Conectado: {self.device.name}")
+        print(f"[JOYSTICK] Device: {self.device.path}")
+        return True
 
     def start(self):
-
         if self.running:
             return
 
         self.running = True
-
         self.thread = threading.Thread(
             target=self._loop,
             daemon=True
         )
-
         self.thread.start()
-
         print("[JOYSTICK] Listener iniciado")
 
     def stop(self):
-
         self.running = False
+
+        if self.device:
+            try:
+                self.device.close()
+            except Exception:
+                pass
+            self.device = None
 
         if self.thread:
             self.thread.join(timeout=1)
 
-        if self.device:
-            self.device.close()
-            self.device = None
-
         print("[JOYSTICK] Listener detenido")
 
     def _emit(self, action):
+        now = time.time()
+        if now - self._last_emit_time < DEBOUNCE_INTERVAL:
+            return
+
+        self._last_emit_time = now
 
         if self.on_input:
             self.on_input(action)
 
+    def _handle_event(self, event):
+        # BOTONES
+        if event.type == ecodes.EV_KEY:
+            if event.value == 1:
+                if event.code == BTN_RELOAD:
+                    self._emit("RELOAD")
+                elif event.code == BTN_CONFIRM:
+                    self._emit("CONFIRM")
+                elif event.code == BTN_BACK:
+                    self._emit("BACK")
+
+        # DIRECCIONES
+        elif event.type == ecodes.EV_ABS:
+            if event.code == ABS_X_CODE:
+                if event.value == -1:
+                    self._emit("UP")
+                elif event.value == 1:
+                    self._emit("DOWN")
+
+            elif event.code == ABS_Y_CODE:
+                if event.value == -1:
+                    self._emit("RIGHT")
+                elif event.value == 1:
+                    self._emit("LEFT")
+
     def _loop(self):
-
         while self.running:
-
-            try:
-
-                data = self.device.read(
-                    64,
-                    timeout_ms=100
-                )
-
-                if not data:
+            if self.device is None:
+                print("[JOYSTICK] Buscando control...")
+                if not self._connect():
+                    time.sleep(2)
                     continue
 
-                data = list(data)
-
-                buttons = data[5]
-                direction = data[7]
-
-                # ----------------------------------
-                # PALANQUITA
-                # ----------------------------------
-
-                if direction != self.previous_direction:
-
-                    self.previous_direction = direction
-
-                    directions = {
-                        DIRECTION_UP: "UP",
-                        DIRECTION_DOWN: "DOWN",
-                        DIRECTION_LEFT: "LEFT",
-                        DIRECTION_RIGHT: "RIGHT",
-                    }
-
-                    action = directions.get(direction)
-
-                    if action:
-                        self._emit(action)
-
-                # ----------------------------------
-                # BOTONES
-                # ----------------------------------
-
-                if buttons != self.previous_buttons:
-
-                    self.previous_buttons = buttons
-
-                    if buttons & BUTTON_A:
-                        self._emit("CONFIRM")
-
-                    elif buttons & BUTTON_B:
-                        self._emit("BACK")
+            try:
+                for event in self.device.read_loop():
+                    if not self.running:
+                        break
+                    self._handle_event(event)
 
             except Exception as e:
+                print(f"[JOYSTICK] Control desconectado: {e}")
 
-                print(
-                    "[JOYSTICK] Error:",
-                    e
-                )
+            if self.device:
+                try:
+                    self.device.close()
+                except Exception:
+                    pass
+                self.device = None
 
+            if self.running:
+                print("[JOYSTICK] Control perdido. Buscando nuevamente...")
                 time.sleep(1)

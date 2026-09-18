@@ -81,6 +81,8 @@
    * Cámara tipo espejo.
    */
   transform: scaleX(-1);
+  transform: rotate(180deg);
+
 
   opacity: 0;
 
@@ -429,35 +431,31 @@
    ========================================================= */
 
 .caption-current {
-
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
   justify-content: center;
-
-  min-width: 180px;
-
+    min-width: 320px;
   padding:
     var(--space-xs)
     var(--space-md)
     var(--space-sm);
-
   border:
     1px solid
     var(--color-border);
-
   border-radius:
     var(--radius-lg);
-
   background:
     var(--overlay-first);
-
 }
 
 
 /* Label */
+.caption-word {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 
 .caption-current-label {
 
@@ -480,6 +478,12 @@
 
 
 /* Seña */
+  .caption-dock {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
 
 .caption-current-glyph {
 
@@ -586,4 +590,15 @@
 
   }
 
+}
+
+.translator-word {
+  display: block;
+  min-width: 80px;
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  font-size: 5rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 3px;
 }
