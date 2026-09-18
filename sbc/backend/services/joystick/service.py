@@ -2,7 +2,7 @@ import logging
 
 from services.joystick.joystick import Joystick
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("[Joystick Service]")
 
 class JoystickService:
 
@@ -14,9 +14,9 @@ class JoystickService:
         try:
             self.joystick = Joystick()
             self.joystick.start()
-            logger.info("[JOYSTICK SERVICE] Initialized")
+            logger.info("Initialized")
         except Exception as e:
-            logger.error("[JOYSTICK SERVICE] Controller not initialized: %s", e)
+            logger.error("Controller not initialized: %s", e)
             self.joystick = None
 
     def stop(self):

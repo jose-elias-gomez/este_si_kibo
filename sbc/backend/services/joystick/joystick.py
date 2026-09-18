@@ -1,4 +1,5 @@
 import logging
+
 import select
 import threading
 import time
@@ -6,7 +7,7 @@ import time
 from evdev import InputDevice, ecodes, list_devices
 from pynput.keyboard import Controller, Key
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("[Joystick]")
 
 VENDOR_ID = 0x05AC
 PRODUCT_ID = 0x022C
@@ -67,8 +68,7 @@ class Joystick:
 
         with self._device_lock:
             self.device = device
-        logger.info("Conectado: %s", device.name)
-        logger.info("Device: %s", device.path)
+
         return True
 
     def start(self):
@@ -157,6 +157,8 @@ class Joystick:
                 if not self._connect():
                     time.sleep(2)
                     continue
+
+            logger.info("Connected")
 
             device_alive = True
             while self.running and device_alive:
