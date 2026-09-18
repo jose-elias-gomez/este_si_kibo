@@ -1,65 +1,74 @@
+import logging
+import select
 import threading
 import time
 
 from evdev import InputDevice, ecodes, list_devices
+from pynput.keyboard import Controller, Key
 
-# -----------------------------------------
-# IDENTIFICACIÓN DEL CONTROL
-# -----------------------------------------
+logger = logging.getLogger(__name__)
 
 VENDOR_ID = 0x05AC
 PRODUCT_ID = 0x022C
 
-# -----------------------------------------
-# CÓDIGOS DEL CONTROL
-# -----------------------------------------
-
 BTN_CONFIRM = 308
 BTN_BACK = 304
-BTN_RELOAD = 307  # Botón asignado para reiniciar (F5)
+BTN_RELOAD = 307
 
-ABS_X_CODE = 16
-ABS_Y_CODE = 17
+ABS_HAT0X = ecodes.ABS_HAT0X
+ABS_HAT0Y = ecodes.ABS_HAT0Y
 
-# Tiempo mínimo entre pulsaciones (evita ráfagas)
 DEBOUNCE_INTERVAL = 0.25
+
+# How long to wait for input on each select() call before checking
+# self.running again. Keeps the loop responsive to stop() and lets us
+# notice a silently-dead Bluetooth connection
+READ_TIMEOUT = 1.0
+
+BUTTON_MAP = {
+    BTN_CONFIRM: Key.enter,
+    BTN_BACK: Key.esc,
+}
+
+AXIS_MAP = {
+    (ABS_HAT0X, -1): Key.up,
+    (ABS_HAT0X, 1): Key.down,
+    (ABS_HAT0Y, -1): Key.right,
+    (ABS_HAT0Y, 1): Key.left,
+}
+
+
+def _find_device():
+    for path in list_devices():
+        try:
+            device = InputDevice(path)
+            if device.info.vendor == VENDOR_ID and device.info.product == PRODUCT_ID:
+                return device
+            device.close()
+        except OSError:
+            pass
+    return None
 
 
 class Joystick:
 
-    def __init__(self, on_input=None):
-        self.on_input = on_input
+    def __init__(self):
         self.device = None
         self.running = False
         self.thread = None
-        self._last_emit_time = 0
-
-    def _find_device(self):
-        for path in list_devices():
-            try:
-                device = InputDevice(path)
-                if (
-                    device.info.vendor == VENDOR_ID
-                    and device.info.product == PRODUCT_ID
-                ):
-                    print(
-                        f"[JOYSTICK] Control encontrado: "
-                        f"{device.name} -> {path}"
-                    )
-                    return device
-                device.close()
-            except Exception:
-                pass
-        return None
+        self._keyboard = Controller()
+        self._last_emit = {}  # key -> last emit timestamp, for per-key debounce
+        self._device_lock = threading.Lock()
 
     def _connect(self):
-        device = self._find_device()
+        device = _find_device()
         if device is None:
             return False
 
-        self.device = device
-        print(f"[JOYSTICK] Conectado: {self.device.name}")
-        print(f"[JOYSTICK] Device: {self.device.path}")
+        with self._device_lock:
+            self.device = device
+        logger.info("Conectado: %s", device.name)
+        logger.info("Device: %s", device.path)
         return True
 
     def start(self):
@@ -69,85 +78,100 @@ class Joystick:
         self.running = True
         self.thread = threading.Thread(
             target=self._loop,
+            name="Joystick Thread",
             daemon=True
         )
         self.thread.start()
-        print("[JOYSTICK] Listener iniciado")
 
     def stop(self):
         self.running = False
 
-        if self.device:
-            try:
-                self.device.close()
-            except Exception:
-                pass
+        with self._device_lock:
+            device = self.device
             self.device = None
+
+        if device:
+            try:
+                device.close()
+            except OSError:
+                pass
 
         if self.thread:
             self.thread.join(timeout=1)
 
-        print("[JOYSTICK] Listener detenido")
-
-    def _emit(self, action):
+    def press(self, key):
         now = time.time()
-        if now - self._last_emit_time < DEBOUNCE_INTERVAL:
+        last = self._last_emit.get(key, 0)
+        if now - last < DEBOUNCE_INTERVAL:
             return
 
-        self._last_emit_time = now
+        self._last_emit[key] = now
 
-        if self.on_input:
-            self.on_input(action)
+        self._keyboard.press(key)
+        self._keyboard.release(key)
 
     def _handle_event(self, event):
-        # BOTONES
+        key = None
+
         if event.type == ecodes.EV_KEY:
             if event.value == 1:
-                if event.code == BTN_RELOAD:
-                    self._emit("RELOAD")
-                elif event.code == BTN_CONFIRM:
-                    self._emit("CONFIRM")
-                elif event.code == BTN_BACK:
-                    self._emit("BACK")
+                key = BUTTON_MAP.get(event.code)
 
-        # DIRECCIONES
         elif event.type == ecodes.EV_ABS:
-            if event.code == ABS_X_CODE:
-                if event.value == -1:
-                    self._emit("UP")
-                elif event.value == 1:
-                    self._emit("DOWN")
+            key = AXIS_MAP.get((event.code, event.value))
 
-            elif event.code == ABS_Y_CODE:
-                if event.value == -1:
-                    self._emit("RIGHT")
-                elif event.value == 1:
-                    self._emit("LEFT")
+        if key is not None:
+            self.press(key)
+
+    def _read_events(self):
+        """Reads and dispatches pending events, blocking at most
+        READ_TIMEOUT seconds. Returns False if the device appears dead
+        (fd closed/invalid) so the caller can reconnect."""
+        try:
+            r, _, _ = select.select([self.device.fd], [], [], READ_TIMEOUT)
+        except (OSError, ValueError):
+            # Bad file descriptor: device is gone.
+            return False
+
+        if not r:
+            # Timeout, no data. Device might still be alive; let the
+            # caller re-check self.running and loop again.
+            return True
+
+        try:
+            for event in self.device.read():
+                self._handle_event(event)
+        except BlockingIOError:
+            # Woke up but nothing to read yet; not an error.
+            pass
+        except OSError as e:
+            logger.warning("Control desconectado: %s", e)
+            return False
+
+        return True
 
     def _loop(self):
         while self.running:
             if self.device is None:
-                print("[JOYSTICK] Buscando control...")
+                logger.info("Searching for device...")
                 if not self._connect():
                     time.sleep(2)
                     continue
 
-            try:
-                for event in self.device.read_loop():
-                    if not self.running:
-                        break
-                    self._handle_event(event)
+            device_alive = True
+            while self.running and device_alive:
+                device_alive = self._read_events()
 
-            except Exception as e:
-                print(f"[JOYSTICK] Control desconectado: {e}")
-
-            if self.device:
-                try:
-                    self.device.close()
-                except Exception:
-                    pass
+            with self._device_lock:
+                device = self.device
                 self.device = None
 
+            if device:
+                try:
+                    device.close()
+                except OSError:
+                    pass
+
             if self.running:
-                print("[JOYSTICK] Control perdido. Buscando nuevamente...")
+                logger.info("Device lost. Trying again...")
                 time.sleep(1)

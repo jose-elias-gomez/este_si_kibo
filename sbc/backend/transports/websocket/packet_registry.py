@@ -1,10 +1,9 @@
-from enum import Enum, auto
+from enum import Enum
 
 class PacketId(Enum):
     SYSTEM_OPTION = 1
-    JOYSTICK = 2
-    GET_PARTS = 3
-    MOVE_PART = 4
+    GET_PARTS = 2
+    MOVE_PART = 3
 
 DECODERS = {}
 

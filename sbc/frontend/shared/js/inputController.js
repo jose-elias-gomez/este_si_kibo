@@ -37,7 +37,6 @@ class InputManager {
     this.eventhandlers = new Map();
     this.contextStack = ["GLOBAL"];
     this._initKeyboard();
-    this._initController();
   }
 
   get activeContext() {
@@ -95,19 +94,6 @@ class InputManager {
       }
     });
   }
-
-  _initController() {
-  onPacket(PACKET_ID.JOYSTICK, (data) => {
-    console.log("[INPUT] JOYSTICK:", data);
-
-    const action = data.action;
-
-    if (action) {
-      console.log("[INPUT] ACTION:", action);
-      this._emit(action);
-    }
-  });
-}
 }
 
 export const input = new InputManager();
