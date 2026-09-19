@@ -145,7 +145,7 @@ class Joystick:
             # Woke up but nothing to read yet; not an error.
             pass
         except OSError as e:
-            logger.warning("Control desconectado: %s", e)
+            logger.warning("Joystick disconnected: %s", e)
             return False
 
         return True

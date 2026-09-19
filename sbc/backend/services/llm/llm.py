@@ -1,43 +1,40 @@
+import logging
 import os
+from typing import Dict, List, Any, cast
+
 from dotenv import load_dotenv
 from groq import Groq
+from groq.types.chat import ChatCompletionMessageParam
 
 load_dotenv()
 
 SYSTEM_PROMPT = (
-    "Sos un asistente de voz que responde en español rioplatense con acento argentino, "
-    "de forma breve, clara y natural, como si hablaras en voz alta. "
-    "Evitá listas, markdown o respuestas largas. "
-    "Respondé normalmente en 1 a 3 oraciones."
+    "Sos Kibo, un robot pingüino asistente creado en 2026 por Facundo Benassi y Agustín Frate en el secundario Juan XXIII D76. "
+    "Respondé siempre en argentino, de forma breve, clara y natural (máximo 1 a 3 oraciones). "
+    "No utilices formato markdown, listas ni textos largos. "
 )
 
+logger = logging.getLogger("[LLM]")
 
 class VoiceAssistantLLM:
 
     def __init__(
         self,
-        model_path: str = None,  # Mantenido por compatibilidad
-        model: str = "openai/gpt-oss-20b",  # Modelo activo y ultra rápido de Groq
-        n_ctx: int = 2048,
-        n_threads: int = 4,
-        **kwargs  # Previene errores si se envían parámetros obsoletos
+        model: str = "openai/gpt-oss-20b",
     ):
-        # Busca primero la clave específica o usa la clave por defecto de Groq
         api_key = os.getenv("GROQ_API_KEY_LLM") or os.getenv("GROQ_API_KEY")
         if not api_key:
-            raise ValueError("[LLM Error] No se encontró GROQ_API_KEY_LLM ni GROQ_API_KEY en el archivo .env")
+            raise ValueError("[LLM ERROR] Can't found GROQ_API_KEY_LLM and GROQ_API_KEY in .env file")
 
         self.client = Groq(api_key=api_key)
         self.model = model
 
-        self.history = [
+        self.history: List[Dict[str, Any]] = [
             {
                 "role": "system",
                 "content": SYSTEM_PROMPT,
             }
         ]
-
-        print(f"[LLM] Groq Cloud cargado ({self.model})")
 
     def ask(
         self,
@@ -57,15 +54,15 @@ class VoiceAssistantLLM:
 
         try:
             output = self.client.chat.completions.create(
-                messages=self.history,
+                messages=cast(List[ChatCompletionMessageParam], self.history),
                 model=self.model,
                 max_tokens=max_tokens,
                 temperature=0.6,
             )
-
-            reply = output.choices[0].message.content.strip()
+            content = output.choices[0].message.content
+            reply = content.strip() if content else "No tengo respuesta para eso."
         except Exception as e:
-            print(f"[LLM Error] Fallo al generar respuesta en Groq: {e}")
+            logger.error("Error on generate response from Groq %s", e)
             reply = "Disculpa, tuve un problema al procesar tu respuesta."
 
         self.history.append(
@@ -75,7 +72,6 @@ class VoiceAssistantLLM:
             }
         )
 
-        # Recorte de historial
         if len(self.history) > 21:
             self.history = (
                 [self.history[0]]
