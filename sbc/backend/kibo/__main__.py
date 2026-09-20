@@ -2,6 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from starlette.staticfiles import StaticFiles
 
 from kibo.config import API_ROUTE
 from kibo.services.assistant import AssistantService
@@ -31,7 +32,7 @@ async def lifespan(fastapi: FastAPI):
     WifiService.register(fastapi)
 
     fastapi.include_router(WebSocketRouter, prefix=API_ROUTE)
-    #fastapi.mount("/", StaticFiles(directory="../frontend", html=True), "frontend")
+    fastapi.mount("/", StaticFiles(directory="../../frontend", html=True), "frontend")
 
     yield
 
