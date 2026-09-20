@@ -1,52 +1,56 @@
 class SwitchToggle extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-  }
-
-  connectedCallback() {
-    this.render();
-    this.shadowRoot.querySelector('input').addEventListener('change', (e) => {
-      this.dispatchEvent(new CustomEvent('change', {
-        detail: { checked: e.target.checked },
-        bubbles: true,
-        composed: true
-      }));
-    });
-  }
-
-  static get observedAttributes() {
-    return ['checked', 'disabled'];
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    const input = this.shadowRoot.querySelector('input');
-    if (!input) return;
-
-    if (name === 'checked') {
-      input.checked = this.hasAttribute('checked');
-    } else if (name === 'disabled') {
-      input.disabled = this.hasAttribute('disabled');
+    constructor() {
+        super();
+        this.attachShadow({ mode: "open" });
     }
-  }
 
-  get checked() {
-    return this.hasAttribute('checked');
-  }
-
-  set checked(val) {
-    if (val) {
-      this.setAttribute('checked', '');
-    } else {
-      this.removeAttribute('checked');
+    connectedCallback() {
+        this.render();
+        this.shadowRoot
+            .querySelector("input")
+            .addEventListener("change", (e) => {
+                this.dispatchEvent(
+                    new CustomEvent("change", {
+                        detail: { checked: e.target.checked },
+                        bubbles: true,
+                        composed: true,
+                    })
+                );
+            });
     }
-  }
 
-  render() {
-    const isChecked = this.hasAttribute('checked') ? 'checked' : '';
-    const isDisabled = this.hasAttribute('disabled') ? 'disabled' : '';
+    static get observedAttributes() {
+        return ["checked", "disabled"];
+    }
 
-    this.shadowRoot.innerHTML = `
+    attributeChangedCallback(name, oldValue, newValue) {
+        const input = this.shadowRoot.querySelector("input");
+        if (!input) return;
+
+        if (name === "checked") {
+            input.checked = this.hasAttribute("checked");
+        } else if (name === "disabled") {
+            input.disabled = this.hasAttribute("disabled");
+        }
+    }
+
+    get checked() {
+        return this.hasAttribute("checked");
+    }
+
+    set checked(val) {
+        if (val) {
+            this.setAttribute("checked", "");
+        } else {
+            this.removeAttribute("checked");
+        }
+    }
+
+    render() {
+        const isChecked = this.hasAttribute("checked") ? "checked" : "";
+        const isDisabled = this.hasAttribute("disabled") ? "disabled" : "";
+
+        this.shadowRoot.innerHTML = `
       <style>
         :host {
           display: inline-block;
@@ -110,7 +114,7 @@ class SwitchToggle extends HTMLElement {
         <span class="slider"></span>
       </label>
     `;
-  }
+    }
 }
 
-customElements.define('switch-toggle', SwitchToggle);
+customElements.define("switch-toggle", SwitchToggle);

@@ -1,8 +1,14 @@
-import { PARTS_CONFIG, DEFAULT_PART_CONFIG, WHEEL_MOTOR_CONFIG, WHEEL_MOTOR_SPEED_DEG_PER_SEC, MotorDirection } from "../../../shared/js/movement/partsConfig.js";
+import {
+    PARTS_CONFIG,
+    DEFAULT_PART_CONFIG,
+    WHEEL_MOTOR_CONFIG,
+    WHEEL_MOTOR_SPEED_DEG_PER_SEC,
+    MotorDirection,
+} from "../../../shared/js/movement/partsConfig.js";
 import { findPivotInNode } from "./modelLoader.js";
 import { movementController } from "../../../shared/js/movement/movementController.js";
 
-export class WrappedMovementPartController  {
+export class WrappedMovementPartController {
     /**
      * @param {THREE.Object3D} modelRoot - raíz del modelo ya cargado en escena
      * @param {() => void} [requestRender] - callback para pedir un nuevo frame (p.ej. sceneEngine.requestRender)
@@ -91,11 +97,13 @@ export class WrappedMovementPartController  {
         if (!pivotMesh) return;
 
         const config = this.getConfig(partName);
-        const baseRotation = this.initialRotations[partName] || new THREE.Euler(0, 0, 0);
+        const baseRotation =
+            this.initialRotations[partName] || new THREE.Euler(0, 0, 0);
         const radiansOffset = THREE.MathUtils.degToRad(angleDegrees);
 
         pivotMesh.rotation.copy(baseRotation);
-        pivotMesh.rotation[config.axis] = baseRotation[config.axis] + radiansOffset;
+        pivotMesh.rotation[config.axis] =
+            baseRotation[config.axis] + radiansOffset;
 
         // movementController es ahora la única fuente de verdad del
         // ángulo de cada pieza (ver nota en el constructor).
@@ -134,7 +142,7 @@ export class WrappedMovementPartController  {
 
         return {
             config: this.getConfig(partName),
-            currentAngle: movementController.getAngleForPart(partName)
+            currentAngle: movementController.getAngleForPart(partName),
         };
     }
 
@@ -150,11 +158,14 @@ export class WrappedMovementPartController  {
         this.stopMotor(this.selectedPartName); // ver nota en setAngleForPart
 
         const config = this.getConfig(this.selectedPartName);
-        const baseRotation = this.initialRotations[this.selectedPartName] || new THREE.Euler(0, 0, 0);
+        const baseRotation =
+            this.initialRotations[this.selectedPartName] ||
+            new THREE.Euler(0, 0, 0);
         const radiansOffset = THREE.MathUtils.degToRad(angleDegrees);
 
         this.activePivotMesh.rotation.copy(baseRotation);
-        this.activePivotMesh.rotation[config.axis] = baseRotation[config.axis] + radiansOffset;
+        this.activePivotMesh.rotation[config.axis] =
+            baseRotation[config.axis] + radiansOffset;
 
         movementController.setAngleForPart(this.selectedPartName, angleDegrees);
 
@@ -173,14 +184,19 @@ export class WrappedMovementPartController  {
      * @param {string} [direction] - MotorDirection.FORWARD (default) o .BACKWARD
      * @param {number} [speedDegPerSec] - velocidad angular del motor
      */
-    runMotor(partName, direction = MotorDirection.FORWARD, speedDegPerSec = WHEEL_MOTOR_SPEED_DEG_PER_SEC) {
+    runMotor(
+        partName,
+        direction = MotorDirection.FORWARD,
+        speedDegPerSec = WHEEL_MOTOR_SPEED_DEG_PER_SEC
+    ) {
         if (this._motorTweens[partName]) return;
 
         const pivotMesh = this._getPivot(partName);
         if (!pivotMesh) return;
 
         const config = this.getConfig(partName);
-        const baseRotation = this.initialRotations[partName] || new THREE.Euler(0, 0, 0);
+        const baseRotation =
+            this.initialRotations[partName] || new THREE.Euler(0, 0, 0);
         const motorConfig = WHEEL_MOTOR_CONFIG[partName];
         const forwardSign = motorConfig ? motorConfig.direction : 1;
         const directionSign = direction === MotorDirection.BACKWARD ? -1 : 1;
@@ -204,14 +220,16 @@ export class WrappedMovementPartController  {
             repeat: -1,
             onUpdate: () => {
                 pivotMesh.rotation.copy(baseRotation);
-                pivotMesh.rotation[config.axis] = baseRotation[config.axis] + THREE.MathUtils.degToRad(proxy.angle);
+                pivotMesh.rotation[config.axis] =
+                    baseRotation[config.axis] +
+                    THREE.MathUtils.degToRad(proxy.angle);
 
                 // No se persiste proxy.angle en movementController: para
                 // ruedas ese ángulo no tiene un correlato real (es un
                 // motor DC, no un servo), así que el giro visual queda
                 // como estado puramente local de este tween.
                 this.requestRender();
-            }
+            },
         });
 
         this._motorTweens[partName] = tween;

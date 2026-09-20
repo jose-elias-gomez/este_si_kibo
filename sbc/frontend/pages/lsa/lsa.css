@@ -1,184 +1,183 @@
 .lsa-page {
-  --lsa-accent: #E8C77E;
-  --lsa-muted: var(--color-h2);
+    --lsa-accent: #e8c77e;
+    --lsa-muted: var(--color-h2);
 
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  padding: var(--space-lg) var(--space-lg) var(--space-md);
-  background-color: var(--color-bg-light);
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    padding: var(--space-lg) var(--space-lg) var(--space-md);
+    background-color: var(--color-bg-light);
 }
 
 /* ---- Hero: título de la página ---- */
 .lsa-hero {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: row;
-  gap: 0.15rem;
-  justify-content: space-between;
-  align-items: center;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 0.15rem;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .lsa-hero h1 {
-  font-size: 2.75rem;
-  font-weight: 600;
-  color: var(--color-text-light);
+    font-size: 2.75rem;
+    font-weight: 600;
+    color: var(--color-text-light);
 }
 
 .lsa-hero p {
-  font-family: var(--font-ui);
-  font-size: var(--font-size-xl);
-  color: var(--color-highlight);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-xl);
+    color: var(--color-highlight);
 }
 
 /* ---- Grid de tarjetas ---- */
 .lsa-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 148px);
-  gap: var(--space-md) var(--space-sm);
-  overflow-y: auto;
-  align-content: start;
-  padding-bottom: var(--space-xs);
-  justify-content: space-between;
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 148px);
+    gap: var(--space-md) var(--space-sm);
+    overflow-y: auto;
+    align-content: start;
+    padding-bottom: var(--space-xs);
+    justify-content: space-between;
 }
 
 .lsa-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  cursor: pointer;
-  opacity: 0;
-  animation: lsa-card-in var(--duration-panel) var(--ease-panel) forwards;
-  animation-delay: calc(var(--i, 0) * 20ms);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    cursor: pointer;
+    opacity: 0;
+    animation: lsa-card-in var(--duration-panel) var(--ease-panel) forwards;
+    animation-delay: calc(var(--i, 0) * 20ms);
 }
 
 .lsa-card-media {
-  position: relative;
-  width: 148px;
-  height: 128px;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  transform: translateY(0) scale(1);
-  transition:
-              transform var(--duration-base) var(--ease-panel),
-              filter var(--duration-base) var(--ease-panel);
-  filter: brightness(0.82);
+    position: relative;
+    width: 148px;
+    height: 128px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transform: translateY(0) scale(1);
+    transition:
+        transform var(--duration-base) var(--ease-panel),
+        filter var(--duration-base) var(--ease-panel);
+    filter: brightness(0.82);
 }
 
 .lsa-card-media img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
 }
 
 .lsa-card-caption {
-  font-family: var(--font-ui);
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  color: var(--lsa-muted);
-  text-align: center;
-  transition: color var(--duration-fast) var(--ease-panel);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: var(--lsa-muted);
+    text-align: center;
+    transition: color var(--duration-fast) var(--ease-panel);
 }
 
 .lsa-card.is-focused .lsa-card-media {
-  filter: brightness(1);
+    filter: brightness(1);
 }
 
 .lsa-card.is-focused .lsa-card-caption {
-  color: var(--color-text-light);
+    color: var(--color-text-light);
 }
 
 @keyframes lsa-card-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 /* ---- Detalle (overlay a pantalla completa) ---- */
 .lsa-detail {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: var(--space-sm);
-  padding: var(--space-lg);
-  background-color: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(14px);
-  z-index: var(--z-popup);
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-lg);
+    background-color: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(14px);
+    z-index: var(--z-popup);
 }
 
 .lsa-detail.is-open {
-  display: flex;
-  animation: lsa-detail-in var(--duration-base) var(--ease-panel);
+    display: flex;
+    animation: lsa-detail-in var(--duration-base) var(--ease-panel);
 }
 
 @keyframes lsa-detail-in {
-  from {
-    opacity: 0;
-    transform: scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+    from {
+        opacity: 0;
+        transform: scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .lsa-detail-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-xs);
-  width: 100%;
-  height: 100%;
-  max-width: 60rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    width: 100%;
+    height: 100%;
+    max-width: 60rem;
 }
 
 .lsa-detail-image {
-  flex: 1;
-  width: auto;
-  max-width: 92vw;
-  max-height: 72vh;
-  object-fit: contain;
-  border-radius: var(--radius-lg);
+    flex: 1;
+    width: auto;
+    max-width: 92vw;
+    max-height: 72vh;
+    object-fit: contain;
+    border-radius: var(--radius-lg);
 }
 
 .lsa-detail-index {
-  font-family: var(--font-ui);
-  font-size: var(--font-size-xxxl);
-  color: var(--color-highlight);
-  margin-top: var(--space-sm);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-xxxl);
+    color: var(--color-highlight);
+    margin-top: var(--space-sm);
 }
 
 .lsa-detail-card h2 {
-  font-size: 2rem;
-  color: var(--color-text-light);
+    font-size: 2rem;
+    color: var(--color-text-light);
 }
 
-
 @media (max-width: 640px) {
-  .lsa-detail-image {
-    max-height: 60vh;
-  }
+    .lsa-detail-image {
+        max-height: 60vh;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lsa-card {
-    animation: none;
-    opacity: 1;
-  }
+    .lsa-card {
+        animation: none;
+        opacity: 1;
+    }
 
-  .lsa-detail.is-open {
-    animation: none;
-  }
+    .lsa-detail.is-open {
+        animation: none;
+    }
 }

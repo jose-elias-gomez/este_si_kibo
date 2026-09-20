@@ -1,248 +1,248 @@
 #app {
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
 }
 
 .screen {
-  flex: 1;
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-lg);
-  padding: var(--space-lg);
-  background: var(--color-bg);
+    flex: 1;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+    background: var(--color-bg);
 }
 
 /* ---------- Menu ---------- */
 
 .menu-header {
-  text-align: center;
+    text-align: center;
 }
 
 .menu-header h2 {
-  margin-left: 0;
+    margin-left: 0;
 }
 
 .game-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--space-md);
-  width: 100%;
-  max-width: 640px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--space-md);
+    width: 100%;
+    max-width: 640px;
 }
 
 .game-card {
-  background: var(--overlay-first);
-  border: 2px solid transparent;
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg) var(--space-md);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-  cursor: pointer;
-  transition:
-    background var(--duration-base) var(--ease-panel),
-    border-color var(--duration-base) var(--ease-panel),
-    transform var(--duration-fast) var(--ease-panel);
+    background: var(--overlay-first);
+    border: 2px solid transparent;
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg) var(--space-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    cursor: pointer;
+    transition:
+        background var(--duration-base) var(--ease-panel),
+        border-color var(--duration-base) var(--ease-panel),
+        transform var(--duration-fast) var(--ease-panel);
 }
 
 .game-card.selected {
-  background: var(--overlay-first-selected);
-  border-color: var(--color-highlight);
-  transform: translateY(-4px);
+    background: var(--overlay-first-selected);
+    border-color: var(--color-highlight);
+    transform: translateY(-4px);
 }
 
 .game-card .icon {
-  font-size: 2.5rem;
-  line-height: 1;
+    font-size: 2.5rem;
+    line-height: 1;
 }
 
 .game-card .label {
-  font-family: var(--font-ui);
-  font-size: var(--font-size-lg);
-  color: var(--color-text);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-lg);
+    color: var(--color-text);
 }
 
 .menu-hint {
-  color: var(--color-h2);
-  font-size: var(--font-size-sm);
-  text-align: center;
+    color: var(--color-h2);
+    font-size: var(--font-size-sm);
+    text-align: center;
 }
 
 /* ---------- Shared game screen chrome ---------- */
 
 .game-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 640px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 640px;
 }
 
 .game-topbar h1 {
-  font-size: var(--font-size-xl);
+    font-size: var(--font-size-xl);
 }
 
 .back-btn {
-  background: var(--overlay-first);
-  border-radius: var(--radius-pill);
-  padding: 0.5rem 1rem;
-  font-family: var(--font-ui);
-  font-size: var(--font-size-md);
-  color: var(--color-text);
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-panel);
-  white-space: nowrap;
+    background: var(--overlay-first);
+    border-radius: var(--radius-pill);
+    padding: 0.5rem 1rem;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-panel);
+    white-space: nowrap;
 }
 
 .back-btn:hover {
-  background: var(--overlay-first-selected);
+    background: var(--overlay-first-selected);
 }
 
 .topbar-spacer {
-  width: 88px;
+    width: 88px;
 }
 
 .primary-btn {
-  background: var(--color-highlight);
-  color: var(--color-text);
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-pill);
-  font-family: var(--font-ui);
-  font-size: var(--font-size-lg);
-  cursor: pointer;
-  transition: filter var(--duration-fast) var(--ease-panel);
+    background: var(--color-highlight);
+    color: var(--color-text);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    transition: filter var(--duration-fast) var(--ease-panel);
 }
 
 .primary-btn:hover {
-  filter: brightness(1.2);
+    filter: brightness(1.2);
 }
 
 /* ---------- Tres en raya ---------- */
 
 .ttt-board {
-  display: grid;
-  grid-template-columns: repeat(3, 96px);
-  grid-template-rows: repeat(3, 96px);
-  gap: var(--space-sm);
+    display: grid;
+    grid-template-columns: repeat(3, 96px);
+    grid-template-rows: repeat(3, 96px);
+    gap: var(--space-sm);
 }
 
 .ttt-cell {
-  background: var(--overlay-first);
-  border-radius: var(--radius-md);
-  border: 2px solid transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-xxxl);
-  color: var(--color-text);
-  cursor: pointer;
-  transition:
-    background var(--duration-fast) var(--ease-panel),
-    border-color var(--duration-fast) var(--ease-panel);
+    background: var(--overlay-first);
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xxxl);
+    color: var(--color-text);
+    cursor: pointer;
+    transition:
+        background var(--duration-fast) var(--ease-panel),
+        border-color var(--duration-fast) var(--ease-panel);
 }
 
 .ttt-cell.selected {
-  border-color: var(--color-highlight);
-  background: var(--overlay-first-selected);
+    border-color: var(--color-highlight);
+    background: var(--overlay-first-selected);
 }
 
 .ttt-cell.taken {
-  cursor: default;
+    cursor: default;
 }
 
 .game-status {
-  font-size: var(--font-size-xl);
-  color: var(--color-text);
-  text-align: center;
+    font-size: var(--font-size-xl);
+    color: var(--color-text);
+    text-align: center;
 }
 
 /* ---------- Quiz ---------- */
 
 .quiz-progress {
-  font-size: var(--font-size-md);
-  color: var(--color-h2);
+    font-size: var(--font-size-md);
+    color: var(--color-h2);
 }
 
 .quiz-question {
-  font-size: var(--font-size-xl);
-  text-align: center;
-  max-width: 520px;
+    font-size: var(--font-size-xl);
+    text-align: center;
+    max-width: 520px;
 }
 
 .quiz-options {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  width: 100%;
-  max-width: 460px;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 100%;
+    max-width: 460px;
+    align-items: center;
 }
 
 .quiz-option {
-  background: var(--overlay-first);
-  border-radius: var(--radius-md);
-  border: 2px solid transparent;
-  padding: var(--space-sm) var(--space-md);
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  font-size: var(--font-size-lg);
-  transition:
-    background var(--duration-fast) var(--ease-panel),
-    border-color var(--duration-fast) var(--ease-panel);
+    background: var(--overlay-first);
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    padding: var(--space-sm) var(--space-md);
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: var(--font-size-lg);
+    transition:
+        background var(--duration-fast) var(--ease-panel),
+        border-color var(--duration-fast) var(--ease-panel);
 }
 
 .quiz-option.selected {
-  border-color: var(--color-highlight);
-  background: var(--overlay-first-selected);
+    border-color: var(--color-highlight);
+    background: var(--overlay-first-selected);
 }
 
 .quiz-option.correct {
-  border-color: #4caf50;
+    border-color: #4caf50;
 }
 
 .quiz-option.incorrect {
-  border-color: #e74c3c;
+    border-color: #e74c3c;
 }
 
 /* ---------- Memoria ---------- */
 
 .memory-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 84px);
-  grid-template-rows: repeat(4, 84px);
-  gap: var(--space-sm);
+    display: grid;
+    grid-template-columns: repeat(4, 84px);
+    grid-template-rows: repeat(4, 84px);
+    gap: var(--space-sm);
 }
 
 .memory-card {
-  background: var(--overlay-first);
-  border-radius: var(--radius-md);
-  border: 2px solid transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-xxl);
-  cursor: pointer;
-  transition:
-    background var(--duration-fast) var(--ease-panel),
-    border-color var(--duration-fast) var(--ease-panel);
+    background: var(--overlay-first);
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xxl);
+    cursor: pointer;
+    transition:
+        background var(--duration-fast) var(--ease-panel),
+        border-color var(--duration-fast) var(--ease-panel);
 }
 
 .memory-card.selected {
-  border-color: var(--color-highlight);
+    border-color: var(--color-highlight);
 }
 
 .memory-card.flipped {
-  background: var(--overlay-first-selected);
+    background: var(--overlay-first-selected);
 }
 
 .memory-card.matched {
-  opacity: 0.35;
-  cursor: default;
+    opacity: 0.35;
+    cursor: default;
 }

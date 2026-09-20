@@ -18,24 +18,27 @@ export class SceneEngine {
         this.renderer = new THREE.WebGLRenderer({
             antialias: false,
             alpha: false,
-            powerPreference: 'low-power'
+            powerPreference: "low-power",
         });
-        this.renderer.shadowMap.enabled = false; 
-        this.renderer.setClearColor(0x000000, 0)
+        this.renderer.shadowMap.enabled = false;
+        this.renderer.setClearColor(0x000000, 0);
 
         this.renderer.setSize(container.clientWidth, container.clientHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         container.appendChild(this.renderer.domElement);
 
-        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        this.controls = new THREE.OrbitControls(
+            this.camera,
+            this.renderer.domElement
+        );
         this.controls.enableRotate = false;
         this.controls.enableZoom = false;
         this.controls.enablePan = false;
         this.controls.target.copy(lookAtTarget);
 
         this._onWindowResize = this._onWindowResize.bind(this);
-        window.addEventListener('resize', this._onWindowResize);
+        window.addEventListener("resize", this._onWindowResize);
 
         this._animate = this._animate.bind(this);
         this._rafId = null;
@@ -82,7 +85,7 @@ export class SceneEngine {
     }
 
     dispose() {
-        window.removeEventListener('resize', this._onWindowResize);
+        window.removeEventListener("resize", this._onWindowResize);
         if (this._rafId) cancelAnimationFrame(this._rafId);
     }
 }

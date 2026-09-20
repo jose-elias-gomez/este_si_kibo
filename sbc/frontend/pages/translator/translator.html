@@ -1,179 +1,107 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+        <title>Traductor de señas</title>
 
-  <title>Traductor de señas</title>
+        <!-- Sistema global -->
+        <link rel="stylesheet" href="../../shared/css/global.css" />
 
-  <!-- Sistema global -->
-  <link
-    rel="stylesheet"
-    href="../../shared/css/global.css"
-  />
+        <!-- Estilos propios del traductor -->
+        <link rel="stylesheet" href="translator.css" />
 
-  <!-- Estilos propios del traductor -->
-  <link
-    rel="stylesheet"
-    href="translator.css"
-  />
+        <script
+            type="modulepreload"
+            src="../../shared/js/inputController.js"
+        ></script>
 
-  <script
-    type="modulepreload"
-    src="../../shared/js/inputController.js"
-  ></script>
+        <script type="module" src="./js/translator.js"></script>
+    </head>
 
-  <script
-    type="module"
-    src="./js/translator.js"
-  ></script>
-</head>
+    <body>
+        <main class="signconsole" id="signconsole">
+            <section class="stage">
+                <div class="camera-frame" id="cameraFrame">
+                    <!-- Cámara -->
+                    <video id="cameraFeed" autoplay playsinline muted></video>
 
-<body>
+                    <!-- Estado inicial -->
+                    <div class="camera-empty" id="cameraEmpty">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M3 7a2 2 0 0 1 2-2h2l1.5-2h7L17 5h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+                            />
 
-  <main
-    class="signconsole"
-    id="signconsole"
-  >
+                            <circle cx="12" cy="13" r="4" />
+                        </svg>
 
-    <section class="stage">
+                        <p>Solicitando acceso a la cámara...</p>
+                    </div>
 
-      <div
-        class="camera-frame"
-        id="cameraFrame"
-      >
+                    <!-- Estado de cámara -->
+                    <div class="signal-pill" id="signalPill">
+                        <span class="signal-dot" id="signalDot"></span>
 
-        <!-- Cámara -->
-        <video
-          id="cameraFeed"
-          autoplay
-          playsinline
-          muted
-        ></video>
+                        <span id="signalLabel"> Cámara apagada </span>
+                    </div>
 
+                    <!-- Flecha inferior -->
+                    <button
+                        class="peek-handle"
+                        id="peekHandle"
+                        type="button"
+                        aria-label="Mostrar última seña"
+                    >
+                        <svg
+                            class="peek-arrow"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.4"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path d="m18 15-6-6-6 6" />
+                        </svg>
+                    </button>
 
-        <!-- Estado inicial -->
-        <div
-          class="camera-empty"
-          id="cameraEmpty"
-        >
+                    <!-- Panel de última seña -->
+                    <div class="caption-dock" id="captionDock">
+                        <div class="caption-current">
+                            <span class="caption-current-label">
+                                Última seña
+                            </span>
 
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path
-              d="M3 7a2 2 0 0 1 2-2h2l1.5-2h7L17 5h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
-            />
+                            <span
+                                class="caption-current-glyph"
+                                id="currentGlyph"
+                            >
+                                —
+                            </span>
+                        </div>
 
-            <circle
-              cx="12"
-              cy="13"
-              r="4"
-            />
-          </svg>
+                        <div class="caption-word">
+                            <span class="caption-current-label">
+                                Palabra formada
+                            </span>
 
-          <p>
-            Solicitando acceso a la cámara...
-          </p>
-
-        </div>
-
-
-        <!-- Estado de cámara -->
-        <div
-          class="signal-pill"
-          id="signalPill"
-        >
-
-          <span
-            class="signal-dot"
-            id="signalDot"
-          ></span>
-
-          <span id="signalLabel">
-            Cámara apagada
-          </span>
-
-        </div>
-
-
-        <!-- Flecha inferior -->
-        <button
-          class="peek-handle"
-          id="peekHandle"
-          type="button"
-          aria-label="Mostrar última seña"
-        >
-
-          <svg
-            class="peek-arrow"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="m18 15-6-6-6 6" />
-          </svg>
-
-        </button>
-
-
-        <!-- Panel de última seña -->
-        <div
-  class="caption-dock"
-  id="captionDock"
->
-  <div
-  class="caption-current"
->
-  <span class="caption-current-label">
-    Última seña
-  </span>
-
-  <span
-    class="caption-current-glyph"
-    id="currentGlyph"
-  >
-    —
-  </span>
-
-</div>
-
-<div
-  class="caption-word"
->
-  <span class="caption-current-label">
-    Palabra formada
-  </span>
-
-  <span
-    class="translator-word" 
-    id="translatorWord"
-  >
-  </span>
-</div>
-
-</div>
-
-      </div>
-
-    </section>
-
-  </main>
-
-</body>
-
+                            <span class="translator-word" id="translatorWord">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </body>
 </html>

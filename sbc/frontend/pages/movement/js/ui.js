@@ -1,6 +1,10 @@
 import { selectPart, runMotor, stopMotor, playAnimation } from "./movement.js";
 import { setPartAngle, getPivotAngle } from "./movement.js";
-import { MotorDirection, NODE_LABELS, PARTS_CONFIG } from "../../../shared/js/movement/partsConfig.js";
+import {
+    MotorDirection,
+    NODE_LABELS,
+    PARTS_CONFIG,
+} from "../../../shared/js/movement/partsConfig.js";
 import { input, InputAction } from "../../../shared/js/inputController.js";
 
 let partButtonIndex = 2;
@@ -40,9 +44,13 @@ function setMotorRunning(isRunning, partName) {
     motorRun.classList.toggle("is-paused", isRunning);
     let direction;
     if (partName === "MotorLeft") {
-        direction = motorWidget.classList.contains("align-right") ? MotorDirection.FORWARD : MotorDirection.BACKWARD;
+        direction = motorWidget.classList.contains("align-right")
+            ? MotorDirection.FORWARD
+            : MotorDirection.BACKWARD;
     } else {
-        direction = motorWidget.classList.contains("align-right") ? MotorDirection.BACKWARD : MotorDirection.FORWARD;
+        direction = motorWidget.classList.contains("align-right")
+            ? MotorDirection.BACKWARD
+            : MotorDirection.FORWARD;
     }
     if (isRunning) {
         runMotor(partName, direction);
@@ -53,20 +61,20 @@ function setMotorRunning(isRunning, partName) {
     }
 }
 
-partButtons[partButtonIndex].classList.add('active');
+partButtons[partButtonIndex].classList.add("active");
 
 function updateFocusedButton(array, prevIndex, newIndex) {
     if (prevIndex !== undefined) {
-        array[prevIndex].classList.remove('hovered');
+        array[prevIndex].classList.remove("hovered");
     }
 
     const currentBtn = array[newIndex];
-    currentBtn.classList.add('hovered');
+    currentBtn.classList.add("hovered");
 
     currentBtn.scrollIntoView({
         behavior: "smooth",
         block: "nearest",
-        inline: "center"
+        inline: "center",
     });
 }
 
@@ -74,112 +82,185 @@ input.on(InputAction.DOWN, () => {
     animationPanel.open();
     updateFocusedButton(animationButtons, undefined, animationButtonIndex);
 
-    input.on(InputAction.LEFT, () => {
-        if (animationButtonIndex > 0) {
-            updateFocusedButton(animationButtons, animationButtonIndex, --animationButtonIndex);
-        }
-    }, animationPanel.context);
+    input.on(
+        InputAction.LEFT,
+        () => {
+            if (animationButtonIndex > 0) {
+                updateFocusedButton(
+                    animationButtons,
+                    animationButtonIndex,
+                    --animationButtonIndex
+                );
+            }
+        },
+        animationPanel.context
+    );
 
-    input.on(InputAction.RIGHT, () => {
-        if (animationButtonIndex < animationButtons.length - 1) {
-            updateFocusedButton(animationButtons, animationButtonIndex, ++animationButtonIndex);
-        }
-    }, animationPanel.context);
+    input.on(
+        InputAction.RIGHT,
+        () => {
+            if (animationButtonIndex < animationButtons.length - 1) {
+                updateFocusedButton(
+                    animationButtons,
+                    animationButtonIndex,
+                    ++animationButtonIndex
+                );
+            }
+        },
+        animationPanel.context
+    );
 
-    input.on(InputAction.CONFIRM, () => {
-        const btn = animationButtons[animationButtonIndex];
-        const type = btn.getAttribute("data-animation");
-        playAnimation(type);
-        animationPanel.close();
-
-    }, animationPanel.context);
+    input.on(
+        InputAction.CONFIRM,
+        () => {
+            const btn = animationButtons[animationButtonIndex];
+            const type = btn.getAttribute("data-animation");
+            playAnimation(type);
+            animationPanel.close();
+        },
+        animationPanel.context
+    );
 });
 
 input.on(InputAction.UP, () => {
     movementPanel.open();
     updateFocusedButton(partButtons, undefined, partButtonIndex);
 
-    input.on(InputAction.LEFT, () => {
-        if (partButtonIndex > 0) {
-            updateFocusedButton(partButtons, partButtonIndex, --partButtonIndex);
-        }
-    }, movementPanel.context);
+    input.on(
+        InputAction.LEFT,
+        () => {
+            if (partButtonIndex > 0) {
+                updateFocusedButton(
+                    partButtons,
+                    partButtonIndex,
+                    --partButtonIndex
+                );
+            }
+        },
+        movementPanel.context
+    );
 
-    input.on(InputAction.RIGHT, () => {
-        if (partButtonIndex < partButtons.length - 1) {
-            updateFocusedButton(partButtons, partButtonIndex, ++partButtonIndex);
-        }
-    }, movementPanel.context);
+    input.on(
+        InputAction.RIGHT,
+        () => {
+            if (partButtonIndex < partButtons.length - 1) {
+                updateFocusedButton(
+                    partButtons,
+                    partButtonIndex,
+                    ++partButtonIndex
+                );
+            }
+        },
+        movementPanel.context
+    );
 
-    input.on(InputAction.CONFIRM, () => {
-        const btn = partButtons[partButtonIndex];
-        const view = btn.getAttribute('data-view');
-        const partName = btn.getAttribute('data-node');
+    input.on(
+        InputAction.CONFIRM,
+        () => {
+            const btn = partButtons[partButtonIndex];
+            const view = btn.getAttribute("data-view");
+            const partName = btn.getAttribute("data-node");
 
-        partButtons.forEach(b => b.classList.remove("active"));
+            partButtons.forEach((b) => b.classList.remove("active"));
 
-        btn.classList.add("active");
-        selectPart(partName, view);
-        movementPanel.close();
+            btn.classList.add("active");
+            selectPart(partName, view);
+            movementPanel.close();
 
-        if (partName === "LeftWheel" || partName == "RightWheel") {
-            currentMotorPart = partName;
+            if (partName === "LeftWheel" || partName == "RightWheel") {
+                currentMotorPart = partName;
 
-            motorWidget.classList.add("visible");
-            input.pushContext("motor-run");
-            input.on(InputAction.BACK, () => {
-                motorWidget.classList.remove("visible");
-                setMotorRunning(false, currentMotorPart);
-                currentMotorPart = null;
-                input.popContext();
-            }, "motor-run");
+                motorWidget.classList.add("visible");
+                input.pushContext("motor-run");
+                input.on(
+                    InputAction.BACK,
+                    () => {
+                        motorWidget.classList.remove("visible");
+                        setMotorRunning(false, currentMotorPart);
+                        currentMotorPart = null;
+                        input.popContext();
+                    },
+                    "motor-run"
+                );
 
-            input.on(InputAction.CONFIRM, () => {
-                setMotorRunning(!motorRun.classList.contains('is-paused'), currentMotorPart);
-            }, "motor-run");
+                input.on(
+                    InputAction.CONFIRM,
+                    () => {
+                        setMotorRunning(
+                            !motorRun.classList.contains("is-paused"),
+                            currentMotorPart
+                        );
+                    },
+                    "motor-run"
+                );
 
-            input.on(InputAction.LEFT, () => {
-                motorWidget.classList.remove("align-right");
-                motorWidget.classList.add("align-left");
-            }, "motor-run");
+                input.on(
+                    InputAction.LEFT,
+                    () => {
+                        motorWidget.classList.remove("align-right");
+                        motorWidget.classList.add("align-left");
+                    },
+                    "motor-run"
+                );
 
-            input.on(InputAction.RIGHT, () => {
-                motorWidget.classList.remove("align-left");
-                motorWidget.classList.add("align-right");
-            }, "motor-run");
-            return;
-        }
+                input.on(
+                    InputAction.RIGHT,
+                    () => {
+                        motorWidget.classList.remove("align-left");
+                        motorWidget.classList.add("align-right");
+                    },
+                    "motor-run"
+                );
+                return;
+            }
 
-        input.pushContext("manual-slider");
-        manualSlider.classList.add("visible");
-        manualSlider.setTitle(NODE_LABELS[partName]);
+            input.pushContext("manual-slider");
+            manualSlider.classList.add("visible");
+            manualSlider.setTitle(NODE_LABELS[partName]);
 
-        const part = PARTS_CONFIG[partName];
-        manualSlider.setMin(part.min);
-        manualSlider.setMax(part.max);
-        manualSlider.value = getPivotAngle(partName);
+            const part = PARTS_CONFIG[partName];
+            manualSlider.setMin(part.min);
+            manualSlider.setMax(part.max);
+            manualSlider.value = getPivotAngle(partName);
 
-        input.on(InputAction.LEFT, () => {
-            manualSlider.step(-1);
-            setPartAngle(manualSlider.value);
-        }, "manual-slider");
+            input.on(
+                InputAction.LEFT,
+                () => {
+                    manualSlider.step(-1);
+                    setPartAngle(manualSlider.value);
+                },
+                "manual-slider"
+            );
 
-        input.on(InputAction.RIGHT, () => {
-            manualSlider.step(1);
-            setPartAngle(manualSlider.value);
-        }, "manual-slider");
+            input.on(
+                InputAction.RIGHT,
+                () => {
+                    manualSlider.step(1);
+                    setPartAngle(manualSlider.value);
+                },
+                "manual-slider"
+            );
 
-        input.on(InputAction.BACK, () => {
-            manualSlider.classList.remove("visible");
-            input.popContext();
-        }, "manual-slider");
-    }, movementPanel.context);
+            input.on(
+                InputAction.BACK,
+                () => {
+                    manualSlider.classList.remove("visible");
+                    input.popContext();
+                },
+                "manual-slider"
+            );
+        },
+        movementPanel.context
+    );
 });
 
 // Listener global para volver a Home cuando estás en la sección principal
 input.on(InputAction.BACK, () => {
     // Si un panel está abierto, lo cierra en lugar de salir a Home
-    if (movementPanel.classList.contains("open") || animationPanel.classList.contains("open")) {
+    if (
+        movementPanel.classList.contains("open") ||
+        animationPanel.classList.contains("open")
+    ) {
         movementPanel.close();
         animationPanel.close();
         return;

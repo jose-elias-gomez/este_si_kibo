@@ -1,188 +1,119 @@
-import {
-  input,
-  InputAction
-} from "../../../shared/js/inputController.js";
+import { input, InputAction } from "../../../shared/js/inputController.js";
 
 (() => {
-  "use strict";
+    "use strict";
 
-  // =========================================================
-  // CONTEXTO
-  // =========================================================
+    // =========================================================
+    // CONTEXTO
+    // =========================================================
 
-  const CONTEXT = "CAMERA";
+    const CONTEXT = "CAMERA";
 
+    // =========================================================
+    // ELEMENTOS
+    // =========================================================
 
-  // =========================================================
-  // ELEMENTOS
-  // =========================================================
+    const cameraFeed = document.getElementById("cameraFeed");
 
-  const cameraFeed =
-    document.getElementById("cameraFeed");
+    // =========================================================
+    // ESTADO
+    // =========================================================
 
+    let mediaStream = null;
 
-  // =========================================================
-  // ESTADO
-  // =========================================================
+    // =========================================================
+    // INICIAR CÁMARA
+    // =========================================================
 
-  let mediaStream = null;
+    async function startCamera() {
+        try {
+            if (
+                !navigator.mediaDevices ||
+                !navigator.mediaDevices.getUserMedia
+            ) {
+                console.error("[CAMERA] getUserMedia no está disponible.");
 
+                return;
+            }
 
-  // =========================================================
-  // INICIAR CÁMARA
-  // =========================================================
+            console.log("[CAMERA] Solicitando acceso a la cámara...");
 
-  async function startCamera() {
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: "user",
+                },
 
-    try {
+                audio: false,
+            });
 
-      if (
-        !navigator.mediaDevices ||
-        !navigator.mediaDevices.getUserMedia
-      ) {
+            cameraFeed.srcObject = mediaStream;
 
-        console.error(
-          "[CAMERA] getUserMedia no está disponible."
-        );
+            cameraFeed.muted = true;
+            cameraFeed.autoplay = true;
+            cameraFeed.playsInline = true;
 
-        return;
-      }
+            await cameraFeed.play();
 
+            console.log("[CAMERA] Cámara iniciada.");
+        } catch (error) {
+            console.error("[CAMERA] No se pudo acceder a la cámara:", error);
+        }
+    }
 
-      console.log(
-        "[CAMERA] Solicitando acceso a la cámara..."
-      );
+    // =========================================================
+    // DETENER CÁMARA
+    // =========================================================
 
+    function stopCamera() {
+        if (!mediaStream) {
+            return;
+        }
 
-      mediaStream =
-        await navigator.mediaDevices.getUserMedia({
-
-          video: {
-            facingMode: "user"
-          },
-
-          audio: false
-
+        mediaStream.getTracks().forEach((track) => {
+            track.stop();
         });
 
+        mediaStream = null;
 
-      cameraFeed.srcObject =
-        mediaStream;
+        cameraFeed.srcObject = null;
 
-
-      cameraFeed.muted = true;
-      cameraFeed.autoplay = true;
-      cameraFeed.playsInline = true;
-
-
-      await cameraFeed.play();
-
-
-      console.log(
-        "[CAMERA] Cámara iniciada."
-      );
-
+        console.log("[CAMERA] Cámara detenida.");
     }
 
-    catch (error) {
+    // =========================================================
+    // ESCAPE / BACK
+    // =========================================================
 
-      console.error(
-        "[CAMERA] No se pudo acceder a la cámara:",
-        error
-      );
+    function handleBack() {
+        console.log("[CAMERA] BACK");
 
+        // Detener cámara
+        stopCamera();
+
+        // Salir del contexto actual
+        input.popContext();
+
+        // Volver al Home
+        window.location.href = "../home/home.html";
     }
 
-  }
+    // =========================================================
+    // INPUT CONTROLLER
+    // =========================================================
 
+    input.pushContext(CONTEXT);
 
-  // =========================================================
-  // DETENER CÁMARA
-  // =========================================================
+    input.on(InputAction.BACK, handleBack, CONTEXT);
 
-  function stopCamera() {
+    // =========================================================
+    // INICIO
+    // =========================================================
 
-    if (!mediaStream) {
-      return;
-    }
+    startCamera();
 
+    // =========================================================
+    // LIMPIEZA
+    // =========================================================
 
-    mediaStream
-      .getTracks()
-      .forEach((track) => {
-
-        track.stop();
-
-      });
-
-
-    mediaStream = null;
-
-
-    cameraFeed.srcObject = null;
-
-
-    console.log(
-      "[CAMERA] Cámara detenida."
-    );
-
-  }
-
-
-  // =========================================================
-  // ESCAPE / BACK
-  // =========================================================
-
-  function handleBack() {
-
-    console.log(
-      "[CAMERA] BACK"
-    );
-
-
-    // Detener cámara
-    stopCamera();
-
-
-    // Salir del contexto actual
-    input.popContext();
-
-
-    // Volver al Home
-    window.location.href =
-      "../home/home.html";
-
-  }
-
-
-  // =========================================================
-  // INPUT CONTROLLER
-  // =========================================================
-
-  input.pushContext(CONTEXT);
-
-
-  input.on(
-    InputAction.BACK,
-    handleBack,
-    CONTEXT
-  );
-
-
-  // =========================================================
-  // INICIO
-  // =========================================================
-
-  startCamera();
-
-
-  // =========================================================
-  // LIMPIEZA
-  // =========================================================
-
-  window.addEventListener(
-    "beforeunload",
-    stopCamera
-  );
-
+    window.addEventListener("beforeunload", stopCamera);
 })();

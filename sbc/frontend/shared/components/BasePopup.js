@@ -1,32 +1,32 @@
 import { input, InputAction } from "../js/inputController.js";
 
 export class BasePopup extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-    this._inputContextActive = false;
-  }
+    constructor() {
+        super();
+        this.attachShadow({ mode: "open" });
+        this._inputContextActive = false;
+    }
 
-  /**
-   * Contexto del input controller asociado a este popup. Las subclases que
-   * necesiten navegación por teclado/control deben sobreescribir este
-   * getter (ver WifiMenu -> get context()). Si devuelve null/undefined,
-   * el popup no toca el input controller y close()/open() se comportan
-   * como antes (solo animación del <dialog>).
-   */
-  get context() {
-    return null;
-  }
+    /**
+     * Contexto del input controller asociado a este popup. Las subclases que
+     * necesiten navegación por teclado/control deben sobreescribir este
+     * getter (ver WifiMenu -> get context()). Si devuelve null/undefined,
+     * el popup no toca el input controller y close()/open() se comportan
+     * como antes (solo animación del <dialog>).
+     */
+    get context() {
+        return null;
+    }
 
-  connectedCallback() {
-    this.render();
-    this.dialog = this.shadowRoot.querySelector("dialog");
-  }
+    connectedCallback() {
+        this.render();
+        this.dialog = this.shadowRoot.querySelector("dialog");
+    }
 
-  render() {
-    const title = this.getAttribute("title") || "";
+    render() {
+        const title = this.getAttribute("title") || "";
 
-    this.shadowRoot.innerHTML = `
+        this.shadowRoot.innerHTML = `
       <style>
         :host {
           display: block;
@@ -110,59 +110,60 @@ export class BasePopup extends HTMLElement {
         </main>
       </dialog>
     `;
-  }
-
-  open() {
-    this._cancelPendingClose();
-
-    if (!this.dialog.open) {
-      this.dialog.showModal();
     }
 
-    if (this.context && !this._inputContextActive) {
-      this._inputContextActive = true;
-      input.pushContext(this.context);
-      input.on(InputAction.BACK, () => this.close(), this.context);
-      this.setupInputController?.();
+    open() {
+        this._cancelPendingClose();
+
+        if (!this.dialog.open) {
+            this.dialog.showModal();
+        }
+
+        if (this.context && !this._inputContextActive) {
+            this._inputContextActive = true;
+            input.pushContext(this.context);
+            input.on(InputAction.BACK, () => this.close(), this.context);
+            this.setupInputController?.();
+        }
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.dialog.classList.add("visible");
+            });
+        });
     }
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        this.dialog.classList.add("visible");
-      });
-    });
-  }
+    close() {
+        if (this.context && this._inputContextActive) {
+            this._inputContextActive = false;
+            while (
+                input.contextStack.length > 1 &&
+                (input.activeContext === this.context ||
+                    input.activeContext.startsWith(`${this.context}-`))
+            ) {
+                input.popContext();
+            }
+        }
 
-  close() {
-    if (this.context && this._inputContextActive) {
-      this._inputContextActive = false;
-      while (
-        input.contextStack.length > 1 &&
-        (input.activeContext === this.context ||
-          input.activeContext.startsWith(`${this.context}-`))
-      ) {
-        input.popContext();
-      }
+        this.dialog.classList.remove("visible");
+        this._cancelPendingClose();
+
+        this._onCloseEnd = (e) => {
+            if (e.propertyName !== "transform" && e.propertyName !== "opacity")
+                return;
+            this.dialog.close();
+            this._cancelPendingClose();
+        };
+
+        this.dialog.addEventListener("transitionend", this._onCloseEnd);
     }
 
-    this.dialog.classList.remove("visible");
-    this._cancelPendingClose();
-
-    this._onCloseEnd = (e) => {
-      if (e.propertyName !== "transform" && e.propertyName !== "opacity") return;
-      this.dialog.close();
-      this._cancelPendingClose();
-    };
-
-    this.dialog.addEventListener("transitionend", this._onCloseEnd);
-  }
-
-  _cancelPendingClose() {
-    if (this._onCloseEnd) {
-      this.dialog.removeEventListener("transitionend", this._onCloseEnd);
-      this._onCloseEnd = null;
+    _cancelPendingClose() {
+        if (this._onCloseEnd) {
+            this.dialog.removeEventListener("transitionend", this._onCloseEnd);
+            this._onCloseEnd = null;
+        }
     }
-  }
 }
 
 customElements.define("base-popup", BasePopup);

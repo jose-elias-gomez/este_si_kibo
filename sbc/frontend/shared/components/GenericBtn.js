@@ -54,68 +54,68 @@ template.innerHTML = `
 `;
 
 export class GenericBtn extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-    this.shadowRoot.appendChild(template.content.cloneNode(true));
+    constructor() {
+        super();
+        this.attachShadow({ mode: "open" });
+        this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-    this._button = this.shadowRoot.getElementById("btn");
-    this._isHovered = false;
-  }
+        this._button = this.shadowRoot.getElementById("btn");
+        this._isHovered = false;
+    }
 
-  connectedCallback() {
-    this._setupMouseEvents();
-  }
+    connectedCallback() {
+        this._setupMouseEvents();
+    }
 
-  _setupMouseEvents() {
-    this._button.addEventListener("mouseenter", () => this.hover());
-    this._button.addEventListener("mouseleave", () => this.unhover());
-    this._button.addEventListener("click", (e) => this._onNativeClick(e));
-  }
+    _setupMouseEvents() {
+        this._button.addEventListener("mouseenter", () => this.hover());
+        this._button.addEventListener("mouseleave", () => this.unhover());
+        this._button.addEventListener("click", (e) => this._onNativeClick(e));
+    }
 
-  // --- MÉTODOS Y ESTADOS PÚBLICOS ---
+    // --- MÉTODOS Y ESTADOS PÚBLICOS ---
 
-  /**
-   * Activa el estado hover (vía control de mando/teclado o mouse)
-   */
-  hover() {
-    if (this.hasAttribute("disabled")) return;
-    this._isHovered = true;
-    this._button.classList.add("hovered");
-    this.setAttribute("is-hovered", "");
-  }
+    /**
+     * Activa el estado hover (vía control de mando/teclado o mouse)
+     */
+    hover() {
+        if (this.hasAttribute("disabled")) return;
+        this._isHovered = true;
+        this._button.classList.add("hovered");
+        this.setAttribute("is-hovered", "");
+    }
 
-  /**
-   * Remueve el estado hover
-   */
-  unhover() {
-    this._isHovered = false;
-    this._button.classList.remove("hovered");
-    this.removeAttribute("is-hovered");
-  }
+    /**
+     * Remueve el estado hover
+     */
+    unhover() {
+        this._isHovered = false;
+        this._button.classList.remove("hovered");
+        this.removeAttribute("is-hovered");
+    }
 
-  /**
-   * Ejecuta la animación de 'click' (pressed) y dispara la acción/evento
-   */
-  click() {
-    if (this.hasAttribute("disabled")) return;
+    /**
+     * Ejecuta la animación de 'click' (pressed) y dispara la acción/evento
+     */
+    click() {
+        if (this.hasAttribute("disabled")) return;
 
-    this._button.classList.add("pressed");
+        this._button.classList.add("pressed");
 
-    setTimeout(() => this._button.classList.remove("pressed"), 150);
-  }
+        setTimeout(() => this._button.classList.remove("pressed"), 150);
+    }
 
-  /**
-   * Retorna si el botón está en estado hover
-   */
-  get isHovered() {
-    return this._isHovered;
-  }
+    /**
+     * Retorna si el botón está en estado hover
+     */
+    get isHovered() {
+        return this._isHovered;
+    }
 
-  _onNativeClick(e) {
-    e.stopPropagation();
-    this.click();
-  }
+    _onNativeClick(e) {
+        e.stopPropagation();
+        this.click();
+    }
 }
 
 customElements.define("generic-btn", GenericBtn);

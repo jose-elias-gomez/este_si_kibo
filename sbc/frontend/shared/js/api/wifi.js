@@ -1,100 +1,110 @@
-import { DEBUG_MODE, getApiUrl } from './common.js';
+import { DEBUG_MODE, getApiUrl } from "./common.js";
 
 // Anticorruption layer for Wi-Fi API calls
 export class WifiNetwork {
-  constructor(ssid, signal, security, inUse) {
-    this.ssid = ssid;
-    this.signal = signal;
-    this.security = security;
-    this.inUse = inUse;
-  }
+    constructor(ssid, signal, security, inUse) {
+        this.ssid = ssid;
+        this.signal = signal;
+        this.security = security;
+        this.inUse = inUse;
+    }
 }
 
 export class WifiApiError extends Error {
-  constructor(message, detail) {
-    super(message);
-    this.name = 'WifiApiError';
-    this.detail = detail;
-  }
+    constructor(message, detail) {
+        super(message);
+        this.name = "WifiApiError";
+        this.detail = detail;
+    }
 }
 
 async function handleResponse(response) {
-  if (!response.ok) {
-    let payload = null;
-    try {
-      payload = await response.json();
-    } catch (_) {
-      // response body wasn't JSON
+    if (!response.ok) {
+        let payload = null;
+        try {
+            payload = await response.json();
+        } catch (_) {
+            // response body wasn't JSON
+        }
+        const detail = payload?.detail;
+        const message =
+            detail?.message ||
+            `Wifi request failed with status ${response.status}`;
+        throw new WifiApiError(message, detail?.detail);
     }
-    const detail = payload?.detail;
-    const message = detail?.message || `Wifi request failed with status ${response.status}`;
-    throw new WifiApiError(message, detail?.detail);
-  }
-  return response.json();
+    return response.json();
 }
 
 export function listWifiNetworks() {
-  if (DEBUG_MODE) {
-    return Promise.resolve([
-      new WifiNetwork('Network 1', 10, 'OPEN', false),
-      new WifiNetwork('Network 2', 30, 'WPA2-Personal', false),
-      new WifiNetwork('Network 3', 60, 'WPA2-Personal', false),
-      new WifiNetwork('Network 4', 90, 'WPA3-Personal', true),
-    ]);
-  }
+    if (DEBUG_MODE) {
+        return Promise.resolve([
+            new WifiNetwork("Network 1", 10, "OPEN", false),
+            new WifiNetwork("Network 2", 30, "WPA2-Personal", false),
+            new WifiNetwork("Network 3", 60, "WPA2-Personal", false),
+            new WifiNetwork("Network 4", 90, "WPA3-Personal", true),
+        ]);
+    }
 
-  return fetch(getApiUrl('networks'))
-    .then(handleResponse)
-    .then((networks) =>
-      networks.map((n) => new WifiNetwork(n.ssid, n.signal, n.security, n.in_use))
-    )
-    .catch((error) => {
-      console.error('Error fetching Wi-Fi networks:', error);
-      throw error;
-    });
+    return fetch(getApiUrl("networks"))
+        .then(handleResponse)
+        .then((networks) =>
+            networks.map(
+                (n) => new WifiNetwork(n.ssid, n.signal, n.security, n.in_use)
+            )
+        )
+        .catch((error) => {
+            console.error("Error fetching Wi-Fi networks:", error);
+            throw error;
+        });
 }
 
 export function getCurrentNetwork() {
-  if (DEBUG_MODE) {
-    return Promise.resolve({ ssid: 'Network 4', connected: true });
-  }
+    if (DEBUG_MODE) {
+        return Promise.resolve({ ssid: "Network 4", connected: true });
+    }
 
-  return fetch(getApiUrl('networks/current'))
-    .then(handleResponse)
-    .catch((error) => {
-      console.error('Error fetching current Wi-Fi network:', error);
-      throw error;
-    });
+    return fetch(getApiUrl("networks/current"))
+        .then(handleResponse)
+        .catch((error) => {
+            console.error("Error fetching current Wi-Fi network:", error);
+            throw error;
+        });
 }
 
 export function connectToNetwork(ssid, password = null) {
-  if (DEBUG_MODE) {
-    return Promise.resolve({ ssid, status: 'connected', previous: null });
-  }
+    if (DEBUG_MODE) {
+        return Promise.resolve({ ssid, status: "connected", previous: null });
+    }
 
-  return fetch(getApiUrl('networks/connect'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ssid, password }),
-  })
-    .then(handleResponse)
-    .catch((error) => {
-      console.error(`Error connecting to Wi-Fi network "${ssid}":`, error);
-      throw error;
-    });
+    return fetch(getApiUrl("networks/connect"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ssid, password }),
+    })
+        .then(handleResponse)
+        .catch((error) => {
+            console.error(
+                `Error connecting to Wi-Fi network "${ssid}":`,
+                error
+            );
+            throw error;
+        });
 }
 
 export function disconnectFromNetwork() {
-  if (DEBUG_MODE) {
-    return Promise.resolve({ status: 'disconnected', previous: 'Network 4' });
-  }
+    if (DEBUG_MODE) {
+        return Promise.resolve({
+            status: "disconnected",
+            previous: "Network 4",
+        });
+    }
 
-  return fetch(getApiUrl('networks/disconnect'), {
-    method: 'POST',
-  })
-    .then(handleResponse)
-    .catch((error) => {
-      console.error('Error disconnecting Wi-Fi:', error);
-      throw error;
-    });
+    return fetch(getApiUrl("networks/disconnect"), {
+        method: "POST",
+    })
+        .then(handleResponse)
+        .catch((error) => {
+            console.error("Error disconnecting Wi-Fi:", error);
+            throw error;
+        });
 }

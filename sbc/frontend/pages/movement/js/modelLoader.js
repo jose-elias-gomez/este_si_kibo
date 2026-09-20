@@ -35,7 +35,7 @@ export function findPivotInNode(modelRoot, parentName) {
 
     let pivotObj = null;
     parentObj.traverse((child) => {
-        if (child !== parentObj && child.name.startsWith('Pivot')) {
+        if (child !== parentObj && child.name.startsWith("Pivot")) {
             pivotObj = child;
         }
     });
@@ -64,7 +64,7 @@ export function loadGltfModel(url) {
                             map: child.material.map,
                             color: child.material.color,
                             transparent: child.material.transparent,
-                            opacity: child.material.opacity
+                            opacity: child.material.opacity,
                         });
                     }
                 });
@@ -73,7 +73,7 @@ export function loadGltfModel(url) {
             },
             undefined,
             (error) => {
-                console.error('Error cargando el modelo:', error);
+                console.error("Error cargando el modelo:", error);
                 reject(error);
             }
         );

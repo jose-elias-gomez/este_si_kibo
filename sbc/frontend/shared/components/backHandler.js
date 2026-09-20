@@ -1,30 +1,19 @@
-import {
-  input,
-  InputAction
-} from "../js/inputController.js";
+import { input, InputAction } from "../js/inputController.js";
 
-export function setupBackHandler({
-  context,
-  onBack
-}) {
+export function setupBackHandler({ context, onBack }) {
+    input.pushContext(context);
 
-  input.pushContext(context);
+    input.on(
+        InputAction.BACK,
+        () => {
+            console.log(`[${context}] BACK`);
 
-  input.on(
-    InputAction.BACK,
-    () => {
+            onBack();
+        },
+        context
+    );
 
-      console.log(
-        `[${context}] BACK`
-      );
-
-      onBack();
-
-    },
-    context
-  );
-
-  return () => {
-    input.popContext();
-  };
+    return () => {
+        input.popContext();
+    };
 }

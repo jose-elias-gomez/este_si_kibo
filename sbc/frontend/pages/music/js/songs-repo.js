@@ -4,8 +4,7 @@ export const SONGS = [
         author: "Tito Calderón (Momo)",
         audio: "audio/tetengoalladoymesientosolo.mp3",
         cover: "covers/momo.jpg",
-        lyrics:
-        `[00:22.11] Te tengo al lado y me siento solo
+        lyrics: `[00:22.11] Te tengo al lado y me siento solo
 [00:24.32] El miedo me come y no entiendo cómo
 [00:26.82] Razones no faltan para querer irme, pero si me voy quizás falte todo
 [00:32.40] Ella me llama, y me llama, y no sé qué hacer
@@ -60,7 +59,7 @@ export const SONGS = [
 [03:12.48] Porque ella me llama, me llama, y no sé qué hacer
 [03:15.72] Llama, me llama y no volveré
 [03:19.82] 
-        ` 
+        `,
     },
     {
         title: "Osito gominola",
@@ -112,7 +111,7 @@ export const SONGS = [
 [02:21.90] Fiesta pop
 [02:25.53] Fiesta pop
 [02:27.50] 
-        `
+        `,
     },
     {
         title: "El polito pio",
@@ -215,6 +214,6 @@ export const SONGS = [
 [02:34.47] Y el tractor BRUUM,
 [02:35.56] Y el pollito (puaggg) OH OH
 [02:37.94] 
-        `
+        `,
     },
 ];

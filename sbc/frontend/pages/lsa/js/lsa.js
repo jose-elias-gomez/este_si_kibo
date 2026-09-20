@@ -10,19 +10,19 @@ import { setupBackHandler } from "../../../shared/components/backHandler.js";
  * vista de detalle usan la misma imagen.
  */
 const ABECEDARIO = "abcdefghijklmnopqrstuvwxyz"
-  .split("")
-  .map((letra) => ({
-    id: letra,
-    label: letra.toUpperCase(),
-    image: `assets/${letra}.png`,
-  }))
-  .concat([
-    {
-      id: "n-tilde",
-      label: "Ñ",
-      image: "assets/n-tilde.png",
-    },
-  ]);
+    .split("")
+    .map((letra) => ({
+        id: letra,
+        label: letra.toUpperCase(),
+        image: `assets/${letra}.png`,
+    }))
+    .concat([
+        {
+            id: "n-tilde",
+            label: "Ñ",
+            image: "assets/n-tilde.png",
+        },
+    ]);
 
 /**
  * ============================================================
@@ -30,7 +30,7 @@ const ABECEDARIO = "abcdefghijklmnopqrstuvwxyz"
  * ============================================================
  */
 const state = {
-  cardIndex: 0,
+    cardIndex: 0,
 };
 
 /**
@@ -53,9 +53,9 @@ let detailCleanup = null;
  * ============================================================
  */
 function renderHero() {
-  heroTitleEl.textContent = "Abecedario";
-  heroMetaEl.textContent =
-    ABECEDARIO.length === 1 ? "1 seña" : `${ABECEDARIO.length} señas`;
+    heroTitleEl.textContent = "Abecedario";
+    heroMetaEl.textContent =
+        ABECEDARIO.length === 1 ? "1 seña" : `${ABECEDARIO.length} señas`;
 }
 
 /**
@@ -64,48 +64,48 @@ function renderHero() {
  * ============================================================
  */
 function renderGrid() {
-  gridEl.innerHTML = "";
+    gridEl.innerHTML = "";
 
-  ABECEDARIO.forEach((item, index) => {
-    const card = document.createElement("div");
-    card.className = "lsa-card";
-    card.style.setProperty("--i", index);
+    ABECEDARIO.forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "lsa-card";
+        card.style.setProperty("--i", index);
 
-    const media = document.createElement("div");
-    media.className = "lsa-card-media";
+        const media = document.createElement("div");
+        media.className = "lsa-card-media";
 
-    const img = document.createElement("img");
-    img.loading = "lazy";
-    img.alt = item.label;
-    img.src = item.image;
+        const img = document.createElement("img");
+        img.loading = "lazy";
+        img.alt = item.label;
+        img.src = item.image;
 
-    media.appendChild(img);
-    card.appendChild(media);
+        media.appendChild(img);
+        card.appendChild(media);
 
-    card.addEventListener("click", () => {
-      setFocusedCard(index);
-      openDetail();
+        card.addEventListener("click", () => {
+            setFocusedCard(index);
+            openDetail();
+        });
+
+        gridEl.appendChild(card);
     });
 
-    gridEl.appendChild(card);
-  });
-
-  setFocusedCard(state.cardIndex);
+    setFocusedCard(state.cardIndex);
 }
 
 function setFocusedCard(index) {
-  const cards = Array.from(gridEl.children);
-  state.cardIndex = index;
+    const cards = Array.from(gridEl.children);
+    state.cardIndex = index;
 
-  cards.forEach((card, i) => {
-    card.classList.toggle("is-focused", i === index);
-  });
-  cards[index]?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    cards.forEach((card, i) => {
+        card.classList.toggle("is-focused", i === index);
+    });
+    cards[index]?.scrollIntoView({ block: "nearest", inline: "nearest" });
 }
 
 function render() {
-  renderHero();
-  renderGrid();
+    renderHero();
+    renderGrid();
 }
 
 /**
@@ -116,58 +116,62 @@ function render() {
  * ============================================================
  */
 function getGridRows() {
-  const cards = Array.from(gridEl.children);
-  const rows = [];
+    const cards = Array.from(gridEl.children);
+    const rows = [];
 
-  cards.forEach((card, index) => {
-    const top = card.offsetTop;
-    let row = rows.find((r) => Math.abs(r.top - top) < 4);
+    cards.forEach((card, index) => {
+        const top = card.offsetTop;
+        let row = rows.find((r) => Math.abs(r.top - top) < 4);
 
-    if (!row) {
-      row = { top, indices: [] };
-      rows.push(row);
-    }
+        if (!row) {
+            row = { top, indices: [] };
+            rows.push(row);
+        }
 
-    row.indices.push(index);
-  });
+        row.indices.push(index);
+    });
 
-  return rows;
+    return rows;
 }
 
 function moveGrid(action) {
-  if (ABECEDARIO.length === 0) return;
+    if (ABECEDARIO.length === 0) return;
 
-  const rows = getGridRows();
-  const currentRow = rows.findIndex((r) =>
-    r.indices.includes(state.cardIndex)
-  );
-  const currentCol = rows[currentRow]?.indices.indexOf(state.cardIndex) ?? 0;
+    const rows = getGridRows();
+    const currentRow = rows.findIndex((r) =>
+        r.indices.includes(state.cardIndex)
+    );
+    const currentCol = rows[currentRow]?.indices.indexOf(state.cardIndex) ?? 0;
 
-  let nextIndex = state.cardIndex;
+    let nextIndex = state.cardIndex;
 
-  if (action === InputAction.LEFT) {
-    if (currentCol > 0) {
-      nextIndex = rows[currentRow].indices[currentCol - 1];
+    if (action === InputAction.LEFT) {
+        if (currentCol > 0) {
+            nextIndex = rows[currentRow].indices[currentCol - 1];
+        }
+    } else if (action === InputAction.RIGHT) {
+        if (currentCol < rows[currentRow].indices.length - 1) {
+            nextIndex = rows[currentRow].indices[currentCol + 1];
+        }
+    } else if (action === InputAction.UP) {
+        if (currentRow > 0) {
+            const targetRow = rows[currentRow - 1];
+            nextIndex =
+                targetRow.indices[
+                    Math.min(currentCol, targetRow.indices.length - 1)
+                ];
+        }
+    } else if (action === InputAction.DOWN) {
+        if (currentRow < rows.length - 1) {
+            const targetRow = rows[currentRow + 1];
+            nextIndex =
+                targetRow.indices[
+                    Math.min(currentCol, targetRow.indices.length - 1)
+                ];
+        }
     }
-  } else if (action === InputAction.RIGHT) {
-    if (currentCol < rows[currentRow].indices.length - 1) {
-      nextIndex = rows[currentRow].indices[currentCol + 1];
-    }
-  } else if (action === InputAction.UP) {
-    if (currentRow > 0) {
-      const targetRow = rows[currentRow - 1];
-      nextIndex =
-        targetRow.indices[Math.min(currentCol, targetRow.indices.length - 1)];
-    }
-  } else if (action === InputAction.DOWN) {
-    if (currentRow < rows.length - 1) {
-      const targetRow = rows[currentRow + 1];
-      nextIndex =
-        targetRow.indices[Math.min(currentCol, targetRow.indices.length - 1)];
-    }
-  }
 
-  setFocusedCard(nextIndex);
+    setFocusedCard(nextIndex);
 }
 
 /**
@@ -176,50 +180,50 @@ function moveGrid(action) {
  * ============================================================
  */
 function openDetail() {
-  const item = ABECEDARIO[state.cardIndex];
-  if (!item) return;
+    const item = ABECEDARIO[state.cardIndex];
+    if (!item) return;
 
-  detailImageEl.src = item.image;
-  detailImageEl.alt = item.label;
-  detailIndexEl.textContent = `Seña ${state.cardIndex + 1} de ${ABECEDARIO.length}`;
-  detailEl.classList.add("is-open");
+    detailImageEl.src = item.image;
+    detailImageEl.alt = item.label;
+    detailIndexEl.textContent = `Seña ${state.cardIndex + 1} de ${ABECEDARIO.length}`;
+    detailEl.classList.add("is-open");
 
-  if (!detailCleanup) {
-    detailCleanup = setupBackHandler({
-      context: "LSA_DETAIL",
-      onBack: closeDetail,
-    });
+    if (!detailCleanup) {
+        detailCleanup = setupBackHandler({
+            context: "LSA_DETAIL",
+            onBack: closeDetail,
+        });
 
-    input.on(
-      InputAction.LEFT,
-      () => {
-        setFocusedCard(Math.max(0, state.cardIndex - 1));
-        openDetail();
-      },
-      "LSA_DETAIL"
-    );
-
-    input.on(
-      InputAction.RIGHT,
-      () => {
-        setFocusedCard(
-          Math.min(ABECEDARIO.length - 1, state.cardIndex + 1)
+        input.on(
+            InputAction.LEFT,
+            () => {
+                setFocusedCard(Math.max(0, state.cardIndex - 1));
+                openDetail();
+            },
+            "LSA_DETAIL"
         );
-        openDetail();
-      },
-      "LSA_DETAIL"
-    );
-  }
+
+        input.on(
+            InputAction.RIGHT,
+            () => {
+                setFocusedCard(
+                    Math.min(ABECEDARIO.length - 1, state.cardIndex + 1)
+                );
+                openDetail();
+            },
+            "LSA_DETAIL"
+        );
+    }
 }
 
 function closeDetail() {
-  detailEl.classList.remove("is-open");
-  detailImageEl.removeAttribute("src");
+    detailEl.classList.remove("is-open");
+    detailImageEl.removeAttribute("src");
 
-  if (detailCleanup) {
-    detailCleanup();
-    detailCleanup = null;
-  }
+    if (detailCleanup) {
+        detailCleanup();
+        detailCleanup = null;
+    }
 }
 
 /**
@@ -230,26 +234,26 @@ function closeDetail() {
  * @param {Function} options.onExit - qué hacer al salir de LSA (ej: volver al menú)
  */
 export function initLsaPage({ onExit } = {}) {
-  render();
+    render();
 
-  const pageCleanup = setupBackHandler({
-    context: "LSA",
-    onBack: () => {
-      pageCleanup();
-      if (typeof onExit === "function") {
-        onExit();
-      } else {
-        window.location.href = "index.html";
-      }
-    },
-  });
+    const pageCleanup = setupBackHandler({
+        context: "LSA",
+        onBack: () => {
+            pageCleanup();
+            if (typeof onExit === "function") {
+                onExit();
+            } else {
+                window.location.href = "index.html";
+            }
+        },
+    });
 
-  input.on(InputAction.UP, () => moveGrid(InputAction.UP), "LSA");
-  input.on(InputAction.DOWN, () => moveGrid(InputAction.DOWN), "LSA");
-  input.on(InputAction.LEFT, () => moveGrid(InputAction.LEFT), "LSA");
-  input.on(InputAction.RIGHT, () => moveGrid(InputAction.RIGHT), "LSA");
+    input.on(InputAction.UP, () => moveGrid(InputAction.UP), "LSA");
+    input.on(InputAction.DOWN, () => moveGrid(InputAction.DOWN), "LSA");
+    input.on(InputAction.LEFT, () => moveGrid(InputAction.LEFT), "LSA");
+    input.on(InputAction.RIGHT, () => moveGrid(InputAction.RIGHT), "LSA");
 
-  input.on(InputAction.CONFIRM, () => openDetail(), "LSA");
+    input.on(InputAction.CONFIRM, () => openDetail(), "LSA");
 }
 
 // Auto-init si esta página se carga directa (no como módulo importado por un router).

@@ -1,20 +1,20 @@
 import { InputAction, input } from "../js/inputController.js";
 
 class SidePanel extends HTMLElement {
-  static get observedAttributes() {
-    return ['side', 'panel-title', 'context'];
-  }
+    static get observedAttributes() {
+        return ["side", "panel-title", "context"];
+    }
 
-  get context() {
-    return this.getAttribute('side') || "GLOBAL";
-  }
+    get context() {
+        return this.getAttribute("side") || "GLOBAL";
+    }
 
-  constructor() {
-    super();
-    this._isOpen = false;
+    constructor() {
+        super();
+        this._isOpen = false;
 
-    const shadow = this.attachShadow({ mode: 'open' });
-    shadow.innerHTML = `
+        const shadow = this.attachShadow({ mode: "open" });
+        shadow.innerHTML = `
       <style>
         :host {
           display: contents;
@@ -137,82 +137,84 @@ class SidePanel extends HTMLElement {
       </div>
     `;
 
-    this._overlay = shadow.querySelector('.overlay');
-    this._panel = shadow.querySelector('.panel');
-    this._titleEl = shadow.querySelector('.title');
-  }
-
-  connectedCallback() {
-    this._applySide();
-    this._applyTitle();
-
-    // aria + estado inicial: totalmente oculto e inerte para el teclado/lectores
-    this._panel.setAttribute('role', 'dialog');
-    this._panel.setAttribute('aria-modal', 'true');
-    this._panel.inert = true;
-  }
-
-  disconnectedCallback() {
-    document.removeEventListener('keydown', this._boundEsc);
-  }
-
-  attributeChangedCallback(name) {
-    if (name === 'side') this._applySide();
-    if (name === 'panel-title') this._applyTitle();
-  }
-
-  _applySide() {
-    const side = ['left', 'right', 'top', 'bottom'].includes(this.getAttribute('side'))
-      ? this.getAttribute('side')
-      : 'right';
-    this._panel.classList.remove('left', 'right', 'top', 'bottom');
-    this._panel.classList.add(side);
-  }
-
-  _applyTitle() {
-    this._titleEl.textContent = this.getAttribute('panel-title') || '';
-  }
-
-  setTitle(newTitle) {
-    this.setAttribute('panel-title', newTitle);
-  }
-
-  open() {
-    if (this._isOpen) return;
-    this._isOpen = true;
-
-    this._panel.inert = false;
-    this._overlay.classList.add('is-open');
-    this._panel.classList.add('is-open');
-    document.body.style.overflow = 'hidden';
-
-    if (this.context != null) {
-      input.pushContext(this.context);
-      input.on(InputAction.BACK, () => this.close(), this.context);
+        this._overlay = shadow.querySelector(".overlay");
+        this._panel = shadow.querySelector(".panel");
+        this._titleEl = shadow.querySelector(".title");
     }
-  }
 
-  close() {
-    if (!this._isOpen) return;
-    this._isOpen = false;
+    connectedCallback() {
+        this._applySide();
+        this._applyTitle();
 
-    this._overlay.classList.remove('is-open');
-    this._panel.classList.remove('is-open');
-    this._panel.inert = true;
-    document.body.style.overflow = '';
-
-    if (this.context != null) {
-      input.popContext();
+        // aria + estado inicial: totalmente oculto e inerte para el teclado/lectores
+        this._panel.setAttribute("role", "dialog");
+        this._panel.setAttribute("aria-modal", "true");
+        this._panel.inert = true;
     }
-  }
 
-  toggle() {
-    this._isOpen ? this.close() : this.open();
-  }
+    disconnectedCallback() {
+        document.removeEventListener("keydown", this._boundEsc);
+    }
 
-  get isOpen() {
-    return this._isOpen;
-  }
+    attributeChangedCallback(name) {
+        if (name === "side") this._applySide();
+        if (name === "panel-title") this._applyTitle();
+    }
+
+    _applySide() {
+        const side = ["left", "right", "top", "bottom"].includes(
+            this.getAttribute("side")
+        )
+            ? this.getAttribute("side")
+            : "right";
+        this._panel.classList.remove("left", "right", "top", "bottom");
+        this._panel.classList.add(side);
+    }
+
+    _applyTitle() {
+        this._titleEl.textContent = this.getAttribute("panel-title") || "";
+    }
+
+    setTitle(newTitle) {
+        this.setAttribute("panel-title", newTitle);
+    }
+
+    open() {
+        if (this._isOpen) return;
+        this._isOpen = true;
+
+        this._panel.inert = false;
+        this._overlay.classList.add("is-open");
+        this._panel.classList.add("is-open");
+        document.body.style.overflow = "hidden";
+
+        if (this.context != null) {
+            input.pushContext(this.context);
+            input.on(InputAction.BACK, () => this.close(), this.context);
+        }
+    }
+
+    close() {
+        if (!this._isOpen) return;
+        this._isOpen = false;
+
+        this._overlay.classList.remove("is-open");
+        this._panel.classList.remove("is-open");
+        this._panel.inert = true;
+        document.body.style.overflow = "";
+
+        if (this.context != null) {
+            input.popContext();
+        }
+    }
+
+    toggle() {
+        this._isOpen ? this.close() : this.open();
+    }
+
+    get isOpen() {
+        return this._isOpen;
+    }
 }
 
-customElements.define('side-panel', SidePanel);
+customElements.define("side-panel", SidePanel);

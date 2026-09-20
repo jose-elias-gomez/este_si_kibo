@@ -34,55 +34,63 @@ bodyTemplate.innerHTML = `
 `;
 
 export class BrightnessMenu extends BasePopup {
-
-  constructor() {
-    super();
-  }
-
-  get context() {
-    return "brightness-menu";
-  }
-
-  connectedCallback() {
-    // Monta el <dialog>/backdrop del BasePopup y crea this.dialog
-    super.connectedCallback();
-
-    // Sólo poblamos el light DOM una vez
-    if (!this.querySelector("[slot='header']")) {
-      const headerFragment = headerTemplate.content.cloneNode(true);
-      const headerWrapper = document.createElement("div");
-      headerWrapper.setAttribute("slot", "header");
-      headerWrapper.append(...headerFragment.childNodes);
-      this.appendChild(headerWrapper);
-
-      const bodyFragment = bodyTemplate.content.cloneNode(true);
-      this.append(...bodyFragment.childNodes);
+    constructor() {
+        super();
     }
-  }
 
-  disconnectedCallback() {
-    this._removeInputController();
-  }
-
-  _removeInputController() {
-    if (!input) return;
-    input.off(this.context);
-  }
-
-  _step(direction) {
-    const brightnessSlider = this.querySelector("range-slider");
-    if (brightnessSlider.step(direction)) {
-      sendPacket({ "id": PACKET_ID.SYSTEM_OPTION, "context": "set_brightness", "value": brightnessSlider.value });
+    get context() {
+        return "brightness-menu";
     }
-  }
 
-  setupInputController() {   
-    sendPacket({ "id": PACKET_ID.SYSTEM_OPTION, "context": "get_brightness" }, true)
-      .then((response) => this.querySelector("range-slider").value = parseInt(response));
+    connectedCallback() {
+        // Monta el <dialog>/backdrop del BasePopup y crea this.dialog
+        super.connectedCallback();
 
-    input.on(InputAction.LEFT, () => this._step(-1), this.context);
-    input.on(InputAction.RIGHT, () => this._step(1), this.context);
-  }
+        // Sólo poblamos el light DOM una vez
+        if (!this.querySelector("[slot='header']")) {
+            const headerFragment = headerTemplate.content.cloneNode(true);
+            const headerWrapper = document.createElement("div");
+            headerWrapper.setAttribute("slot", "header");
+            headerWrapper.append(...headerFragment.childNodes);
+            this.appendChild(headerWrapper);
+
+            const bodyFragment = bodyTemplate.content.cloneNode(true);
+            this.append(...bodyFragment.childNodes);
+        }
+    }
+
+    disconnectedCallback() {
+        this._removeInputController();
+    }
+
+    _removeInputController() {
+        if (!input) return;
+        input.off(this.context);
+    }
+
+    _step(direction) {
+        const brightnessSlider = this.querySelector("range-slider");
+        if (brightnessSlider.step(direction)) {
+            sendPacket({
+                id: PACKET_ID.SYSTEM_OPTION,
+                context: "set_brightness",
+                value: brightnessSlider.value,
+            });
+        }
+    }
+
+    setupInputController() {
+        sendPacket(
+            { id: PACKET_ID.SYSTEM_OPTION, context: "get_brightness" },
+            true
+        ).then(
+            (response) =>
+                (this.querySelector("range-slider").value = parseInt(response))
+        );
+
+        input.on(InputAction.LEFT, () => this._step(-1), this.context);
+        input.on(InputAction.RIGHT, () => this._step(1), this.context);
+    }
 }
 
 customElements.define("brightness-menu", BrightnessMenu);

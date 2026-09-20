@@ -5,13 +5,12 @@ body {
     height: 100%;
     overflow: hidden;
 
-    background:
-        radial-gradient(
-            circle at center,
-            #102027 0%,
-            #071015 45%,
-            #020607 100%
-        );
+    background: radial-gradient(
+        circle at center,
+        #102027 0%,
+        #071015 45%,
+        #020607 100%
+    );
 
     font-family: "Fredoka", sans-serif;
     color: white;
@@ -90,8 +89,7 @@ canvas {
     background: #6ce7e7;
     border-radius: 50%;
 
-    box-shadow:
-        0 0 10px #6ce7e7;
+    box-shadow: 0 0 10px #6ce7e7;
 }
 
 .logo-text {
@@ -122,8 +120,7 @@ canvas {
 
     background: #64e6dc;
 
-    box-shadow:
-        0 0 10px #64e6dc;
+    box-shadow: 0 0 10px #64e6dc;
 }
 
 /* =========================================================
@@ -173,12 +170,11 @@ canvas {
     border: 1px solid rgba(100, 230, 220, 0.45);
     border-radius: 16px;
 
-    background:
-        linear-gradient(
-            135deg,
-            rgba(50, 160, 160, 0.18),
-            rgba(30, 80, 90, 0.1)
-        );
+    background: linear-gradient(
+        135deg,
+        rgba(50, 160, 160, 0.18),
+        rgba(30, 80, 90, 0.1)
+    );
 
     color: white;
 
@@ -215,8 +211,7 @@ canvas {
 
     color: #70e7e0;
 
-    text-shadow:
-        0 0 10px #70e7e0;
+    text-shadow: 0 0 10px #70e7e0;
 }
 
 /* =========================================================

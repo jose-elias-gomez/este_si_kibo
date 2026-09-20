@@ -97,154 +97,166 @@ template.innerHTML = `
  * <text-container>
  */
 export class TextContainer extends HTMLElement {
-  static get observedAttributes() {
-    return ["max-length", "label"];
-  }
-
-  constructor() {
-    super();
-
-    this.attachShadow({ mode: "open" });
-    this.shadowRoot.appendChild(template.content.cloneNode(true));
-
-    this.textSpan = this.shadowRoot.querySelector(".text-content");
-    this.cursorSpan = this.shadowRoot.querySelector(".text-cursor");
-    this.counterEl = this.shadowRoot.querySelector(".char-counter");
-    this.labelEl = this.shadowRoot.querySelector(".label-text");
-
-    this.hideCursor();
-
-    this._maxLength = DEFAULT_MAX_LENGTH;
-  }
-
-  get isHovered() {
-    return this.classList.contains("hovered");
-  }
-
-  get text() {
-    return this.textSpan.textContent;
-  }
-
-  set text(value) {
-    this.textSpan.textContent = value.slice(0, this._maxLength);
-    this.updateCounter();
-  }
-
-  hover() {
-    this.classList.add("hovered");
-  }
-
-  select() {
-    document.getElementById("virtual-keyboard")?.open(this);
-    this.classList.add("selected");
-    this.classList.remove("hovered");
-    this.showCursor();
-  }
-
-  unselect() {
-    this.classList.remove("selected");
-    this.classList.remove("hovered");
-    this.hideCursor();
-  }
-
-  onCloseKeyboard() {
-    this.unselect();
-    this.hover();
-  }
-
-  unhover() {
-    this.classList.remove("hovered");
-  }
-
-  connectedCallback() {
-    this.updateCounter();
-    this.updateLabel();
-  }
-
-  attributeChangedCallback(name, _oldValue, newValue) {
-    if (name === "max-length") {
-      const parsed = parseInt(newValue, 10);
-      this._maxLength = Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_LENGTH;
-      if (this.textSpan.textContent.length > this._maxLength) {
-        this.textSpan.textContent = this.textSpan.textContent.slice(0, this._maxLength);
-      }
-      this.updateCounter();
+    static get observedAttributes() {
+        return ["max-length", "label"];
     }
 
-    if (name === "label") {
-      this.updateLabel();
+    constructor() {
+        super();
+
+        this.attachShadow({ mode: "open" });
+        this.shadowRoot.appendChild(template.content.cloneNode(true));
+
+        this.textSpan = this.shadowRoot.querySelector(".text-content");
+        this.cursorSpan = this.shadowRoot.querySelector(".text-cursor");
+        this.counterEl = this.shadowRoot.querySelector(".char-counter");
+        this.labelEl = this.shadowRoot.querySelector(".label-text");
+
+        this.hideCursor();
+
+        this._maxLength = DEFAULT_MAX_LENGTH;
     }
-  }
 
-  get maxLength() {
-    return this._maxLength;
-  }
-
-  set maxLength(value) {
-    this.setAttribute("max-length", value);
-  }
-
-  get label() {
-    return this.getAttribute("label") || "";
-  }
-
-  set label(value) {
-    if (value) {
-      this.setAttribute("label", value);
-    } else {
-      this.removeAttribute("label");
+    get isHovered() {
+        return this.classList.contains("hovered");
     }
-  }
 
-  getText() {
-    return this.textSpan.textContent;
-  }
+    get text() {
+        return this.textSpan.textContent;
+    }
 
-  showCursor() {
-    this.cursorSpan.style.visibility = "visible";
-  }
+    set text(value) {
+        this.textSpan.textContent = value.slice(0, this._maxLength);
+        this.updateCounter();
+    }
 
-  hideCursor() {
-    this.cursorSpan.style.visibility = "hidden";
-  }
+    hover() {
+        this.classList.add("hovered");
+    }
 
-  insertText(str) {
-    if (!str) return;
-    const available = this._maxLength - this.textSpan.textContent.length;
-    if (available <= 0) return;
-    this.textSpan.textContent += str.slice(0, available);
-    this.updateCounter();
-  }
+    select() {
+        document.getElementById("virtual-keyboard")?.open(this);
+        this.classList.add("selected");
+        this.classList.remove("hovered");
+        this.showCursor();
+    }
 
-  deleteChar() {
-    if (this.textSpan.textContent.length === 0) return;
-    this.textSpan.textContent = this.textSpan.textContent.slice(0, -1);
-    this.updateCounter();
-  }
+    unselect() {
+        this.classList.remove("selected");
+        this.classList.remove("hovered");
+        this.hideCursor();
+    }
 
-  clear() {
-    this.textSpan.textContent = "";
-    this.updateCounter();
-  }
+    onCloseKeyboard() {
+        this.unselect();
+        this.hover();
+    }
 
-  updateLabel() {
-    this.labelEl.textContent = this.getAttribute("label") || "";
-    // Oculta el elemento del label si está vacío para evitar ocupar espacio
-    this.labelEl.style.display = this.labelEl.textContent ? "block" : "none";
-  }
+    unhover() {
+        this.classList.remove("hovered");
+    }
 
-  updateCounter() {
-    const length = this.textSpan.textContent.length;
-    this.counterEl.textContent = `${length}/${this._maxLength}`;
+    connectedCallback() {
+        this.updateCounter();
+        this.updateLabel();
+    }
 
-    this.dispatchEvent(
-      new CustomEvent("text-changed", {
-        bubbles: true,
-        composed: true,
-        detail: { length, maxLength: this._maxLength, text: this.textSpan.textContent },
-      })
-    );
-  }
+    attributeChangedCallback(name, _oldValue, newValue) {
+        if (name === "max-length") {
+            const parsed = parseInt(newValue, 10);
+            this._maxLength =
+                Number.isFinite(parsed) && parsed > 0
+                    ? parsed
+                    : DEFAULT_MAX_LENGTH;
+            if (this.textSpan.textContent.length > this._maxLength) {
+                this.textSpan.textContent = this.textSpan.textContent.slice(
+                    0,
+                    this._maxLength
+                );
+            }
+            this.updateCounter();
+        }
+
+        if (name === "label") {
+            this.updateLabel();
+        }
+    }
+
+    get maxLength() {
+        return this._maxLength;
+    }
+
+    set maxLength(value) {
+        this.setAttribute("max-length", value);
+    }
+
+    get label() {
+        return this.getAttribute("label") || "";
+    }
+
+    set label(value) {
+        if (value) {
+            this.setAttribute("label", value);
+        } else {
+            this.removeAttribute("label");
+        }
+    }
+
+    getText() {
+        return this.textSpan.textContent;
+    }
+
+    showCursor() {
+        this.cursorSpan.style.visibility = "visible";
+    }
+
+    hideCursor() {
+        this.cursorSpan.style.visibility = "hidden";
+    }
+
+    insertText(str) {
+        if (!str) return;
+        const available = this._maxLength - this.textSpan.textContent.length;
+        if (available <= 0) return;
+        this.textSpan.textContent += str.slice(0, available);
+        this.updateCounter();
+    }
+
+    deleteChar() {
+        if (this.textSpan.textContent.length === 0) return;
+        this.textSpan.textContent = this.textSpan.textContent.slice(0, -1);
+        this.updateCounter();
+    }
+
+    clear() {
+        this.textSpan.textContent = "";
+        this.updateCounter();
+    }
+
+    updateLabel() {
+        this.labelEl.textContent = this.getAttribute("label") || "";
+        // Oculta el elemento del label si está vacío para evitar ocupar espacio
+        this.labelEl.style.display = this.labelEl.textContent
+            ? "block"
+            : "none";
+    }
+
+    updateCounter() {
+        const length = this.textSpan.textContent.length;
+        this.counterEl.textContent = `${length}/${this._maxLength}`;
+
+        this.dispatchEvent(
+            new CustomEvent("text-changed", {
+                bubbles: true,
+                composed: true,
+                detail: {
+                    length,
+                    maxLength: this._maxLength,
+                    text: this.textSpan.textContent,
+                },
+            })
+        );
+    }
 }
 
 customElements.define("text-container", TextContainer);

@@ -1,26 +1,26 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Game Hub</title>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Game Hub</title>
         <link rel="stylesheet" href="../../shared/css/global.css" />
-    <link rel="stylesheet" href="games.css" />
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module">
-      import { mountGameHub } from "./js/app.js";
+        <link rel="stylesheet" href="games.css" />
+    </head>
+    <body>
+        <div id="app"></div>
+        <script type="module">
+            import { mountGameHub } from "./js/app.js";
 
-      const app = document.getElementById("app");
+            const app = document.getElementById("app");
 
-      // Acá es donde vuelve al home de tu app. Mismo patrón que usás en
-      // tus otras páginas (ej. la del asistente de voz): frenar cualquier
-      // recurso propio de esta página (el hub ya limpia sus timers e
-      // input contexts solo) y después navegar.
-      mountGameHub(app, () => {
-        window.location.href = "../home/home.html";
-      });
-    </script>
-  </body>
+            // Acá es donde vuelve al home de tu app. Mismo patrón que usás en
+            // tus otras páginas (ej. la del asistente de voz): frenar cualquier
+            // recurso propio de esta página (el hub ya limpia sus timers e
+            // input contexts solo) y después navegar.
+            mountGameHub(app, () => {
+                window.location.href = "../home/home.html";
+            });
+        </script>
+    </body>
 </html>

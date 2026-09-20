@@ -1,7 +1,7 @@
 export const CameraView = Object.freeze({
-    FRONT: 'front',
-    LEFT: 'left',
-    RIGHT: 'right'
+    FRONT: "front",
+    LEFT: "left",
+    RIGHT: "right",
 });
 
 export const CAMERA_VIEW_BY_PART = Object.freeze({
@@ -9,7 +9,7 @@ export const CAMERA_VIEW_BY_PART = Object.freeze({
     LeftArm: CameraView.LEFT,
     RightArm: CameraView.RIGHT,
     LeftWheel: CameraView.LEFT,
-    RightWheel: CameraView.RIGHT
+    RightWheel: CameraView.RIGHT,
 });
 
 export class CameraViewController {
@@ -52,7 +52,7 @@ export class CameraViewController {
         // (ver fitCameraToModel en movement.js), en vez de un valor fijo
         // en metros que quedaría mal si el modelo es más grande o chico.
         this.wheelHeightDropRatio = 0.25; // cuánto baja la cámara (0 = nada, 1 = tanto como la distancia)
-        this.wheelZoomRatio = 0.6;        // multiplicador de distance: <1 acerca la cámara
+        this.wheelZoomRatio = 0.6; // multiplicador de distance: <1 acerca la cámara
     }
 
     setDistance(distance) {
@@ -74,8 +74,8 @@ export class CameraViewController {
     }
 
     goToPart(partName) {
-      const view = CAMERA_VIEW_BY_PART[partName];
-      this.goTo(view, partName);
+        const view = CAMERA_VIEW_BY_PART[partName];
+        this.goTo(view, partName);
     }
 
     /**
@@ -90,7 +90,7 @@ export class CameraViewController {
     goTo(view, partName = null) {
         const { x, y, z } = this.center;
         const targetPos = this._targetPos;
-        const isWheel = partName === 'LeftWheel' || partName === 'RightWheel';
+        const isWheel = partName === "LeftWheel" || partName === "RightWheel";
 
         switch (view) {
             case CameraView.FRONT:
@@ -157,7 +157,7 @@ export class CameraViewController {
             y: lookAtGoal.y,
             z: lookAtGoal.z,
             duration: 1,
-            ease: "power2.inOut"
+            ease: "power2.inOut",
             // No hace falta lookAt() acá: el tween de abajo (posición de
             // cámara) ya lo llama en su propio onUpdate, y ambos tweens
             // corren en paralelo con la misma duración/easing, así que
@@ -179,7 +179,7 @@ export class CameraViewController {
                 // OrbitControls una sola vez, ya con la posición final.
                 this.controls.update();
                 this.requestRender();
-            }
+            },
         });
     }
 }

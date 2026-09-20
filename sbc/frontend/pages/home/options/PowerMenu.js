@@ -40,61 +40,72 @@ bodyTemplate.innerHTML = `
 `;
 
 export class PowerMenu extends BasePopup {
-
-  constructor() {
-    super();
-  }
-
-  get context() {
-    return "power-menu";
-  }
-
-  connectedCallback() {
-    // Monta el <dialog>/backdrop del BasePopup y crea this.dialog
-    super.connectedCallback();
-
-    // Sólo poblamos el light DOM una vez
-    if (!this.querySelector("[slot='header']")) {
-      const bodyFragment = bodyTemplate.content.cloneNode(true);
-      this.append(...bodyFragment.childNodes);
+    constructor() {
+        super();
     }
-  }
 
-  disconnectedCallback() {
-    this._removeInputController();
-  }
+    get context() {
+        return "power-menu";
+    }
 
-  _removeInputController() {
-    if (!input) return;
-    input.off(this.context);
-  }
+    connectedCallback() {
+        // Monta el <dialog>/backdrop del BasePopup y crea this.dialog
+        super.connectedCallback();
 
-  setupInputController() {
-    const acceptBtn = this.querySelector("#power-accept");
-    const cancelBtn = this.querySelector("#power-cancel");
+        // Sólo poblamos el light DOM una vez
+        if (!this.querySelector("[slot='header']")) {
+            const bodyFragment = bodyTemplate.content.cloneNode(true);
+            this.append(...bodyFragment.childNodes);
+        }
+    }
 
-    input.on(InputAction.LEFT, () => {
-      acceptBtn.hover();
-      cancelBtn.unhover();
-    }, this.context);
-    
-    input.on(InputAction.RIGHT, () => {
-      acceptBtn.unhover();
-      cancelBtn.hover();
-    }, this.context);
+    disconnectedCallback() {
+        this._removeInputController();
+    }
 
-    input.on(InputAction.CONFIRM, () => {
-      if (acceptBtn.isHovered) {
-        acceptBtn.click();
-        return;
-      }
+    _removeInputController() {
+        if (!input) return;
+        input.off(this.context);
+    }
 
-      if (cancelBtn.isHovered) {
-        this.close();
-        return;
-      }
-    }, this.context);
-  }
+    setupInputController() {
+        const acceptBtn = this.querySelector("#power-accept");
+        const cancelBtn = this.querySelector("#power-cancel");
+
+        input.on(
+            InputAction.LEFT,
+            () => {
+                acceptBtn.hover();
+                cancelBtn.unhover();
+            },
+            this.context
+        );
+
+        input.on(
+            InputAction.RIGHT,
+            () => {
+                acceptBtn.unhover();
+                cancelBtn.hover();
+            },
+            this.context
+        );
+
+        input.on(
+            InputAction.CONFIRM,
+            () => {
+                if (acceptBtn.isHovered) {
+                    acceptBtn.click();
+                    return;
+                }
+
+                if (cancelBtn.isHovered) {
+                    this.close();
+                    return;
+                }
+            },
+            this.context
+        );
+    }
 }
 
 customElements.define("power-menu", PowerMenu);

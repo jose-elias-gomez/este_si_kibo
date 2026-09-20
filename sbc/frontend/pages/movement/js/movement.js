@@ -2,8 +2,11 @@ import { SceneEngine } from "./sceneEngine.js";
 import { CameraViewController, CameraView } from "./cameraViews.js";
 import { loadGltfModel } from "./modelLoader.js";
 import { WrappedMovementPartController } from "./partsController.js";
-import { AnimationBuilder, buildAnimation } from "../../../shared/js/movement/animationBuilder.js";
-const MODEL_URL = 'assets/kibo_model.glb';
+import {
+    AnimationBuilder,
+    buildAnimation,
+} from "../../../shared/js/movement/animationBuilder.js";
+const MODEL_URL = "assets/kibo_model.glb";
 const modelCenter = new THREE.Vector3(0, 0.8, 0);
 let cameraDistance = 3.5;
 
@@ -18,7 +21,7 @@ let partsController = null;
  * mover un ángulo, resetear, etc.).
  */
 async function init3D() {
-    const container = document.getElementById('canvas-container');
+    const container = document.getElementById("canvas-container");
 
     sceneEngine = new SceneEngine(container, modelCenter);
 
@@ -35,7 +38,7 @@ async function init3D() {
 
     sceneEngine.start();
 
-    const modelRoot = await loadGltfModel(MODEL_URL).catch(err => {
+    const modelRoot = await loadGltfModel(MODEL_URL).catch((err) => {
         console.error("Error on model loading:", err);
         throw err;
     });
@@ -43,7 +46,9 @@ async function init3D() {
     sceneEngine.scene.add(modelRoot);
     sceneEngine.requestRender(); // el modelo recién agregado tiene que pintarse
 
-    partsController = new WrappedMovementPartController(modelRoot, () => sceneEngine.requestRender());
+    partsController = new WrappedMovementPartController(modelRoot, () =>
+        sceneEngine.requestRender()
+    );
 
     fitCameraToModel(modelRoot);
 

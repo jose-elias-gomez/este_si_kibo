@@ -1,10 +1,6 @@
 import * as THREE from "three";
 
-import {
-    input,
-    InputAction
-} from "../../../shared/js/inputController.js";
-
+import { input, InputAction } from "../../../shared/js/inputController.js";
 
 /* =========================================================
    CONFIG
@@ -15,45 +11,44 @@ const APPS = [
         id: "games",
         title: "Juegos",
         cover: "assets/apps/games.png",
-        color: 0x132d4d
+        color: 0x132d4d,
     },
 
     {
         id: "movement",
         title: "Movimiento",
         cover: "assets/apps/motion.png",
-        color: 0x3ad0c9
+        color: 0x3ad0c9,
     },
 
     {
         id: "translator",
         title: "Traducción",
         cover: "assets/apps/translator.jpg",
-        color: 0xc47a3a
+        color: 0xc47a3a,
     },
 
     {
         id: "assistant",
         title: "Asistente",
         cover: "assets/apps/chat.png",
-        color: 0x8fa3ba
+        color: 0x8fa3ba,
     },
 
     {
         id: "camera",
         title: "Cámara",
         cover: "assets/apps/camera.png",
-        color: 0x66a8dd
-    }, 
-    
+        color: 0x66a8dd,
+    },
+
     {
         id: "music",
         title: "Música",
         cover: "assets/apps/music.png",
-        color: 0x9c3a3a
-    }
+        color: 0x9c3a3a,
+    },
 ];
-
 
 /* =========================================================
    THREE
@@ -62,7 +57,6 @@ const APPS = [
 const scene = new THREE.Scene();
 
 scene.background = new THREE.Color(0x020607);
-
 
 /* Cámara */
 
@@ -75,70 +69,44 @@ const camera = new THREE.PerspectiveCamera(
 
 camera.position.set(0, 1.6, 0);
 
-
 /* Renderer */
 
 const renderer = new THREE.WebGLRenderer({
     antialias: true,
-    powerPreference: "high-performance"
+    powerPreference: "high-performance",
 });
 
-renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, 1.5)
-);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 
-renderer.setSize(
-    window.innerWidth,
-    window.innerHeight
-);
+renderer.setSize(window.innerWidth, window.innerHeight);
 
 renderer.xr.enabled = true;
 
 document.body.appendChild(renderer.domElement);
 
-
 /* =========================================================
    LUCES
    ========================================================= */
 
-const ambientLight = new THREE.AmbientLight(
-    0xffffff,
-    1.4
-);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
 
 scene.add(ambientLight);
 
+const pointLight = new THREE.PointLight(0x6ce7e7, 3, 8);
 
-const pointLight = new THREE.PointLight(
-    0x6ce7e7,
-    3,
-    8
-);
-
-pointLight.position.set(
-    0,
-    2,
-    -2
-);
+pointLight.position.set(0, 2, -2);
 
 scene.add(pointLight);
-
 
 /* =========================================================
    SUELO / AMBIENTE
    ========================================================= */
 
-const grid = new THREE.GridHelper(
-    20,
-    40,
-    0x17464a,
-    0x0a2225
-);
+const grid = new THREE.GridHelper(20, 40, 0x17464a, 0x0a2225);
 
 grid.position.y = 0;
 
 scene.add(grid);
-
 
 /* =========================================================
    KIBO CENTRAL
@@ -146,131 +114,76 @@ scene.add(grid);
 
 const kiboGroup = new THREE.Group();
 
-kiboGroup.position.set(
-    0,
-    2.35,
-    -3.8
-);
+kiboGroup.position.set(0, 2.35, -3.8);
 
 scene.add(kiboGroup);
 
-
 /* Anillo */
 
-const ringGeometry =
-    new THREE.TorusGeometry(
-        0.5,
-        0.025,
-        12,
-        64
-    );
+const ringGeometry = new THREE.TorusGeometry(0.5, 0.025, 12, 64);
 
-const ringMaterial =
-    new THREE.MeshBasicMaterial({
-        color: 0x6ce7e7,
-        transparent: true,
-        opacity: 0.75
-    });
+const ringMaterial = new THREE.MeshBasicMaterial({
+    color: 0x6ce7e7,
+    transparent: true,
+    opacity: 0.75,
+});
 
-const ring =
-    new THREE.Mesh(
-        ringGeometry,
-        ringMaterial
-    );
+const ring = new THREE.Mesh(ringGeometry, ringMaterial);
 
 kiboGroup.add(ring);
 
-
 /* Núcleo */
 
-const coreGeometry =
-    new THREE.SphereGeometry(
-        0.12,
-        16,
-        16
-    );
+const coreGeometry = new THREE.SphereGeometry(0.12, 16, 16);
 
-const coreMaterial =
-    new THREE.MeshBasicMaterial({
-        color: 0x8ffff8
-    });
+const coreMaterial = new THREE.MeshBasicMaterial({
+    color: 0x8ffff8,
+});
 
-const core =
-    new THREE.Mesh(
-        coreGeometry,
-        coreMaterial
-    );
+const core = new THREE.Mesh(coreGeometry, coreMaterial);
 
 kiboGroup.add(core);
-
 
 /* Texto KIBO */
 
 function createTextSprite(text) {
-
-    const canvas =
-        document.createElement("canvas");
+    const canvas = document.createElement("canvas");
 
     canvas.width = 512;
     canvas.height = 128;
 
-    const ctx =
-        canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
 
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.font =
-        "600 54px Fredoka, Arial";
+    ctx.font = "600 54px Fredoka, Arial";
 
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    ctx.fillStyle =
-        "rgba(255,255,255,0.9)";
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
 
-    ctx.fillText(
-        text,
-        canvas.width / 2,
-        canvas.height / 2
-    );
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 
-    const texture =
-        new THREE.CanvasTexture(canvas);
+    const texture = new THREE.CanvasTexture(canvas);
 
-    const material =
-        new THREE.SpriteMaterial({
-            map: texture,
-            transparent: true
-        });
+    const material = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+    });
 
-    const sprite =
-        new THREE.Sprite(material);
+    const sprite = new THREE.Sprite(material);
 
-    sprite.scale.set(
-        1.7,
-        0.42,
-        1
-    );
+    sprite.scale.set(1.7, 0.42, 1);
 
     return sprite;
 }
 
-const kiboText =
-    createTextSprite("K I B O");
+const kiboText = createTextSprite("K I B O");
 
-kiboText.position.set(
-    0,
-    -0.7,
-    0
-);
+kiboText.position.set(0, -0.7, 0);
 
 kiboGroup.add(kiboText);
-
 
 /* =========================================================
    TARJETAS
@@ -278,136 +191,79 @@ kiboGroup.add(kiboText);
 
 const cards = [];
 
-const textureLoader =
-    new THREE.TextureLoader();
-
+const textureLoader = new THREE.TextureLoader();
 
 function createCard(app, index) {
-
-    const group =
-        new THREE.Group();
+    const group = new THREE.Group();
 
     const width = 1.65;
     const height = 2.05;
 
-    const geometry =
-        new THREE.PlaneGeometry(
-            width,
-            height
-        );
-
+    const geometry = new THREE.PlaneGeometry(width, height);
 
     let texture;
 
     if (app.cover) {
-        texture =
-            textureLoader.load(
-                app.cover
-            );
+        texture = textureLoader.load(app.cover);
     }
 
+    const material = new THREE.MeshBasicMaterial({
+        color: app.color,
+        map: texture,
+        transparent: true,
+    });
 
-    const material =
-        new THREE.MeshBasicMaterial({
-            color: app.color,
-            map: texture,
-            transparent: true
-        });
-
-    const mesh =
-        new THREE.Mesh(
-            geometry,
-            material
-        );
-
+    const mesh = new THREE.Mesh(geometry, material);
 
     /* Borde */
 
-    const borderGeometry =
-        new THREE.EdgesGeometry(
-            geometry
-        );
+    const borderGeometry = new THREE.EdgesGeometry(geometry);
 
-    const borderMaterial =
-        new THREE.LineBasicMaterial({
-            color: 0x6ce7e7,
-            transparent: true,
-            opacity: 0.15
-        });
+    const borderMaterial = new THREE.LineBasicMaterial({
+        color: 0x6ce7e7,
+        transparent: true,
+        opacity: 0.15,
+    });
 
-    const border =
-        new THREE.LineSegments(
-            borderGeometry,
-            borderMaterial
-        );
+    const border = new THREE.LineSegments(borderGeometry, borderMaterial);
 
     group.add(mesh);
     group.add(border);
-
 
     /* Posición inicial */
 
     const spacing = 2.0;
 
-    const x =
-        (index - (APPS.length - 1) / 2)
-        * spacing;
+    const x = (index - (APPS.length - 1) / 2) * spacing;
 
-    group.position.set(
-        x,
-        1.45,
-        -4
-    );
-
+    group.position.set(x, 1.45, -4);
 
     /* Rotación */
 
-    group.rotation.y =
-        -x * 0.045;
-
+    group.rotation.y = -x * 0.045;
 
     scene.add(group);
 
+    const title = createTextSprite(app.title.toUpperCase());
 
-    const title =
-        createTextSprite(
-            app.title.toUpperCase()
-        );
+    title.position.set(0, -1.35, 0);
 
-    title.position.set(
-        0,
-        -1.35,
-        0
-    );
-
-    title.scale.set(
-        1.55,
-        0.38,
-        1
-    );
+    title.scale.set(1.55, 0.38, 1);
 
     group.add(title);
-
 
     cards.push({
         group,
         mesh,
         border,
         title,
-        app
+        app,
     });
 }
 
-
-APPS.forEach(
-    (app, index) => {
-        createCard(
-            app,
-            index
-        );
-    }
-);
-
+APPS.forEach((app, index) => {
+    createCard(app, index);
+});
 
 /* =========================================================
    SELECCIÓN
@@ -417,90 +273,43 @@ let selectedIndex = 0;
 
 const targetPositions = [];
 
-
 for (let i = 0; i < cards.length; i++) {
-
-    targetPositions.push(
-        new THREE.Vector3()
-    );
+    targetPositions.push(new THREE.Vector3());
 }
-
 
 function updateSelection() {
+    cards.forEach((card, i) => {
+        const selected = i === selectedIndex;
 
-    cards.forEach(
-        (card, i) => {
+        const x = (i - selectedIndex) * 2.0;
 
-            const selected =
-                i === selectedIndex;
+        const targetZ = selected ? -2.8 : -4.0;
 
-            const x =
-                (i - selectedIndex)
-                * 2.0;
+        const targetY = selected ? 1.55 : 1.45;
 
-            const targetZ =
-                selected
-                    ? -2.8
-                    : -4.0;
+        targetPositions[i].set(x, targetY, targetZ);
 
-            const targetY =
-                selected
-                    ? 1.55
-                    : 1.45;
+        card.border.material.opacity = selected ? 0.95 : 0.12;
 
+        card.mesh.material.opacity = selected ? 1 : 0.65;
 
-            targetPositions[i].set(
-                x,
-                targetY,
-                targetZ
-            );
+        card.group.scale.setScalar(selected ? 1.08 : 0.92);
 
-
-            card.border.material.opacity =
-                selected
-                    ? 0.95
-                    : 0.12;
-
-
-            card.mesh.material.opacity =
-                selected
-                    ? 1
-                    : 0.65;
-
-
-            card.group.scale.setScalar(
-                selected
-                    ? 1.08
-                    : 0.92
-            );
-
-
-            card.title.material.opacity =
-                selected
-                    ? 1
-                    : 0.35;
-        }
-    );
+        card.title.material.opacity = selected ? 1 : 0.35;
+    });
 }
 
-
 updateSelection();
-
 
 /* =========================================================
    NAVEGACIÓN
    ========================================================= */
 
 function navigate(direction) {
-
-    const next =
-        Math.max(
-            0,
-            Math.min(
-                APPS.length - 1,
-                selectedIndex + direction
-            )
-        );
+    const next = Math.max(
+        0,
+        Math.min(APPS.length - 1, selectedIndex + direction)
+    );
 
     if (next === selectedIndex) {
         return;
@@ -511,221 +320,116 @@ function navigate(direction) {
     updateSelection();
 }
 
-
 function openSelected() {
+    const app = APPS[selectedIndex];
 
-    const app =
-        APPS[selectedIndex];
-
-    window.location.href =
-        `../${app.id}/${app.id}.html`;
+    window.location.href = `../${app.id}/${app.id}.html`;
 }
-
 
 /* =========================================================
    GAMEPAD
    ========================================================= */
 
-input.on(
-    InputAction.RIGHT,
-    () => navigate(1)
-);
+input.on(InputAction.RIGHT, () => navigate(1));
 
-input.on(
-    InputAction.LEFT,
-    () => navigate(-1)
-);
+input.on(InputAction.LEFT, () => navigate(-1));
 
-input.on(
-    InputAction.CONFIRM,
-    () => openSelected()
-);
+input.on(InputAction.CONFIRM, () => openSelected());
 
-input.on(
-    InputAction.BACK,
-    () => {
-        window.location.href =
-            "../home/home.html";
-    }
-);
-
+input.on(InputAction.BACK, () => {
+    window.location.href = "../home/home.html";
+});
 
 /* =========================================================
    ANIMACIÓN
    ========================================================= */
 
-const clock =
-    new THREE.Clock();
-
+const clock = new THREE.Clock();
 
 function animate() {
-
-    const elapsed =
-        clock.getElapsedTime();
-
+    const elapsed = clock.getElapsedTime();
 
     /* Kibo */
 
-    ring.rotation.z =
-        elapsed * 0.4;
+    ring.rotation.z = elapsed * 0.4;
 
-    ring.rotation.x =
-        Math.sin(elapsed * 0.7) * 0.15;
+    ring.rotation.x = Math.sin(elapsed * 0.7) * 0.15;
 
-    kiboGroup.position.y =
-        2.35 +
-        Math.sin(elapsed * 1.2) * 0.04;
-
+    kiboGroup.position.y = 2.35 + Math.sin(elapsed * 1.2) * 0.04;
 
     /* Tarjetas */
 
-    cards.forEach(
-        (card, i) => {
+    cards.forEach((card, i) => {
+        card.group.position.lerp(targetPositions[i], 0.08);
 
-            card.group.position.lerp(
-                targetPositions[i],
-                0.08
-            );
+        const selected = i === selectedIndex;
 
-
-            const selected =
-                i === selectedIndex;
-
-
-            if (selected) {
-
-                card.group.position.z +=
-                    Math.sin(elapsed * 2) * 0.005;
-            }
+        if (selected) {
+            card.group.position.z += Math.sin(elapsed * 2) * 0.005;
         }
-    );
+    });
 
-
-    renderer.render(
-        scene,
-        camera
-    );
+    renderer.render(scene, camera);
 }
 
-
-renderer.setAnimationLoop(
-    animate
-);
-
+renderer.setAnimationLoop(animate);
 
 /* =========================================================
    RESIZE
    ========================================================= */
 
-window.addEventListener(
-    "resize",
-    () => {
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
 
-        camera.aspect =
-            window.innerWidth /
-            window.innerHeight;
+    camera.updateProjectionMatrix();
 
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(
-            window.innerWidth,
-            window.innerHeight
-        );
-    }
-);
-
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
 /* =========================================================
    WEBXR
    ========================================================= */
 
-const enterButton =
-    document.getElementById(
-        "enter-vr"
-    );
+const enterButton = document.getElementById("enter-vr");
 
-const message =
-    document.getElementById(
-        "vr-message-text"
-    );
-
+const message = document.getElementById("vr-message-text");
 
 async function enterVR() {
-
     if (!navigator.xr) {
-
-        message.textContent =
-            "Este navegador no soporta WebXR";
+        message.textContent = "Este navegador no soporta WebXR";
 
         return;
     }
 
-
-    const supported =
-        await navigator.xr.isSessionSupported(
-            "immersive-vr"
-        );
-
+    const supported = await navigator.xr.isSessionSupported("immersive-vr");
 
     if (!supported) {
-
-        message.textContent =
-            "RV inmersiva no disponible en este dispositivo";
+        message.textContent = "RV inmersiva no disponible en este dispositivo";
 
         return;
     }
 
+    const session = await navigator.xr.requestSession("immersive-vr", {
+        optionalFeatures: ["local-floor"],
+    });
 
-    const session =
-        await navigator.xr.requestSession(
-            "immersive-vr",
-            {
-                optionalFeatures: [
-                    "local-floor"
-                ]
-            }
-        );
+    await renderer.xr.setSession(session);
 
+    document.body.classList.add("in-vr");
 
-    await renderer.xr.setSession(
-        session
-    );
-
-
-    document.body.classList.add(
-        "in-vr"
-    );
-
-
-    session.addEventListener(
-        "end",
-        () => {
-
-            document.body.classList.remove(
-                "in-vr"
-            );
-        }
-    );
+    session.addEventListener("end", () => {
+        document.body.classList.remove("in-vr");
+    });
 }
 
-
-enterButton.addEventListener(
-    "click",
-    enterVR
-);
-
+enterButton.addEventListener("click", enterVR);
 
 /* =========================================================
    MENSAJE INICIAL
    ========================================================= */
 
 if (!navigator.xr) {
-
-    message.textContent =
-        "Conectá un dispositivo compatible con WebXR";
-
+    message.textContent = "Conectá un dispositivo compatible con WebXR";
 } else {
-
-    message.textContent =
-        "Listo para iniciar el entorno virtual";
+    message.textContent = "Listo para iniciar el entorno virtual";
 }

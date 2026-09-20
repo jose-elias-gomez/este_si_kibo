@@ -4,784 +4,512 @@
    ========================================================= */
 
 .assistant {
+    position: relative;
 
-  position: relative;
+    display: flex;
 
-  display: flex;
+    width: 100%;
+    height: 100dvh;
 
-  width: 100%;
-  height: 100dvh;
+    flex-direction: column;
 
-  flex-direction: column;
+    overflow: hidden;
 
-  overflow: hidden;
+    background: var(--color-bg);
 
-  background: var(--color-bg);
-
-  color: var(--color-text);
-
+    color: var(--color-text);
 }
-
 
 /* =========================================================
    HEADER
    ========================================================= */
 
 .assistant__header {
+    display: flex;
 
-  display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-  align-items: center;
-  justify-content: space-between;
+    width: 100%;
 
-  width: 100%;
+    padding: var(--space-md);
 
-  padding:
-    var(--space-md);
+    border-bottom: 1px solid var(--color-border);
 
-  border-bottom:
-    1px solid
-    var(--color-border);
-
-  background:
-    var(--color-bg);
-
+    background: var(--color-bg);
 }
-
 
 /* =========================================================
    IDENTIDAD
    ========================================================= */
 
 .assistant__identity {
+    display: flex;
 
-  display: flex;
+    align-items: center;
 
-  align-items: center;
-
-  gap:
-    var(--space-sm);
-
+    gap: var(--space-sm);
 }
-
 
 .assistant__avatar {
+    display: flex;
 
-  display: flex;
+    align-items: center;
+    justify-content: center;
 
-  align-items: center;
-  justify-content: center;
+    width: 44px;
+    height: 44px;
 
-  width: 44px;
-  height: 44px;
+    flex-shrink: 0;
 
-  flex-shrink: 0;
+    border: 1px solid var(--color-border);
 
-  border:
-    1px solid
-    var(--color-border);
+    border-radius: var(--radius-md);
 
-  border-radius:
-    var(--radius-md);
+    background: var(--overlay-first);
 
-  background:
-    var(--overlay-first);
+    color: var(--color-text);
 
-  color:
-    var(--color-text);
+    font-family: var(--font-heading);
 
-  font-family:
-    var(--font-heading);
+    font-size: var(--font-size-lg);
 
-  font-size:
-    var(--font-size-lg);
-
-  font-weight: 700;
-
+    font-weight: 700;
 }
-
 
 .assistant__identity-text {
+    display: flex;
 
-  display: flex;
+    flex-direction: column;
 
-  flex-direction: column;
-
-  gap:
-    2px;
-
+    gap: 2px;
 }
-
 
 .assistant__identity-text h1 {
+    margin: 0;
 
-  margin: 0;
+    color: var(--color-text);
 
-  color:
-    var(--color-text);
+    font-family: var(--font-heading);
 
-  font-family:
-    var(--font-heading);
+    font-size: var(--font-size-xl);
 
-  font-size:
-    var(--font-size-xl);
+    font-weight: 600;
 
-  font-weight: 600;
-
-  letter-spacing: 0;
-
+    letter-spacing: 0;
 }
-
 
 .assistant__identity-text p {
+    color: var(--color-h2);
 
-  color:
-    var(--color-h2);
+    font-family: var(--font-body);
 
-  font-family:
-    var(--font-body);
-
-  font-size:
-    var(--font-size-sm);
-
+    font-size: var(--font-size-sm);
 }
-
 
 /* =========================================================
    ESTADO
    ========================================================= */
 
 .assistant__status {
+    display: flex;
 
-  display: flex;
+    align-items: center;
 
-  align-items: center;
+    gap: var(--space-xs);
 
-  gap:
-    var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
 
-  padding:
-    var(--space-xs)
-    var(--space-sm);
+    border: 1px solid var(--color-border);
 
-  border:
-    1px solid
-    var(--color-border);
+    border-radius: var(--radius-pill);
 
-  border-radius:
-    var(--radius-pill);
+    background: var(--overlay-first);
 
-  background:
-    var(--overlay-first);
+    color: var(--color-h2);
 
-  color:
-    var(--color-h2);
+    font-family: var(--font-ui);
 
-  font-family:
-    var(--font-ui);
-
-  font-size:
-    var(--font-size-sm);
-
+    font-size: var(--font-size-sm);
 }
-
 
 .assistant__status-dot {
+    width: 7px;
+    height: 7px;
 
-  width: 7px;
-  height: 7px;
+    border-radius: 50%;
 
-  border-radius: 50%;
-
-  background:
-    var(--color-enabled);
-
+    background: var(--color-enabled);
 }
 
-
-.assistant.is-listening
-.assistant__status-dot {
-
-  animation:
-    status-pulse 1s
-    ease-in-out infinite;
-
+.assistant.is-listening .assistant__status-dot {
+    animation: status-pulse 1s ease-in-out infinite;
 }
-
 
 @keyframes status-pulse {
+    0%,
+    100% {
+        opacity: 0.35;
+    }
 
-  0%,
-  100% {
-
-    opacity: 0.35;
-
-  }
-
-  50% {
-
-    opacity: 1;
-
-  }
-
+    50% {
+        opacity: 1;
+    }
 }
-
 
 /* =========================================================
    CONVERSACIÓN
    ========================================================= */
 
 .assistant__conversation {
+    flex: 1;
 
-  flex: 1;
+    width: 100%;
 
-  width: 100%;
+    overflow-y: auto;
 
-  overflow-y: auto;
-
-  padding:
-    var(--space-md);
-
+    padding: var(--space-md);
 }
-
 
 .assistant__welcome {
+    display: flex;
 
-  display: flex;
+    flex-direction: column;
 
-  flex-direction: column;
+    align-items: center;
 
-  align-items: center;
+    justify-content: center;
 
-  justify-content: center;
+    min-height: 100%;
 
-  min-height: 100%;
-
-  text-align: center;
-
+    text-align: center;
 }
-
 
 .assistant__welcome-icon {
+    display: flex;
 
-  display: flex;
+    align-items: center;
+    justify-content: center;
 
-  align-items: center;
-  justify-content: center;
+    width: 64px;
+    height: 64px;
 
-  width: 64px;
-  height: 64px;
+    margin-bottom: var(--space-sm);
 
-  margin-bottom:
-    var(--space-sm);
+    border: 1px solid var(--color-border);
 
-  border:
-    1px solid
-    var(--color-border);
+    border-radius: var(--radius-lg);
 
-  border-radius:
-    var(--radius-lg);
+    background: var(--overlay-first);
 
-  background:
-    var(--overlay-first);
+    color: var(--color-h1);
 
-  color:
-    var(--color-h1);
-
-  font-size:
-    var(--font-size-xxxl);
-
+    font-size: var(--font-size-xxxl);
 }
-
 
 .assistant__welcome h2 {
+    margin: 0;
 
-  margin: 0;
+    color: var(--color-text);
 
-  color:
-    var(--color-text);
+    font-family: var(--font-heading);
 
-  font-family:
-    var(--font-heading);
+    font-size: var(--font-size-xxl);
 
-  font-size:
-    var(--font-size-xxl);
-
-  font-weight: 600;
-
+    font-weight: 600;
 }
-
 
 .assistant__welcome p {
+    margin-top: var(--space-xs);
 
-  margin-top:
-    var(--space-xs);
+    color: var(--color-h2);
 
-  color:
-    var(--color-h2);
-
-  font-size:
-    var(--font-size-md);
-
+    font-size: var(--font-size-md);
 }
-
 
 /* =========================================================
    MENSAJES
    ========================================================= */
 
 .message {
+    display: flex;
 
-  display: flex;
+    width: 100%;
 
-  width: 100%;
-
-  margin-bottom:
-    var(--space-sm);
-
+    margin-bottom: var(--space-sm);
 }
-
 
 .message--user {
-
-  justify-content: flex-end;
-
+    justify-content: flex-end;
 }
-
 
 .message--assistant {
-
-  justify-content: flex-start;
-
+    justify-content: flex-start;
 }
-
 
 .message__bubble {
+    max-width: 75%;
 
-  max-width: 75%;
+    padding: var(--space-sm);
 
-  padding:
-    var(--space-sm);
+    border: 1px solid var(--color-border);
 
-  border:
-    1px solid
-    var(--color-border);
+    border-radius: var(--radius-lg);
 
-  border-radius:
-    var(--radius-lg);
+    font-family: var(--font-body);
 
-  font-family:
-    var(--font-body);
+    font-size: var(--font-size-lg);
 
-  font-size:
-    var(--font-size-lg);
-
-  line-height: 1.4;
-
+    line-height: 1.4;
 }
 
+.message--user .message__bubble {
+    background: var(--overlay-first-selected);
 
-.message--user
-.message__bubble {
+    color: var(--color-text);
 
-  background:
-    var(--overlay-first-selected);
-
-  color:
-    var(--color-text);
-
-  border-bottom-right-radius:
-    var(--radius-sm);
-
+    border-bottom-right-radius: var(--radius-sm);
 }
 
+.message--assistant .message__bubble {
+    background: var(--overlay-first);
 
-.message--assistant
-.message__bubble {
+    color: var(--color-text);
 
-  background:
-    var(--overlay-first);
-
-  color:
-    var(--color-text);
-
-  border-bottom-left-radius:
-    var(--radius-sm);
-
+    border-bottom-left-radius: var(--radius-sm);
 }
-
 
 /* =========================================================
    CONTROL DE VOZ
    ========================================================= */
 
 .assistant__voice {
+    display: flex;
 
-  display: flex;
+    flex-direction: column;
 
-  flex-direction: column;
+    align-items: center;
 
-  align-items: center;
+    justify-content: center;
 
-  justify-content: center;
+    padding: var(--space-sm) var(--space-md) var(--space-md);
 
-  padding:
-    var(--space-sm)
-    var(--space-md)
-    var(--space-md);
+    border-top: 1px solid var(--color-border);
 
-  border-top:
-    1px solid
-    var(--color-border);
-
-  background:
-    var(--color-bg);
-
+    background: var(--color-bg);
 }
-
 
 .assistant__voice-label {
+    min-height: 20px;
 
-  min-height: 20px;
+    margin-bottom: var(--space-xs);
 
-  margin-bottom:
-    var(--space-xs);
+    color: var(--color-h2);
 
-  color:
-    var(--color-h2);
+    font-family: var(--font-ui);
 
-  font-family:
-    var(--font-ui);
-
-  font-size:
-    var(--font-size-sm);
-
+    font-size: var(--font-size-sm);
 }
-
 
 .assistant__mic {
+    display: flex;
 
-  display: flex;
+    align-items: center;
+    justify-content: center;
 
-  align-items: center;
-  justify-content: center;
+    width: 76px;
+    height: 76px;
 
-  width: 76px;
-  height: 76px;
+    padding: 0;
 
-  padding: 0;
+    border: 1px solid var(--color-border);
 
-  border:
-    1px solid
-    var(--color-border);
+    border-radius: 50%;
 
-  border-radius:
-    50%;
+    background: var(--overlay-first);
 
-  background:
-    var(--overlay-first);
+    color: var(--color-text);
 
-  color:
-    var(--color-text);
+    cursor: pointer;
 
-  cursor: pointer;
-
-  transition:
-    transform var(--duration-fast) ease,
-    background-color var(--duration-medium) ease,
-    border-color var(--duration-medium) ease;
-
+    transition:
+        transform var(--duration-fast) ease,
+        background-color var(--duration-medium) ease,
+        border-color var(--duration-medium) ease;
 }
-
 
 .assistant__mic:hover {
-
-  background:
-    var(--overlay-first-selected);
-
+    background: var(--overlay-first-selected);
 }
-
 
 .assistant__mic:active {
-
-  transform:
-    scale(0.94);
-
+    transform: scale(0.94);
 }
-
 
 .assistant__mic-icon {
-
-  width: 30px;
-  height: 30px;
-
+    width: 30px;
+    height: 30px;
 }
-
 
 /* =========================================================
    ESTADO ESCUCHANDO (grabando)
    ========================================================= */
 
-.assistant.is-listening
-.assistant__mic {
+.assistant.is-listening .assistant__mic {
+    border-color: var(--color-recording, var(--color-enabled));
 
-  border-color:
-    var(--color-recording, var(--color-enabled));
+    color: var(--color-recording, var(--color-enabled));
 
-  color:
-    var(--color-recording, var(--color-enabled));
+    background: var(--overlay-first-selected);
 
-  background:
-    var(--overlay-first-selected);
-
-  animation:
-    microphone-pulse 1.4s
-    ease-in-out infinite;
-
+    animation: microphone-pulse 1.4s ease-in-out infinite;
 }
 
-
-.assistant.is-listening
-.assistant__status-dot {
-
-  background:
-    var(--color-recording, var(--color-enabled));
-
+.assistant.is-listening .assistant__status-dot {
+    background: var(--color-recording, var(--color-enabled));
 }
-
 
 @keyframes microphone-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.08);
+    }
 
-  0%,
-  100% {
-
-    box-shadow:
-      0 0 0 0
-      rgba(255, 255, 255, 0.08);
-
-  }
-
-  50% {
-
-    box-shadow:
-      0 0 0 14px
-      rgba(255, 255, 255, 0);
-
-  }
-
+    50% {
+        box-shadow: 0 0 0 14px rgba(255, 255, 255, 0);
+    }
 }
-
 
 /* =========================================================
    ESTADO PROCESANDO
    ========================================================= */
 
-.assistant.is-processing
-.assistant__mic {
+.assistant.is-processing .assistant__mic {
+    border-color: var(--color-processing, #f2a93b);
 
-  border-color:
-    var(--color-processing, #f2a93b);
+    color: var(--color-processing, #f2a93b);
 
-  color:
-    var(--color-processing, #f2a93b);
+    background: var(--overlay-first-selected);
 
-  background:
-    var(--overlay-first-selected);
+    cursor: not-allowed;
 
-  cursor:
-    not-allowed;
-
-  animation:
-    microphone-processing 1s
-    ease-in-out infinite;
-
+    animation: microphone-processing 1s ease-in-out infinite;
 }
 
-
-.assistant.is-processing
-.assistant__mic:hover {
-
-  background:
-    var(--overlay-first-selected);
-
+.assistant.is-processing .assistant__mic:hover {
+    background: var(--overlay-first-selected);
 }
 
+.assistant.is-processing .assistant__status-dot {
+    background: var(--color-processing, #f2a93b);
 
-.assistant.is-processing
-.assistant__status-dot {
-
-  background:
-    var(--color-processing, #f2a93b);
-
-  animation:
-    status-pulse 0.6s
-    ease-in-out infinite;
-
+    animation: status-pulse 0.6s ease-in-out infinite;
 }
-
 
 @keyframes microphone-processing {
+    0%,
+    100% {
+        opacity: 0.55;
 
-  0%,
-  100% {
+        box-shadow: 0 0 0 0 rgba(242, 169, 35, 0.25);
+    }
 
-    opacity: 0.55;
+    50% {
+        opacity: 1;
 
-    box-shadow:
-      0 0 0 0
-      rgba(242, 169, 35, 0.25);
-
-  }
-
-  50% {
-
-    opacity: 1;
-
-    box-shadow:
-      0 0 0 12px
-      rgba(242, 169, 35, 0);
-
-  }
-
+        box-shadow: 0 0 0 12px rgba(242, 169, 35, 0);
+    }
 }
-
 
 /* =========================================================
    TEMPORIZADOR (limite de 10s de grabacion)
    ========================================================= */
 
 .assistant__timer {
+    width: 140px;
+    height: 4px;
 
-  width: 140px;
-  height: 4px;
+    margin-top: var(--space-sm);
 
-  margin-top:
-    var(--space-sm);
+    overflow: hidden;
 
-  overflow: hidden;
+    border-radius: var(--radius-pill);
 
-  border-radius:
-    var(--radius-pill);
+    background: var(--overlay-first);
 
-  background:
-    var(--overlay-first);
+    opacity: 0;
 
-  opacity: 0;
-
-  transition:
-    opacity var(--duration-fast) ease;
-
+    transition: opacity var(--duration-fast) ease;
 }
 
-
-.assistant.is-listening
-.assistant__timer {
-
-  opacity: 1;
-
+.assistant.is-listening .assistant__timer {
+    opacity: 1;
 }
-
 
 .assistant__timer-bar {
+    width: 100%;
+    height: 100%;
 
-  width: 100%;
-  height: 100%;
+    border-radius: var(--radius-pill);
 
-  border-radius:
-    var(--radius-pill);
+    background: var(--color-recording, var(--color-enabled));
 
-  background:
-    var(--color-recording, var(--color-enabled));
+    transform-origin: left;
 
-  transform-origin: left;
-
-  transform: scaleX(1);
-
+    transform: scaleX(1);
 }
-
 
 .assistant__timer-bar.is-counting {
+    transition: transform 10s linear;
 
-  transition:
-    transform 10s linear;
-
-  transform: scaleX(0);
-
+    transform: scaleX(0);
 }
-
 
 /* =========================================================
    MIC DESHABILITADO (procesando)
    ========================================================= */
 
 .assistant__mic:disabled {
+    cursor: not-allowed;
 
-  cursor:
-    not-allowed;
-
-  opacity: 0.85;
-
+    opacity: 0.85;
 }
-
 
 /* =========================================================
    HINT
    ========================================================= */
 
 .assistant__voice-hint {
+    margin-top: var(--space-xs);
 
-  margin-top:
-    var(--space-xs);
+    color: var(--color-h2);
 
-  color:
-    var(--color-h2);
+    font-family: var(--font-ui);
 
-  font-family:
-    var(--font-ui);
-
-  font-size:
-    var(--font-size-sm);
-
+    font-size: var(--font-size-sm);
 }
-
 
 /* =========================================================
    MOBILE
    ========================================================= */
 
 @media (max-width: 560px) {
+    .assistant__header {
+        padding: var(--space-sm);
+    }
 
-  .assistant__header {
+    .assistant__conversation {
+        padding: var(--space-sm);
+    }
 
-    padding:
-      var(--space-sm);
+    .message__bubble {
+        max-width: 85%;
 
-  }
+        font-size: var(--font-size-md);
+    }
 
-
-  .assistant__conversation {
-
-    padding:
-      var(--space-sm);
-
-  }
-
-
-  .message__bubble {
-
-    max-width: 85%;
-
-    font-size:
-      var(--font-size-md);
-
-  }
-
-
-  .assistant__mic {
-
-    width: 68px;
-    height: 68px;
-
-  }
-
+    .assistant__mic {
+        width: 68px;
+        height: 68px;
+    }
 }

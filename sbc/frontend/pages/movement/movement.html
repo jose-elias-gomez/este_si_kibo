@@ -1,106 +1,156 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Movimiento</title>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Movimiento</title>
 
-  <link rel="stylesheet" href="../../shared/css/global.css">
-  <link rel="stylesheet" href="movement.css" />
+        <link rel="stylesheet" href="../../shared/css/global.css" />
+        <link rel="stylesheet" href="movement.css" />
 
-  <!-- Dependencias 3D (three.js, GLTFLoader, OrbitControls, gsap) -->
-  <script src="https://unpkg.com/three@0.140.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/three@0.140.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="https://unpkg.com/three@0.140.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+        <!-- Dependencias 3D (three.js, GLTFLoader, OrbitControls, gsap) -->
+        <script src="https://unpkg.com/three@0.140.0/build/three.min.js"></script>
+        <script src="https://unpkg.com/three@0.140.0/examples/js/loaders/GLTFLoader.js"></script>
+        <script src="https://unpkg.com/three@0.140.0/examples/js/controls/OrbitControls.js"></script>
+        <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
 
-  <script type="module" src="../../shared/components/SidePanel.js"></script>
-  <script type="module" src="../../shared/components/Sliderbar.js"></script>
-  <script type="module" src="js/ui.js"></script>
-</head>
-<body>
-  <div id="canvas-container"></div>
+        <script
+            type="module"
+            src="../../shared/components/SidePanel.js"
+        ></script>
+        <script
+            type="module"
+            src="../../shared/components/Sliderbar.js"
+        ></script>
+        <script type="module" src="js/ui.js"></script>
+    </head>
+    <body>
+        <div id="canvas-container"></div>
 
-  <side-panel id="movement-panel" context="movement-panel" side="bottom" panel-title="Movimiento por pieza">
-    <div class="lateral-selector">
-      <button class="btn-part" data-node="LeftWheel" data-view="left">
-        <img src="../../shared/assets/body/left-wheel.svg">
-      </button>
+        <side-panel
+            id="movement-panel"
+            context="movement-panel"
+            side="bottom"
+            panel-title="Movimiento por pieza"
+        >
+            <div class="lateral-selector">
+                <button class="btn-part" data-node="LeftWheel" data-view="left">
+                    <img src="../../shared/assets/body/left-wheel.svg" />
+                </button>
 
-      <button class="btn-part" data-node="LeftArm" data-view="left">
-        <img src="../../shared/assets/body/left-arm.svg">
-      </button>
+                <button class="btn-part" data-node="LeftArm" data-view="left">
+                    <img src="../../shared/assets/body/left-arm.svg" />
+                </button>
 
-      <button class="btn-part" data-node="Head" data-view="front">
-        <img src="../../shared/assets/body/head.svg">
-      </button>
+                <button class="btn-part" data-node="Head" data-view="front">
+                    <img src="../../shared/assets/body/head.svg" />
+                </button>
 
-      <button class="btn-part" data-node="RightArm" data-view="right">
-        <img src="../../shared/assets/body/right-arm.svg">
-      </button>
+                <button class="btn-part" data-node="RightArm" data-view="right">
+                    <img src="../../shared/assets/body/right-arm.svg" />
+                </button>
 
-      <button class="btn-part" data-node="RightWheel" data-view="right">
-        <img src="../../shared/assets/body/right-wheel.svg">
-      </button>
-    </div>
-  </side-panel>
+                <button
+                    class="btn-part"
+                    data-node="RightWheel"
+                    data-view="right"
+                >
+                    <img src="../../shared/assets/body/right-wheel.svg" />
+                </button>
+            </div>
+        </side-panel>
 
-  <side-panel id="animations-panel" context="animations-panel" side="top" panel-title="Animaciones">
-    <div class="lateral-selector">
-      <button class="btn-part" data-animation="dance">
-        <img src="../../shared/assets/expressions/dance.svg">
-      </button>
-      <button class="btn-part" data-animation="surprise">
-        <img src="../../shared/assets/expressions/surprise.svg">
-      </button>
-      <button class="btn-part" data-animation="sad">
-        <img src="../../shared/assets/expressions/sad.svg">
-      </button>
-      <button class="btn-part" data-animation="angry">
-        <img src="../../shared/assets/expressions/angry.svg">
-      </button>
-      <button class="btn-part" data-animation="confusion">
-        <img src="../../shared/assets/expressions/confusion.svg">
-      </button>
-      <button class="btn-part" data-animation="happy">
-        <img src="../../shared/assets/expressions/happy.svg">
-      </button>
-      <button class="btn-part" data-animation="no">
-        <img src="../../shared/assets/expressions/no.svg">
-      </button>
-      <button class="btn-part" data-animation="run">
-        <img src="../../shared/assets/expressions/run.svg">
-      </button>
-    </div>
-  </side-panel>
+        <side-panel
+            id="animations-panel"
+            context="animations-panel"
+            side="top"
+            panel-title="Animaciones"
+        >
+            <div class="lateral-selector">
+                <button class="btn-part" data-animation="dance">
+                    <img src="../../shared/assets/expressions/dance.svg" />
+                </button>
+                <button class="btn-part" data-animation="surprise">
+                    <img src="../../shared/assets/expressions/surprise.svg" />
+                </button>
+                <button class="btn-part" data-animation="sad">
+                    <img src="../../shared/assets/expressions/sad.svg" />
+                </button>
+                <button class="btn-part" data-animation="angry">
+                    <img src="../../shared/assets/expressions/angry.svg" />
+                </button>
+                <button class="btn-part" data-animation="confusion">
+                    <img src="../../shared/assets/expressions/confusion.svg" />
+                </button>
+                <button class="btn-part" data-animation="happy">
+                    <img src="../../shared/assets/expressions/happy.svg" />
+                </button>
+                <button class="btn-part" data-animation="no">
+                    <img src="../../shared/assets/expressions/no.svg" />
+                </button>
+                <button class="btn-part" data-animation="run">
+                    <img src="../../shared/assets/expressions/run.svg" />
+                </button>
+            </div>
+        </side-panel>
 
-  <range-slider class="fade-appears" id="manual-slider" min="0" max="100" value="0" step="1"></range-slider>
+        <range-slider
+            class="fade-appears"
+            id="manual-slider"
+            min="0"
+            max="100"
+            value="0"
+            step="1"
+        ></range-slider>
 
-  <div class="motor-widget fade-appears">
-    <button class="media-btn" id="motor-run">
-      <div class="icon">
-        <div class="bar bar-1"></div>
-        <div class="bar bar-2"></div>
-      </div>
-    </button>
-    <div class="motor-info">
-      <span class="motor-timer" id="motor-timer" aria-live="polite">
-        <span class="motor-timer-dot"></span>
-        <span class="motor-timer-value">0s</span>
-      </span>
-    </div>
-  </div>
+        <div class="motor-widget fade-appears">
+            <button class="media-btn" id="motor-run">
+                <div class="icon">
+                    <div class="bar bar-1"></div>
+                    <div class="bar bar-2"></div>
+                </div>
+            </button>
+            <div class="motor-info">
+                <span class="motor-timer" id="motor-timer" aria-live="polite">
+                    <span class="motor-timer-dot"></span>
+                    <span class="motor-timer-value">0s</span>
+                </span>
+            </div>
+        </div>
 
-  <div class="background-draw">
-    <div class="arrow arrow-bounce" aria-label="Abrir opciones del sistema">
-      <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-      <strong>Animaciones</strong>
-    </div>
+        <div class="background-draw">
+            <div
+                class="arrow arrow-bounce"
+                aria-label="Abrir opciones del sistema"
+            >
+                <svg
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.4"
+                    viewBox="0 0 24 24"
+                >
+                    <path d="m6 9 6 6 6-6" />
+                </svg>
+                <strong>Animaciones</strong>
+            </div>
 
-    <div class="arrow arrow-bounce" aria-label="Abrir opciones del sistema">
-      <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></svg>
-      <strong>Manual</strong>
-    </div>
-  </div>
-
-</body>
+            <div
+                class="arrow arrow-bounce"
+                aria-label="Abrir opciones del sistema"
+            >
+                <svg
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.4"
+                    viewBox="0 0 24 24"
+                >
+                    <path d="m6 15 6-6 6 6" />
+                </svg>
+                <strong>Manual</strong>
+            </div>
+        </div>
+    </body>
 </html>

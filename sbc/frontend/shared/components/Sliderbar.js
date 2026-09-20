@@ -1,16 +1,16 @@
 export class RangeSlider extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-  }
+    constructor() {
+        super();
+        this.attachShadow({ mode: "open" });
+    }
 
-  connectedCallback() {
-    const min = this.getAttribute("min") || "0";
-    const max = this.getAttribute("max") || "100";
-    const value = this.getAttribute("value") || min;
-    const step = this.getAttribute("step") || "1";
+    connectedCallback() {
+        const min = this.getAttribute("min") || "0";
+        const max = this.getAttribute("max") || "100";
+        const value = this.getAttribute("value") || min;
+        const step = this.getAttribute("step") || "1";
 
-    this.shadowRoot.innerHTML = `
+        this.shadowRoot.innerHTML = `
       <style>
         :host {
           display: block;
@@ -106,90 +106,93 @@ export class RangeSlider extends HTMLElement {
       </div>
     `;
 
-    // Referencias del Shadow DOM
-    this.slider = this.shadowRoot.getElementById("myRange");
-    this.thumbValue = this.shadowRoot.getElementById("thumbValue");
+        // Referencias del Shadow DOM
+        this.slider = this.shadowRoot.getElementById("myRange");
+        this.thumbValue = this.shadowRoot.getElementById("thumbValue");
 
-    // Listeners nativos del <input type="range">
-    this.slider.addEventListener("input", () => this.updateSlider());
+        // Listeners nativos del <input type="range">
+        this.slider.addEventListener("input", () => this.updateSlider());
 
-    this.updateSlider();
-  }
-
-  step(direction) {
-    const stepAttr = Number(this.slider.step) || 1;
-    const min = Number(this.slider.min) || 0;
-    const max = Number(this.slider.max) || 100;
-    const currentValue = Number(this.slider.value);
-    const newValue = Math.min(max, Math.max(min, currentValue + direction * stepAttr));
-
-    if (newValue === currentValue) {
-      return false;
+        this.updateSlider();
     }
 
-    this.slider.value = newValue;
-    this.updateSlider();
-    this.slider.dispatchEvent(new Event("input"));
-    return true;
-  }
+    step(direction) {
+        const stepAttr = Number(this.slider.step) || 1;
+        const min = Number(this.slider.min) || 0;
+        const max = Number(this.slider.max) || 100;
+        const currentValue = Number(this.slider.value);
+        const newValue = Math.min(
+            max,
+            Math.max(min, currentValue + direction * stepAttr)
+        );
 
-  updateSlider() {
-    this._value = Number(this.slider.value);
+        if (newValue === currentValue) {
+            return false;
+        }
 
-    if (this.thumbValue && this.slider) {
-      const min = Number(this.slider.min) || 0;
-      const max = Number(this.slider.max) || 100;
-      const val = Number(this.slider.value);
-      const percent = (val - min) / (max - min || 1);
-      const valStr = String(val);
-
-      this.thumbValue.textContent = valStr;
-
-      // Escalar la fuente si el número tiene 3 o más dígitos para que no sobresalga
-      if (valStr.length >= 3) {
-        this.thumbValue.style.fontSize = "1.1rem";
-      } else {
-        this.thumbValue.style.fontSize = "1.4rem";
-      }
-
-      // Fórmula corregida: considera los 16px de padding + 24px de radio del thumb (total offset: 40px)
-      this.thumbValue.style.left = `calc(40px + (100% - 80px) * ${percent})`;
+        this.slider.value = newValue;
+        this.updateSlider();
+        this.slider.dispatchEvent(new Event("input"));
+        return true;
     }
-  }
 
-  get value() {
-    return this.slider ? this.slider.value : this.getAttribute("value");
-  }
+    updateSlider() {
+        this._value = Number(this.slider.value);
 
-  set value(val) {
-    if (this.slider) {
-      this.slider.value = val;
-      this.updateSlider();
+        if (this.thumbValue && this.slider) {
+            const min = Number(this.slider.min) || 0;
+            const max = Number(this.slider.max) || 100;
+            const val = Number(this.slider.value);
+            const percent = (val - min) / (max - min || 1);
+            const valStr = String(val);
+
+            this.thumbValue.textContent = valStr;
+
+            // Escalar la fuente si el número tiene 3 o más dígitos para que no sobresalga
+            if (valStr.length >= 3) {
+                this.thumbValue.style.fontSize = "1.1rem";
+            } else {
+                this.thumbValue.style.fontSize = "1.4rem";
+            }
+
+            // Fórmula corregida: considera los 16px de padding + 24px de radio del thumb (total offset: 40px)
+            this.thumbValue.style.left = `calc(40px + (100% - 80px) * ${percent})`;
+        }
     }
-  }
 
-  setTitle(title) {
-    const slot = this.shadowRoot.querySelector("slot");
-    if (slot) {
-      this.textContent = title;
+    get value() {
+        return this.slider ? this.slider.value : this.getAttribute("value");
     }
-  }
 
-  setMin(min) {
-    this.slider.min = min;
-    this.shadowRoot.getElementById("minLabel").textContent = min;
-    this.updateSlider();
-  }
+    set value(val) {
+        if (this.slider) {
+            this.slider.value = val;
+            this.updateSlider();
+        }
+    }
 
-  setMax(max) {
-    this.slider.max = max;
-    this.shadowRoot.getElementById("maxLabel").textContent = max;
-    this.updateSlider();
-  }
+    setTitle(title) {
+        const slot = this.shadowRoot.querySelector("slot");
+        if (slot) {
+            this.textContent = title;
+        }
+    }
 
-  setStep(step) {
-    this.slider.step = step;
-  }
+    setMin(min) {
+        this.slider.min = min;
+        this.shadowRoot.getElementById("minLabel").textContent = min;
+        this.updateSlider();
+    }
+
+    setMax(max) {
+        this.slider.max = max;
+        this.shadowRoot.getElementById("maxLabel").textContent = max;
+        this.updateSlider();
+    }
+
+    setStep(step) {
+        this.slider.step = step;
+    }
 }
 
 // Registrar el Web Component

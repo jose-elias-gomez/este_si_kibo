@@ -16,7 +16,11 @@
 //   await anim.execute();
 
 import { ANIMATIONS } from "./animations.js";
-import { WHEEL_MOTOR_CONFIG, WHEEL_MOTOR_SPEED_DEG_PER_SEC, MotorDirection } from "./partsConfig.js";
+import {
+    WHEEL_MOTOR_CONFIG,
+    WHEEL_MOTOR_SPEED_DEG_PER_SEC,
+    MotorDirection,
+} from "./partsConfig.js";
 
 // --- Timing del servo SG90 ---
 // Datasheet: ~0.1s por cada 60° a 4.8V (más lento a menor voltaje).
@@ -72,11 +76,11 @@ function isWheelPart(partName) {
 // el intérprete data-driven) no pasa por acá: recibe el nombre de pieza
 // directamente, tal como viene escrito en ANIMATIONS.
 const PART_NAMES = {
-    head: 'Head',
-    leftArm: 'LeftArm',
-    rightArm: 'RightArm',
-    leftWheel: 'LeftWheel',
-    rightWheel: 'RightWheel'
+    head: "Head",
+    leftArm: "LeftArm",
+    rightArm: "RightArm",
+    leftWheel: "LeftWheel",
+    rightWheel: "RightWheel",
 };
 
 export class AnimationBuilder {
@@ -123,10 +127,10 @@ export class AnimationBuilder {
             this._parallelBuffer.steps.push(step);
         } else {
             this._groups.push({
-                type: 'move',
+                type: "move",
                 steps: [step],
                 repeat: options.repeat || 0,
-                yoyo: options.yoyo || false
+                yoyo: options.yoyo || false,
             });
         }
 
@@ -170,7 +174,7 @@ export class AnimationBuilder {
      * @returns {AnimationBuilder}
      */
     wait(durationMs) {
-        this._groups.push({ type: 'wait', duration: durationMs });
+        this._groups.push({ type: "wait", duration: durationMs });
         return this;
     }
 
@@ -197,10 +201,10 @@ export class AnimationBuilder {
 
         if (buffer.steps.length > 0) {
             this._groups.push({
-                type: 'move',
+                type: "move",
                 steps: buffer.steps,
                 repeat: options.repeat || 0,
-                yoyo: options.yoyo || false
+                yoyo: options.yoyo || false,
             });
         }
 
@@ -275,7 +279,7 @@ export class AnimationBuilder {
                     // no dependa de esa paridad.
                     this.partsController.setAngleForPart(partName, targetAngle);
                     resolve();
-                }
+                },
             });
         });
     }
@@ -311,9 +315,10 @@ export class AnimationBuilder {
             // — eso ya lo hace partsController.runMotor() internamente
             // (forwardSign * directionSign). Hacerlo también acá
             // duplicaría el signo y giraría la rueda al revés de lo pedido.
-            const direction = requestedSign >= 0
-                ? MotorDirection.FORWARD
-                : MotorDirection.BACKWARD;
+            const direction =
+                requestedSign >= 0
+                    ? MotorDirection.FORWARD
+                    : MotorDirection.BACKWARD;
 
             const durationMs = wheelDurationMs(angleDelta);
 
@@ -347,7 +352,9 @@ export class AnimationBuilder {
      */
     _runMoveGroup(group) {
         return Promise.all(
-            group.steps.map((step) => this._runStep(step, group.repeat, group.yoyo))
+            group.steps.map((step) =>
+                this._runStep(step, group.repeat, group.yoyo)
+            )
         ).then(() => {});
     }
 
@@ -359,7 +366,7 @@ export class AnimationBuilder {
      */
     async execute() {
         for (const group of this._groups) {
-            if (group.type === 'wait') {
+            if (group.type === "wait") {
                 await this._runWait(group.duration);
             } else {
                 await this._runMoveGroup(group);
@@ -375,7 +382,11 @@ export class AnimationBuilder {
  * .move()/.parallel()/.wait() según corresponda, sin motor nuevo.
  * @returns {AnimationBuilder}
  */
-export function buildAnimation(partsController, animationName, cameraViewController = null) {
+export function buildAnimation(
+    partsController,
+    animationName,
+    cameraViewController = null
+) {
     const steps = ANIMATIONS[animationName];
     if (!steps) {
         throw new Error(`Animación desconocida: "${animationName}"`);
@@ -384,7 +395,7 @@ export function buildAnimation(partsController, animationName, cameraViewControl
     const builder = new AnimationBuilder(partsController, cameraViewController);
 
     steps.forEach((step) => {
-        if ('wait' in step) {
+        if ("wait" in step) {
             builder.wait(step.wait);
             return;
         }
