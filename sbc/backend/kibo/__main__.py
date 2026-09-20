@@ -1,3 +1,4 @@
+import inspect
 import logging
 from contextlib import asynccontextmanager
 
@@ -38,7 +39,9 @@ async def lifespan(fastapi: FastAPI):
 
     logger.info("Stopping Kibo")
     for shutdown_task in fastapi.router.on_shutdown:
-        await shutdown_task()
+        res = shutdown_task()
+        if inspect.isawaitable(res):
+            await res
 
 if __name__ == '__main__':
     webserver.start("0.0.0.0", 25566, lifespan)

@@ -40,9 +40,9 @@ class GroqClient:
         return self.async_
 
     @classmethod
-    def _stop(cls):
+    async def _stop(cls):
         if cls._instance is not None:
-            cls._instance.stop()
+            await cls._instance.stop()
 
     @classmethod
     def start(cls, webserver: FastAPI):
