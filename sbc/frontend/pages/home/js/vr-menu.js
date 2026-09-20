@@ -60,12 +60,7 @@ scene.background = new THREE.Color(0x020607);
 
 /* Cámara */
 
-const camera = new THREE.PerspectiveCamera(
-    70,
-    window.innerWidth / window.innerHeight,
-    0.01,
-    100
-);
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
 
 camera.position.set(0, 1.6, 0);
 
@@ -306,10 +301,7 @@ updateSelection();
    ========================================================= */
 
 function navigate(direction) {
-    const next = Math.max(
-        0,
-        Math.min(APPS.length - 1, selectedIndex + direction)
-    );
+    const next = Math.max(0, Math.min(APPS.length - 1, selectedIndex + direction));
 
     if (next === selectedIndex) {
         return;

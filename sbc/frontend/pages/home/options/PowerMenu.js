@@ -3,40 +3,39 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
 
 const bodyTemplate = document.createElement("template");
 bodyTemplate.innerHTML = `
-  <style>
-    power-menu {
-      --popup-height: 60vh;
-      display: block;
-      height: 100%;
-    }
+    <style>
+        power-menu {
+            --popup-height: 60vh;
+            display: block;
+            height: 100%;
+        }
 
-    power-menu .power-content {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-      padding: 8px 0;
-      flex-direction: column;
-      box-sizing: border-box;
-    }
+        power-menu .power-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 8px 0;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
 
-    power-menu .power-selection {
-      margin-top: 8px;
-      gap: 8px;
-      display: flex;
-      align-items: row;
-    }
+        power-menu .power-selection {
+            margin-top: 8px;
+            gap: 8px;
+            display: flex;
+            align-items: row;
+        }
+    </style>
 
-  </style>
-
-  <div class="power-content">
-    <h1>¿Estás seguro de apagar?</h1>
-    <div class="power-selection">
-      <generic-btn id="power-accept">Si</generic-btn>
-      <generic-btn id="power-cancel">No</generic-btn>
+    <div class="power-content">
+        <h1>¿Estás seguro de apagar?</h1>
+        <div class="power-selection">
+            <generic-btn id="power-accept">Si</generic-btn>
+            <generic-btn id="power-cancel">No</generic-btn>
+        </div>
     </div>
-  </div>
 `;
 
 export class PowerMenu extends BasePopup {

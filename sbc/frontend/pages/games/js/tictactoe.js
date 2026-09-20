@@ -75,10 +75,7 @@ export function mountTicTacToe(container, exitToMenu) {
         const result = checkResult();
         if (result) {
             gameOver = true;
-            statusEl.textContent =
-                result.winner === "draw"
-                    ? "¡Empate!"
-                    : `¡Ganó ${result.winner}!`;
+            statusEl.textContent = result.winner === "draw" ? "¡Empate!" : `¡Ganó ${result.winner}!`;
         } else {
             currentPlayer = currentPlayer === "X" ? "O" : "X";
             statusEl.textContent = `Turno de ${currentPlayer}`;
@@ -118,11 +115,7 @@ export function mountTicTacToe(container, exitToMenu) {
     input.on(InputAction.RIGHT, () => moveCursor(1, 0), "TICTACTOE");
     input.on(InputAction.UP, () => moveCursor(0, -1), "TICTACTOE");
     input.on(InputAction.DOWN, () => moveCursor(0, 1), "TICTACTOE");
-    input.on(
-        InputAction.CONFIRM,
-        () => (gameOver ? restart() : place(cursor)),
-        "TICTACTOE"
-    );
+    input.on(InputAction.CONFIRM, () => (gameOver ? restart() : place(cursor)), "TICTACTOE");
 
     return function cleanup() {
         removeBackHandler();

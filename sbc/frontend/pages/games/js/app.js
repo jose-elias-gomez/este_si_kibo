@@ -74,9 +74,7 @@ export function mountGameHub(container, exitToHome) {
         let selected = 0;
 
         function render() {
-            cards.forEach((card, i) =>
-                card.classList.toggle("selected", i === selected)
-            );
+            cards.forEach((card, i) => card.classList.toggle("selected", i === selected));
         }
 
         function launchGame(i) {

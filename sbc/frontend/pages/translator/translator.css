@@ -283,8 +283,7 @@
     align-items: center;
     justify-content: center;
 
-    padding: var(--space-md) var(--space-md)
-        calc(var(--space-md) + env(safe-area-inset-bottom));
+    padding: var(--space-md) var(--space-md) calc(var(--space-md) + env(safe-area-inset-bottom));
 
     border-top: 1px solid var(--color-border);
 
@@ -405,8 +404,7 @@
     }
 
     .caption-dock {
-        padding: var(--space-sm) var(--space-sm)
-            calc(var(--space-sm) + env(safe-area-inset-bottom));
+        padding: var(--space-sm) var(--space-sm) calc(var(--space-sm) + env(safe-area-inset-bottom));
     }
 
     .caption-current {

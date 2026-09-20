@@ -2,100 +2,98 @@ const DEFAULT_MAX_LENGTH = 512;
 
 const template = document.createElement("template");
 template.innerHTML = `
-  <style>
-    :host {
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      height: 100%;
-      width: 100%;
-      background: transparent;
-      border-radius: var(--radius-xl);
-      border: 2px solid var(--color-border);
-      outline: none;
+    <style>
+        :host {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            height: 100%;
+            width: 100%;
+            background: transparent;
+            border-radius: var(--radius-xl);
+            border: 2px solid var(--color-border);
+            outline: none;
 
-      padding: 0.75rem 1rem 2.25rem 1rem;
+            padding: 0.75rem 1rem 2.25rem 1rem;
 
-      box-sizing: border-box;
-      cursor: pointer;
-      font-family: var(--font-body);
-      color: var(--color-text);
-      font-size: var(--font-size-lg);
-      font-weight: 400;
+            box-sizing: border-box;
+            cursor: pointer;
+            font-family: var(--font-body);
+            color: var(--color-text);
+            font-size: var(--font-size-lg);
+            font-weight: 400;
 
-      transition:
-        background-color var(--duration-fast, 0.3s) ease;    
-        border-color var(--duration-fast, 0.3s) ease;    
+            transition:
+                background-color var(--duration-fast, 0.3s) ease;    
+                border-color var(--duration-fast, 0.3s) ease;    
 
-      overflow: hidden;
-      caret-color: transparent;
-    }
+            overflow: hidden;
+            caret-color: transparent;
+        }
 
-    :host(.hovered) {
-      background-color: rgba(255, 255, 255, 0.1);
-      border-color: transparent;
-    }
+        :host(.hovered) {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: transparent;
+        }
 
-    :host(.selected) {
-      background-color: rgba(255, 255, 255, 0.05);
-      border-color: transparent;
-    }
-      
-    .label-text {
-      font-size: var(--font-size-lg);
-      font-weight: 600;
-      color: var(--color-h1);
-      pointer-events: none;
-      user-select: none;
-      font-family: var(--font-body);
-      margin-bottom: 0.5rem; /* Espacio fijo y constante entre el label y el texto */
-      line-height: 1.2;
-    }
+        :host(.selected) {
+            background-color: rgba(25, 255, 255, 0.05);
+            border-color: transparent;5
+        }
+            
+        .label-text {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--color-h1);
+            pointer-events: none;
+            user-select: none;
+            font-family: var(--font-body);
+            margin-bottom: 0.5rem; /* Espacio fijo y constante entre el label y el texto */
+            line-height: 1.2;
+        }
 
-    .input-area {
-      flex: 1;
-      white-space: pre-wrap;
-      overflow-wrap: break-word;
-      line-height: 1.3;
-    }
+        .input-area {
+            flex: 1;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            line-height: 1.3;
+        }
 
-    /* Cursor visual */
-    .text-cursor {
-      display: inline-block;
-      width: 4px;
-      border-radius: 2px;
-      height: 1.2em;
-      vertical-align: middle;
-      margin-left: 2px;
-      background-color: var(--color-h1);
-      animation: text-cursor-blink 1s step-start infinite;
-    }
+        /* Cursor visual */
+        .text-cursor {
+            display: inline-block;
+            width: 4px;
+            border-radius: 2px;
+            height: 1.2em;
+            vertical-align: middle;
+            margin-left: 2px;
+            background-color: var(--color-h1);
+            animation: text-cursor-blink 1s step-start infinite;
+        }
 
-    @keyframes text-cursor-blink {
-      50% {
-        opacity: 0;
-      }
-    }
+        @keyframes text-cursor-blink {
+            50% {
+                opacity: 0;
+            }
+        }
 
-    .char-counter {
-      position: absolute;
-      right: 1.25rem;
-      bottom: 0.5rem;
-      pointer-events: none;
-      font-size: 0.9rem;
-      color: var(--color-text);
-      box-sizing: border-box;
-      font-family: var(--font-body);
-    }
-  </style>
-  <div class="label-text"></div>
-  <div class="input-area"><span class="text-content"></span><span class="text-cursor"></span></div>
-  <div class="char-counter"></div>
+        .char-counter {
+            position: absolute;
+            right: 1.25rem;
+            bottom: 0.5rem;
+            pointer-events: none;
+            font-size: 0.9rem;
+            color: var(--color-text);
+            box-sizing: border-box;
+            font-family: var(--font-body);
+        }
+    </style>
+
+    <div class="label-text"></div>
+    <div class="input-area"><span class="text-content"></span><span class="text-cursor"></span></div>
+    <div class="char-counter"></div>
 `;
 
-/**
- * <text-container>
- */
 export class TextContainer extends HTMLElement {
     static get observedAttributes() {
         return ["max-length", "label"];
@@ -164,15 +162,9 @@ export class TextContainer extends HTMLElement {
     attributeChangedCallback(name, _oldValue, newValue) {
         if (name === "max-length") {
             const parsed = parseInt(newValue, 10);
-            this._maxLength =
-                Number.isFinite(parsed) && parsed > 0
-                    ? parsed
-                    : DEFAULT_MAX_LENGTH;
+            this._maxLength = Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_LENGTH;
             if (this.textSpan.textContent.length > this._maxLength) {
-                this.textSpan.textContent = this.textSpan.textContent.slice(
-                    0,
-                    this._maxLength
-                );
+                this.textSpan.textContent = this.textSpan.textContent.slice(0, this._maxLength);
             }
             this.updateCounter();
         }
@@ -236,9 +228,7 @@ export class TextContainer extends HTMLElement {
     updateLabel() {
         this.labelEl.textContent = this.getAttribute("label") || "";
         // Oculta el elemento del label si está vacío para evitar ocupar espacio
-        this.labelEl.style.display = this.labelEl.textContent
-            ? "block"
-            : "none";
+        this.labelEl.style.display = this.labelEl.textContent ? "block" : "none";
     }
 
     updateCounter() {

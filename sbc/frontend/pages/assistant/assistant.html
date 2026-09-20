@@ -1,104 +1,85 @@
 <!doctype html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8" />
 
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8" />
 
-        <title>Asistente AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <link rel="stylesheet" href="../../shared/css/global.css" />
+    <title>Asistente AI</title>
 
-        <link rel="stylesheet" href="./assistant.css" />
+    <link rel="stylesheet" href="../../shared/css/global.css" />
 
-        <script type="module" src="./js/assistant.js"></script>
-    </head>
+    <link rel="stylesheet" href="./assistant.css" />
 
-    <body>
-        <main class="assistant" id="assistant">
-            <!-- =====================================================
+    <script type="module" src="./js/assistant.js"></script>
+</head>
+
+<body>
+    <main class="assistant" id="assistant">
+        <!-- =====================================================
          ENCABEZADO
          ===================================================== -->
 
-            <header class="assistant__header">
-                <div class="assistant__identity">
-                    <div class="assistant__avatar">AI</div>
+        <header class="assistant__header">
+            <div class="assistant__identity">
+                <div class="assistant__avatar">AI</div>
 
-                    <div class="assistant__identity-text">
-                        <h1>Asistente</h1>
+                <div class="assistant__identity-text">
+                    <h1>Asistente</h1>
 
-                        <p>Estoy para ayudarte</p>
-                    </div>
+                    <p>Estoy para ayudarte</p>
                 </div>
+            </div>
 
-                <div class="assistant__status" id="assistantStatus">
-                    <span class="assistant__status-dot" id="statusDot"></span>
+            <div class="assistant__status" id="assistantStatus">
+                <span class="assistant__status-dot" id="statusDot"></span>
 
-                    <span id="statusText"> Listo </span>
-                </div>
-            </header>
+                <span id="statusText">Listo</span>
+            </div>
+        </header>
 
-            <!-- =====================================================
+        <!-- =====================================================
          CONVERSACIÓN
          ===================================================== -->
 
-            <section
-                class="assistant__conversation"
-                id="conversation"
-                aria-live="polite"
-            >
-                <div class="assistant__welcome" id="welcome">
-                    <div class="assistant__welcome-icon">✦</div>
+        <section class="assistant__conversation" id="conversation" aria-live="polite">
+            <div class="assistant__welcome" id="welcome">
+                <div class="assistant__welcome-icon">✦</div>
 
-                    <h2>¿En qué puedo ayudarte?</h2>
+                <h2>¿En qué puedo ayudarte?</h2>
 
-                    <p>Tocá el micrófono y hablá.</p>
-                </div>
-            </section>
+                <p>Tocá el micrófono y hablá.</p>
+            </div>
+        </section>
 
-            <!-- =====================================================
+        <!-- =====================================================
          CONTROL DE VOZ
          ===================================================== -->
 
-            <footer class="assistant__voice">
-                <div class="assistant__voice-label" id="voiceLabel">
-                    Tocá para hablar
-                </div>
+        <footer class="assistant__voice">
+            <div class="assistant__voice-label" id="voiceLabel">Tocá para hablar</div>
 
-                <button
-                    class="assistant__mic"
-                    id="micButton"
-                    type="button"
-                    aria-label="Hablar con el asistente"
-                >
-                    <svg
-                        class="assistant__mic-icon"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <rect x="9" y="2" width="6" height="13" rx="3" />
+            <button class="assistant__mic" id="micButton" type="button" aria-label="Hablar con el asistente">
+                <svg class="assistant__mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="9" y="2" width="6" height="13" rx="3" />
 
-                        <path d="M5 10a7 7 0 0 0 14 0" />
+                    <path d="M5 10a7 7 0 0 0 14 0" />
 
-                        <path d="M12 19v3" />
+                    <path d="M12 19v3" />
 
-                        <path d="M8 22h8" />
-                    </svg>
-                </button>
+                    <path d="M8 22h8" />
+                </svg>
+            </button>
 
-                <div class="assistant__timer" id="recordTimer">
-                    <div class="assistant__timer-bar" id="recordTimerBar"></div>
-                </div>
+            <div class="assistant__timer" id="recordTimer">
+                <div class="assistant__timer-bar" id="recordTimerBar"></div>
+            </div>
 
-                <div class="assistant__voice-hint" id="voiceHint">
-                    Voz &middot; máx. 10s
-                </div>
-            </footer>
-        </main>
-    </body>
+            <div class="assistant__voice-hint" id="voiceHint">Voz &middot; máx. 10s</div>
+        </footer>
+    </main>
+</body>
+
 </html>

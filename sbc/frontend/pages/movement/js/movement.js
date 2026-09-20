@@ -2,10 +2,7 @@ import { SceneEngine } from "./sceneEngine.js";
 import { CameraViewController, CameraView } from "./cameraViews.js";
 import { loadGltfModel } from "./modelLoader.js";
 import { WrappedMovementPartController } from "./partsController.js";
-import {
-    AnimationBuilder,
-    buildAnimation,
-} from "../../../shared/js/movement/animationBuilder.js";
+import { AnimationBuilder, buildAnimation } from "../../../shared/js/movement/animationBuilder.js";
 const MODEL_URL = "assets/kibo_model.glb";
 const modelCenter = new THREE.Vector3(0, 0.8, 0);
 let cameraDistance = 3.5;
@@ -28,13 +25,7 @@ async function init3D() {
     // Le pasamos requestRender a todo lo que puede modificar la escena
     // (cámara y piezas), para que el loop de render (que ahora es
     // "bajo demanda") sepa cuándo tiene que pintar un frame nuevo.
-    cameraViewController = new CameraViewController(
-        sceneEngine.camera,
-        sceneEngine.controls,
-        modelCenter,
-        cameraDistance,
-        () => sceneEngine.requestRender()
-    );
+    cameraViewController = new CameraViewController(sceneEngine.camera, sceneEngine.controls, modelCenter, cameraDistance, () => sceneEngine.requestRender());
 
     sceneEngine.start();
 
@@ -46,9 +37,7 @@ async function init3D() {
     sceneEngine.scene.add(modelRoot);
     sceneEngine.requestRender(); // el modelo recién agregado tiene que pintarse
 
-    partsController = new WrappedMovementPartController(modelRoot, () =>
-        sceneEngine.requestRender()
-    );
+    partsController = new WrappedMovementPartController(modelRoot, () => sceneEngine.requestRender());
 
     fitCameraToModel(modelRoot);
 
@@ -69,11 +58,7 @@ function fitCameraToModel(modelRoot) {
     cameraViewController.setDistance(cameraDistance);
     sceneEngine.controls.target.copy(modelCenter);
 
-    sceneEngine.camera.position.set(
-        modelCenter.x,
-        modelCenter.y,
-        modelCenter.z + cameraDistance
-    );
+    sceneEngine.camera.position.set(modelCenter.x, modelCenter.y, modelCenter.z + cameraDistance);
     sceneEngine.camera.lookAt(modelCenter);
     sceneEngine.controls.update();
     cameraViewController.syncLookAt(modelCenter); // evita el salto en el primer goTo() de la sesión
@@ -140,10 +125,7 @@ export function resetParts() {
  * @returns {AnimationBuilder}
  */
 export function animate(followWithCamera = false) {
-    return new AnimationBuilder(
-        partsController,
-        followWithCamera ? cameraViewController : null
-    );
+    return new AnimationBuilder(partsController, followWithCamera ? cameraViewController : null);
 }
 
 /**
@@ -157,11 +139,7 @@ export function animate(followWithCamera = false) {
  * @returns {Promise<void>} resuelve cuando termina toda la secuencia
  */
 export function playAnimation(animationName, followWithCamera = false) {
-    const builder = buildAnimation(
-        partsController,
-        animationName,
-        followWithCamera ? cameraViewController : null
-    );
+    const builder = buildAnimation(partsController, animationName, followWithCamera ? cameraViewController : null);
     return builder.execute();
 }
 

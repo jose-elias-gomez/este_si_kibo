@@ -1,10 +1,6 @@
 import { PACKET_ID, sendPacket, onConnect } from "../api/client.js";
 import { DEBUG_MODE } from "../api/common.js";
-import {
-    WHEEL_MOTOR_CONFIG,
-    MotorDirection,
-    PARTS_CONFIG,
-} from "./partsConfig.js";
+import { WHEEL_MOTOR_CONFIG, MotorDirection, PARTS_CONFIG } from "./partsConfig.js";
 
 // partName (tal como lo usa el modelo 3D / PARTS_CONFIG) -> nombre de
 // campo del packet MOVE_PART / respuesta de GET_PARTS.
@@ -59,31 +55,20 @@ class MovementController {
 
         onConnect()
             .then(() => this._fetchInitialAngles())
-            .catch((err) =>
-                console.error(
-                    "No se pudo obtener el estado inicial de las partes",
-                    err
-                )
-            );
+            .catch((err) => console.error("No se pudo obtener el estado inicial de las partes", err));
     }
 
     async _fetchInitialAngles() {
         try {
             const parts = await sendPacket({ id: PACKET_ID.GET_PARTS }, true);
             Object.entries(parts || {}).forEach(([field, value]) => {
-                const partName = Object.keys(PART_FIELD).find(
-                    (name) => PART_FIELD[name] === field
-                );
+                const partName = Object.keys(PART_FIELD).find((name) => PART_FIELD[name] === field);
                 if (partName) {
                     let degrees = value; // Valor que viene del HAL [0, 180]
                     const config = PARTS_CONFIG[partName];
 
                     // Mapeo dinámico inverso: transforma [0, 180] del HAL al rango [min, max]
-                    if (
-                        config &&
-                        typeof config.min === "number" &&
-                        typeof config.max === "number"
-                    ) {
+                    if (config && typeof config.min === "number" && typeof config.max === "number") {
                         const min = config.min;
                         const max = config.max;
 
@@ -100,10 +85,7 @@ class MovementController {
                 }
             });
         } catch (err) {
-            console.error(
-                "No se pudo obtener el estado inicial de las partes:",
-                err
-            );
+            console.error("No se pudo obtener el estado inicial de las partes:", err);
         }
     }
 
@@ -129,9 +111,7 @@ class MovementController {
      */
     setAngleForPart(partName, angleDegrees) {
         if (isWheelPart(partName)) {
-            console.warn(
-                `setAngleForPart no aplica a ${partName}: es un motor DC, usar runMotor/stopMotor`
-            );
+            console.warn(`setAngleForPart no aplica a ${partName}: es un motor DC, usar runMotor/stopMotor`);
             return;
         }
 
@@ -147,19 +127,13 @@ class MovementController {
 
         const config = PARTS_CONFIG[partName];
         if (!config) {
-            console.warn(
-                `Error en la configuracion (no existe la parte): ${partName}`
-            );
+            console.warn(`Error en la configuracion (no existe la parte): ${partName}`);
             return;
         }
 
         // Mapeo dinámico: transforma [min, max] de la config al rango del HAL [0, 180]
         let halAngle = angleDegrees;
-        if (
-            config &&
-            typeof config.min === "number" &&
-            typeof config.max === "number"
-        ) {
+        if (config && typeof config.min === "number" && typeof config.max === "number") {
             const min = config.min;
             const max = config.max;
 

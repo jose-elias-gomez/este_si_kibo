@@ -1,10 +1,6 @@
 import { selectPart, runMotor, stopMotor, playAnimation } from "./movement.js";
 import { setPartAngle, getPivotAngle } from "./movement.js";
-import {
-    MotorDirection,
-    NODE_LABELS,
-    PARTS_CONFIG,
-} from "../../../shared/js/movement/partsConfig.js";
+import { MotorDirection, NODE_LABELS, PARTS_CONFIG } from "../../../shared/js/movement/partsConfig.js";
 import { input, InputAction } from "../../../shared/js/inputController.js";
 
 let partButtonIndex = 2;
@@ -44,13 +40,9 @@ function setMotorRunning(isRunning, partName) {
     motorRun.classList.toggle("is-paused", isRunning);
     let direction;
     if (partName === "MotorLeft") {
-        direction = motorWidget.classList.contains("align-right")
-            ? MotorDirection.FORWARD
-            : MotorDirection.BACKWARD;
+        direction = motorWidget.classList.contains("align-right") ? MotorDirection.FORWARD : MotorDirection.BACKWARD;
     } else {
-        direction = motorWidget.classList.contains("align-right")
-            ? MotorDirection.BACKWARD
-            : MotorDirection.FORWARD;
+        direction = motorWidget.classList.contains("align-right") ? MotorDirection.BACKWARD : MotorDirection.FORWARD;
     }
     if (isRunning) {
         runMotor(partName, direction);
@@ -86,11 +78,7 @@ input.on(InputAction.DOWN, () => {
         InputAction.LEFT,
         () => {
             if (animationButtonIndex > 0) {
-                updateFocusedButton(
-                    animationButtons,
-                    animationButtonIndex,
-                    --animationButtonIndex
-                );
+                updateFocusedButton(animationButtons, animationButtonIndex, --animationButtonIndex);
             }
         },
         animationPanel.context
@@ -100,11 +88,7 @@ input.on(InputAction.DOWN, () => {
         InputAction.RIGHT,
         () => {
             if (animationButtonIndex < animationButtons.length - 1) {
-                updateFocusedButton(
-                    animationButtons,
-                    animationButtonIndex,
-                    ++animationButtonIndex
-                );
+                updateFocusedButton(animationButtons, animationButtonIndex, ++animationButtonIndex);
             }
         },
         animationPanel.context
@@ -130,11 +114,7 @@ input.on(InputAction.UP, () => {
         InputAction.LEFT,
         () => {
             if (partButtonIndex > 0) {
-                updateFocusedButton(
-                    partButtons,
-                    partButtonIndex,
-                    --partButtonIndex
-                );
+                updateFocusedButton(partButtons, partButtonIndex, --partButtonIndex);
             }
         },
         movementPanel.context
@@ -144,11 +124,7 @@ input.on(InputAction.UP, () => {
         InputAction.RIGHT,
         () => {
             if (partButtonIndex < partButtons.length - 1) {
-                updateFocusedButton(
-                    partButtons,
-                    partButtonIndex,
-                    ++partButtonIndex
-                );
+                updateFocusedButton(partButtons, partButtonIndex, ++partButtonIndex);
             }
         },
         movementPanel.context
@@ -186,10 +162,7 @@ input.on(InputAction.UP, () => {
                 input.on(
                     InputAction.CONFIRM,
                     () => {
-                        setMotorRunning(
-                            !motorRun.classList.contains("is-paused"),
-                            currentMotorPart
-                        );
+                        setMotorRunning(!motorRun.classList.contains("is-paused"), currentMotorPart);
                     },
                     "motor-run"
                 );
@@ -257,10 +230,7 @@ input.on(InputAction.UP, () => {
 // Listener global para volver a Home cuando estás en la sección principal
 input.on(InputAction.BACK, () => {
     // Si un panel está abierto, lo cierra en lugar de salir a Home
-    if (
-        movementPanel.classList.contains("open") ||
-        animationPanel.classList.contains("open")
-    ) {
+    if (movementPanel.classList.contains("open") || animationPanel.classList.contains("open")) {
         movementPanel.close();
         animationPanel.close();
         return;

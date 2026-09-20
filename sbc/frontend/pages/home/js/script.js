@@ -169,9 +169,7 @@ function renderItems() {
         card.style.backgroundColor = item.bg;
         card.style.width = isFocused ? `${large}px` : `${small}px`;
         card.style.opacity = isFocused ? "1" : "0.68";
-        card.style.boxShadow = isFocused
-            ? `0 20px 45px -12px ${item.glow}, 0 6px 16px rgba(0,0,0,0.18)`
-            : "0 6px 16px rgba(0,0,0,0.14)";
+        card.style.boxShadow = isFocused ? `0 20px 45px -12px ${item.glow}, 0 6px 16px rgba(0,0,0,0.18)` : "0 6px 16px rgba(0,0,0,0.14)";
 
         if (isFocused) wrapper.classList.add("is-focused");
 
@@ -246,10 +244,7 @@ function availableSliderHeight() {
     const sliderPadding = 64;
     const safetyMargin = 16;
 
-    return Math.max(
-        0,
-        consoleEl.clientHeight - reserved - sliderPadding - safetyMargin
-    );
+    return Math.max(0, consoleEl.clientHeight - reserved - sliderPadding - safetyMargin);
 }
 
 // ============================================================
@@ -282,9 +277,7 @@ function updateFocusStyles() {
         wrapper.classList.toggle("is-focused", isFocused);
         card.style.width = isFocused ? `${large}px` : `${small}px`;
         card.style.opacity = isFocused ? "1" : "0.68";
-        card.style.boxShadow = isFocused
-            ? `0 20px 45px -12px ${item.glow}, 0 6px 16px rgba(0,0,0,0.18)`
-            : "0 6px 16px rgba(0,0,0,0.14)";
+        card.style.boxShadow = isFocused ? `0 20px 45px -12px ${item.glow}, 0 6px 16px rgba(0,0,0,0.18)` : "0 6px 16px rgba(0,0,0,0.14)";
     });
 
     scrollToFocused(large, small);
@@ -298,8 +291,7 @@ function scrollToFocused(large, small, { instant = false } = {}) {
     const spacer = spacerEl ? spacerEl.offsetWidth : window.innerWidth / 2;
     const gap = 24;
 
-    const focusedCenter =
-        spacer + gap * (index + 1) + small * index + large / 2;
+    const focusedCenter = spacer + gap * (index + 1) + small * index + large / 2;
     const target = focusedCenter - scrollContainer.clientWidth / 2;
 
     scrollContainer.scrollTo({
@@ -352,9 +344,7 @@ function renderDots() {
 
 const brightness = document.getElementById("brightness");
 
-input.on(InputAction.RIGHT, () =>
-    navigate(Math.min(index + 1, currentItems().length - 1))
-);
+input.on(InputAction.RIGHT, () => navigate(Math.min(index + 1, currentItems().length - 1)));
 input.on(InputAction.LEFT, () => navigate(Math.max(index - 1, 0)));
 input.on(InputAction.DOWN, () => {
     if (mode === "apps") {

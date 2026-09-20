@@ -16,11 +16,7 @@
 //   await anim.execute();
 
 import { ANIMATIONS } from "./animations.js";
-import {
-    WHEEL_MOTOR_CONFIG,
-    WHEEL_MOTOR_SPEED_DEG_PER_SEC,
-    MotorDirection,
-} from "./partsConfig.js";
+import { WHEEL_MOTOR_CONFIG, WHEEL_MOTOR_SPEED_DEG_PER_SEC, MotorDirection } from "./partsConfig.js";
 
 // --- Timing del servo SG90 ---
 // Datasheet: ~0.1s por cada 60° a 4.8V (más lento a menor voltaje).
@@ -315,10 +311,7 @@ export class AnimationBuilder {
             // — eso ya lo hace partsController.runMotor() internamente
             // (forwardSign * directionSign). Hacerlo también acá
             // duplicaría el signo y giraría la rueda al revés de lo pedido.
-            const direction =
-                requestedSign >= 0
-                    ? MotorDirection.FORWARD
-                    : MotorDirection.BACKWARD;
+            const direction = requestedSign >= 0 ? MotorDirection.FORWARD : MotorDirection.BACKWARD;
 
             const durationMs = wheelDurationMs(angleDelta);
 
@@ -351,11 +344,7 @@ export class AnimationBuilder {
      * @returns {Promise<void>}
      */
     _runMoveGroup(group) {
-        return Promise.all(
-            group.steps.map((step) =>
-                this._runStep(step, group.repeat, group.yoyo)
-            )
-        ).then(() => {});
+        return Promise.all(group.steps.map((step) => this._runStep(step, group.repeat, group.yoyo))).then(() => {});
     }
 
     /**
@@ -382,11 +371,7 @@ export class AnimationBuilder {
  * .move()/.parallel()/.wait() según corresponda, sin motor nuevo.
  * @returns {AnimationBuilder}
  */
-export function buildAnimation(
-    partsController,
-    animationName,
-    cameraViewController = null
-) {
+export function buildAnimation(partsController, animationName, cameraViewController = null) {
     const steps = ANIMATIONS[animationName];
     if (!steps) {
         throw new Error(`Animación desconocida: "${animationName}"`);

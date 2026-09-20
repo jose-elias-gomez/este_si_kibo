@@ -66,14 +66,7 @@ import { getApiUrl } from "../../../shared/js/api/common.js";
      VALIDAR ELEMENTOS
      ========================================================= */
 
-    if (
-        !assistant ||
-        !micButton ||
-        !voiceLabel ||
-        !conversation ||
-        !statusText ||
-        !recordTimerBar
-    ) {
+    if (!assistant || !micButton || !voiceLabel || !conversation || !statusText || !recordTimerBar) {
         console.error("[ASSISTANT] Faltan elementos HTML necesarios.");
 
         return;
@@ -167,12 +160,9 @@ import { getApiUrl } from "../../../shared/js/api/common.js";
         try {
             console.log("[ASSISTANT] Iniciando grabación...");
 
-            const response = await fetch(
-                getApiUrl("assistant/start-recording"),
-                {
-                    method: "POST",
-                }
-            );
+            const response = await fetch(getApiUrl("assistant/start-recording"), {
+                method: "POST",
+            });
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -212,12 +202,9 @@ import { getApiUrl } from "../../../shared/js/api/common.js";
         try {
             console.log("[ASSISTANT] Deteniendo grabación...");
 
-            const response = await fetch(
-                getApiUrl("assistant/stop-recording"),
-                {
-                    method: "POST",
-                }
-            );
+            const response = await fetch(getApiUrl("assistant/stop-recording"), {
+                method: "POST",
+            });
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -233,10 +220,7 @@ import { getApiUrl } from "../../../shared/js/api/common.js";
         } catch (error) {
             console.error("[ASSISTANT] Error al detener grabación:", error);
 
-            addMessage(
-                "No pude enviar tu mensaje para procesarlo.",
-                "assistant"
-            );
+            addMessage("No pude enviar tu mensaje para procesarlo.", "assistant");
 
             setState("idle");
 
@@ -314,8 +298,7 @@ import { getApiUrl } from "../../../shared/js/api/common.js";
 
                 statusText.textContent = "Escuchando";
 
-                voiceLabel.textContent =
-                    "Hablá... tocá nuevamente para terminar";
+                voiceLabel.textContent = "Hablá... tocá nuevamente para terminar";
 
                 startAutoStopTimer();
 
@@ -385,9 +368,7 @@ import { getApiUrl } from "../../../shared/js/api/common.js";
         autoStopTimeoutId = setTimeout(() => {
             clearInterval(tick);
 
-            console.log(
-                "[ASSISTANT] Límite de 10s alcanzado, deteniendo automáticamente"
-            );
+            console.log("[ASSISTANT] Límite de 10s alcanzado, deteniendo automáticamente");
 
             stopRecording();
         }, MAX_RECORD_SECONDS * 1000);

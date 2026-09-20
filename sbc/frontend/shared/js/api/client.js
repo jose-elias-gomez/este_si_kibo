@@ -42,11 +42,7 @@ function scheduleReconnect() {
 }
 
 function connect() {
-    if (
-        socket &&
-        (socket.readyState === WebSocket.OPEN ||
-            socket.readyState === WebSocket.CONNECTING)
-    ) {
+    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
         return;
     }
 
@@ -67,11 +63,7 @@ function connect() {
         try {
             data = JSON.parse(event.data);
         } catch (err) {
-            console.error(
-                "[WS CLIENT] Mensaje no es JSON válido:",
-                event.data,
-                err
-            );
+            console.error("[WS CLIENT] Mensaje no es JSON válido:", event.data, err);
             return;
         }
 
@@ -92,29 +84,17 @@ function connect() {
 
             pendingRequests.delete(data.id);
 
-            console.log(
-                "[WS CLIENT] Resolviendo request:",
-                data.id,
-                data.payload ?? data
-            );
+            console.log("[WS CLIENT] Resolviendo request:", data.id, data.payload ?? data);
 
             resolve(data.payload ?? data);
         }
 
         // Broadcast / listeners
         if (data.id !== undefined && listeners.has(data.id)) {
-            console.log(
-                "[WS CLIENT] Ejecutando listeners para packet:",
-                data.id,
-                "listeners:",
-                listeners.get(data.id).size
-            );
+            console.log("[WS CLIENT] Ejecutando listeners para packet:", data.id, "listeners:", listeners.get(data.id).size);
 
             listeners.get(data.id).forEach((cb) => {
-                console.log(
-                    "[WS CLIENT] Ejecutando callback con:",
-                    data.payload ?? data
-                );
+                console.log("[WS CLIENT] Ejecutando callback con:", data.payload ?? data);
 
                 cb(data.payload ?? data);
             });
@@ -125,15 +105,11 @@ function connect() {
 
     socket.onclose = function () {
         stopHeartbeat();
-        pendingRequests.forEach(({ reject }) =>
-            reject(new Error("Websocket closed"))
-        );
+        pendingRequests.forEach(({ reject }) => reject(new Error("Websocket closed")));
         pendingRequests.clear();
         socket = null;
 
-        console.warn(
-            "[WS CLIENT] WebSocket desconectado. Programando reintento..."
-        );
+        console.warn("[WS CLIENT] WebSocket desconectado. Programando reintento...");
         scheduleReconnect();
     };
 
@@ -191,11 +167,7 @@ export function sendPacket(packet, receiveResponse = false, timeout = 5000) {
         }
 
         if (!socket || socket.readyState !== WebSocket.OPEN) {
-            return reject(
-                new Error(
-                    `Websocket not open. Current state: ${socket?.readyState}`
-                )
-            );
+            return reject(new Error(`Websocket not open. Current state: ${socket?.readyState}`));
         }
 
         const id = packet.id;
@@ -207,11 +179,7 @@ export function sendPacket(packet, receiveResponse = false, timeout = 5000) {
             const timer = setTimeout(() => {
                 if (pendingRequests.has(id)) {
                     pendingRequests.delete(id);
-                    reject(
-                        new Error(
-                            `Timeout for the packet: ${JSON.stringify(packet)}`
-                        )
-                    );
+                    reject(new Error(`Timeout for the packet: ${JSON.stringify(packet)}`));
                 }
             }, timeout);
 

@@ -54,8 +54,7 @@ let detailCleanup = null;
  */
 function renderHero() {
     heroTitleEl.textContent = "Abecedario";
-    heroMetaEl.textContent =
-        ABECEDARIO.length === 1 ? "1 seña" : `${ABECEDARIO.length} señas`;
+    heroMetaEl.textContent = ABECEDARIO.length === 1 ? "1 seña" : `${ABECEDARIO.length} señas`;
 }
 
 /**
@@ -138,9 +137,7 @@ function moveGrid(action) {
     if (ABECEDARIO.length === 0) return;
 
     const rows = getGridRows();
-    const currentRow = rows.findIndex((r) =>
-        r.indices.includes(state.cardIndex)
-    );
+    const currentRow = rows.findIndex((r) => r.indices.includes(state.cardIndex));
     const currentCol = rows[currentRow]?.indices.indexOf(state.cardIndex) ?? 0;
 
     let nextIndex = state.cardIndex;
@@ -156,18 +153,12 @@ function moveGrid(action) {
     } else if (action === InputAction.UP) {
         if (currentRow > 0) {
             const targetRow = rows[currentRow - 1];
-            nextIndex =
-                targetRow.indices[
-                    Math.min(currentCol, targetRow.indices.length - 1)
-                ];
+            nextIndex = targetRow.indices[Math.min(currentCol, targetRow.indices.length - 1)];
         }
     } else if (action === InputAction.DOWN) {
         if (currentRow < rows.length - 1) {
             const targetRow = rows[currentRow + 1];
-            nextIndex =
-                targetRow.indices[
-                    Math.min(currentCol, targetRow.indices.length - 1)
-                ];
+            nextIndex = targetRow.indices[Math.min(currentCol, targetRow.indices.length - 1)];
         }
     }
 
@@ -206,9 +197,7 @@ function openDetail() {
         input.on(
             InputAction.RIGHT,
             () => {
-                setFocusedCard(
-                    Math.min(ABECEDARIO.length - 1, state.cardIndex + 1)
-                );
+                setFocusedCard(Math.min(ABECEDARIO.length - 1, state.cardIndex + 1));
                 openDetail();
             },
             "LSA_DETAIL"

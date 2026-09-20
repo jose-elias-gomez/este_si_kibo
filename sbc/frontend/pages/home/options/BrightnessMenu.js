@@ -3,34 +3,31 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
 import { sendPacket, PACKET_ID } from "../../../shared/js/api/client.js";
 
 const headerTemplate = document.createElement("template");
-headerTemplate.innerHTML = `
-  <h1>Brillo</h1>
-`;
+headerTemplate.innerHTML = `<h1>Brillo</h1>`;
 
 const bodyTemplate = document.createElement("template");
 bodyTemplate.innerHTML = `
-  <style>
-    brightness-menu {
-      --popup-height: 60vh;
-      display: block;
-      height: 100%;
-    }
+    <style>
+        brightness-menu {
+            --popup-height: 60vh;
+            display: block;
+            height: 100%;
+        }
 
-    brightness-menu .brightness-content {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-      padding: 8px 0;
-      box-sizing: border-box;
-    }
+        brightness-menu .brightness-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 8px 0;
+            box-sizing: border-box;
+        }
+    </style>
 
-  </style>
-
-  <div class="brightness-content">
-    <range-slider min="30" max="100" value="80">Luminosidad</range-slider>
-  </div>
+    <div class="brightness-content">
+        <range-slider min="30" max="100" value="80">Luminosidad</range-slider>
+    </div>
 `;
 
 export class BrightnessMenu extends BasePopup {
@@ -80,13 +77,7 @@ export class BrightnessMenu extends BasePopup {
     }
 
     setupInputController() {
-        sendPacket(
-            { id: PACKET_ID.SYSTEM_OPTION, context: "get_brightness" },
-            true
-        ).then(
-            (response) =>
-                (this.querySelector("range-slider").value = parseInt(response))
-        );
+        sendPacket({ id: PACKET_ID.SYSTEM_OPTION, context: "get_brightness" }, true).then((response) => (this.querySelector("range-slider").value = parseInt(response)));
 
         input.on(InputAction.LEFT, () => this._step(-1), this.context);
         input.on(InputAction.RIGHT, () => this._step(1), this.context);

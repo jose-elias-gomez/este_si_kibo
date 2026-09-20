@@ -1,220 +1,209 @@
-/**
- * <wifi-menu> Web Component
- * Encapsula la interfaz de usuario del menú Wi-Fi, listas de redes,
- * animaciones de expansión de opciones y control mediante teclado/controlador.
- */
-
 import { input, InputAction } from "../../../shared/js/inputController.js";
 import { BasePopup } from "../../../shared/components/BasePopup.js";
-import {
-    listWifiNetworks,
-    connectToNetwork,
-    disconnectFromNetwork,
-} from "../../../shared/js/api/wifi.js";
+import { listWifiNetworks, connectToNetwork, disconnectFromNetwork } from "../../../shared/js/api/wifi.js";
 
-// Contenido que se proyecta en el slot="header" del BasePopup
 const headerTemplate = document.createElement("template");
 headerTemplate.innerHTML = `
-  <h1>Wi-Fi</h1>
-  <switch-toggle id="autoConnectToggle" checked></switch-toggle>
+    <h1>Wi-Fi</h1>
+    <switch-toggle id="autoConnectToggle" checked></switch-toggle>
 `;
 
-// Contenido que se proyecta en el slot por defecto (popup-body) del BasePopup
 const bodyTemplate = document.createElement("template");
 bodyTemplate.innerHTML = `
-  <style>
-    /* Estos estilos viven en el light DOM de <wifi-menu>, por lo que
-       aplican al contenido proyectado dentro de los slots del BasePopup. */
+    <style>
+        /* Estos estilos viven en el light DOM de <wifi-menu>, por lo que
+        aplican al contenido proyectado dentro de los slots del BasePopup. */
 
-    wifi-menu [slot="header"] {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-    }
+        wifi-menu [slot="header"] {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
 
-    /* Lista de redes */
-    wifi-menu .wifi-list {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
+        /* Lista de redes */
+        wifi-menu .wifi-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
 
-    /* Card de cada red */
-    wifi-menu .wifi-card {
-      border-radius: var(--radius-xl, 16px);
-      background-color: transparent;
-      padding: 32px;
-      transition:
-        background-color var(--duration-medium, 0.3s) ease,
-        transform var(--duration-fast, 0.15s) ease;
-    }
+        /* Card de cada red */
+        wifi-menu .wifi-card {
+            border-radius: var(--radius-xl, 16px);
+            background-color: transparent;
+            padding: 32px;
+            transition:
+                background-color var(--duration-medium, 0.3s) ease,
+                transform var(--duration-fast, 0.15s) ease;
+        }
 
-    wifi-menu .wifi-card header {
-      position: relative;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-    }
+        wifi-menu .wifi-card header {
+            position: relative;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
 
-    wifi-menu .wifi-card.hovered {
-      background-color: rgba(255, 255, 255, 0.03);
-    }
+        wifi-menu .wifi-card.hovered {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
 
-    wifi-menu .wifi-card.selected {
-      background-color: var(--color-highlight, rgba(255, 255, 255, 0.08));
-    }
+        wifi-menu .wifi-card.selected {
+            background-color: var(--color-highlight, rgba(255, 255, 255, 0.08));
+        }
 
-    wifi-menu .wifi-card.selected .wifi-icon-wrapper {
-      transition: transform var(--duration-medium, 0.15s) ease;
-    }
+        wifi-menu .wifi-card.selected .wifi-icon-wrapper {
+            transition: transform var(--duration-medium, 0.15s) ease;
+        }
 
-    wifi-menu .wifi-card.selected .ssid {
-      transition: color var(--duration-medium, 0.15s) ease;
-    }
+        wifi-menu .wifi-card.selected .ssid {
+            transition: color var(--duration-medium, 0.15s) ease;
+        }
 
-    /* Panel de opciones: sistema de expansión animado con grid-template-rows */
-    wifi-menu .wifi-options {
-      display: grid;
-      grid-template-rows: 0fr;
-      opacity: 0;
-      margin-top: 0;
-      transition:
-        grid-template-rows var(--duration-medium, 0.15s) ease,
-        opacity var(--duration-medium, 0.15s) ease,
-        margin-top var(--duration-medium, 0.15s) ease;
-    }
+        /* Panel de opciones: sistema de expansión animado con grid-template-rows */
+        wifi-menu .wifi-options {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            margin-top: 0;
+            transition:
+                grid-template-rows var(--duration-medium, 0.15s) ease,
+                opacity var(--duration-medium, 0.15s) ease,
+                margin-top var(--duration-medium, 0.15s) ease;
+        }
 
-    wifi-menu .wifi-options.expanded {
-      grid-template-rows: 1fr;
-      opacity: 1;
-      margin-top: 16px;
-    }
+        wifi-menu .wifi-options.expanded {
+            grid-template-rows: 1fr;
+            opacity: 1;
+            margin-top: 16px;
+        }
 
-    wifi-menu .wifi-options-inner {
-      overflow: hidden;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
+        wifi-menu .wifi-options-inner {
+            overflow: hidden;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
 
-    wifi-menu .active {
-      margin-bottom: 32px;
-    }
+        wifi-menu .active {
+            margin-bottom: 32px;
+        }
 
-    wifi-menu .wifi-password {
-      width: 100%;
-    }
+        wifi-menu .wifi-password {
+            width: 100%;
+        }
 
-    wifi-menu .wifi-icon-wrapper {
-      position: relative;
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 16px;
-      flex-shrink: 0;
-    }
+        wifi-menu .wifi-icon-wrapper {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
 
-    wifi-menu .wifi-icon-bg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0.25;
-    }
+        wifi-menu .wifi-icon-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.25;
+        }
 
-    wifi-menu .wifi-icon-bars {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
+        wifi-menu .wifi-icon-bars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
 
-    wifi-menu .wifi-info {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      overflow: hidden;
-    }
+        wifi-menu .wifi-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
 
-    wifi-menu .wifi-info .ssid {
-      font-size: var(--font-size-xl, 1rem);
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: var(--color-text, #ffffff);
-    }
+        wifi-menu .wifi-info .ssid {
+            font-size: var(--font-size-xl, 1rem);
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--color-text, #ffffff);
+        }
 
-    wifi-menu .wifi-info .status {
-      font-size: var(--font-size-lg, 0.75rem);
-      color: var(--color-enabled, #4caf50);
-      opacity: 0.7;
-      margin-top: 2px;
-      font-weight: 400;
-    }
+        wifi-menu .wifi-info .status {
+            font-size: var(--font-size-lg, 0.75rem);
+            color: var(--color-enabled, #4caf50);
+            opacity: 0.7;
+            margin-top: 2px;
+            font-weight: 400;
+        }
 
-    wifi-menu h2 {
-      font-size: var(--font-size-lg, 1.1rem);
-      font-weight: 600;
-      margin: 16px 0 8px 0;
-    }
+        wifi-menu h2 {
+            font-size: var(--font-size-lg, 1.1rem);
+            font-weight: 600;
+            margin: 16px 0 8px 0;
+        }
 
-    wifi-menu .connect-btn {
-      align-self: flex-end;
-      margin-top: 16px;
-    }
+        wifi-menu .connect-btn {
+            align-self: flex-end;
+            margin-top: 16px;
+        }
 
-    wifi-menu #disable-wifi-content,
-    wifi-menu #content {
-      transition: opacity var(--duration-medium, 0.3s) ease;
-    }
+        wifi-menu #disable-wifi-content,
+        wifi-menu #content {
+            transition: opacity var(--duration-medium, 0.3s) ease;
+        }
 
-    wifi-menu #disable-wifi-content[hidden],
-    wifi-menu #content[hidden] {
-      display: none !important;
-    }
+        wifi-menu #disable-wifi-content[hidden],
+        wifi-menu #content[hidden] {
+            display: none !important;
+        }
 
-    wifi-menu #disable-wifi-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      gap: 16px;
-      width: 100%;
-      height: 100%;
-    }
+        wifi-menu #disable-wifi-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 16px;
+            width: 100%;
+            height: 100%;
+        }
 
-    wifi-menu #disable-wifi-content img {
-      width: 256px;
-      height: 256px;
-    }
-    wifi-menu #disable-wifi-content h2 {
-      font-size: 3rem;
-    }
-  </style>
+        wifi-menu #disable-wifi-content img {
+            width: 256px;
+            height: 256px;
+        }
 
-  <div id="disable-wifi-content" hidden>
-    <img src="../../shared/assets/wifi/off.svg" alt="Wi-Fi desactivado">
-    <h2>Wi-Fi desactivado</h2>
-  </div>
+        wifi-menu #disable-wifi-content h2 {
+            font-size: 3rem;
+        }
+    </style>
 
-  <section id="content">
-    <h2>Red actual</h2>
-    <article class="wifi-card active" hidden></article>
+    <div id="disable-wifi-content" hidden>
+        <img src="../../shared/assets/wifi/off.svg" alt="Wi-Fi desactivado">
+        <h2>Wi-Fi desactivado</h2>
+    </div>
 
-    <h2>Redes disponibles</h2>
-    <ul class="wifi-list"></ul>
-  </section>
+    <section id="content">
+        <h2>Red actual</h2>
+        <article class="wifi-card active" hidden></article>
+
+        <h2>Redes disponibles</h2>
+        <ul class="wifi-list"></ul>
+    </section>
 `;
 
 export class WifiMenu extends BasePopup {
@@ -278,9 +267,7 @@ export class WifiMenu extends BasePopup {
     }
 
     getWifiCards() {
-        return Array.from(this.querySelectorAll(".wifi-card")).filter(
-            (card) => !card.hidden
-        );
+        return Array.from(this.querySelectorAll(".wifi-card")).filter((card) => !card.hidden);
     }
 
     _signalIcon(signal) {
@@ -292,23 +279,20 @@ export class WifiMenu extends BasePopup {
 
     _activeCardHTML(network) {
         const icon = this._signalIcon(network.signal);
-        const statusText =
-            network.security === "OPEN" ? "Conectada" : "Conectada, segura";
+        const statusText = network.security === "OPEN" ? "Conectada" : "Conectada, segura";
 
         return `
-      <header>
-        <div class="wifi-icon-wrapper" data-signal="${icon}">
-          <img class="wifi-icon-bg" src="../../shared/assets/wifi/${icon}.svg" alt="Señal base">
-          <img class="wifi-icon-bars" src="../../shared/assets/wifi/${icon}.svg" alt="Barras de señal">
-        </div>
-
-        <div class="wifi-info">
-          <span class="ssid">${network.ssid}</span>
-          <span class="status">${statusText}</span>
-        </div>
-
-        <generic-btn class="disconnect-btn">Desconectar</generic-btn>
-      </header>
+        <header>
+            <div class="wifi-icon-wrapper" data-signal="${icon}">
+                <img class="wifi-icon-bg" src="../../shared/assets/wifi/${icon}.svg" alt="Señal base">
+                <img class="wifi-icon-bars" src="../../shared/assets/wifi/${icon}.svg" alt="Barras de señal">
+            </div>
+            <div class="wifi-info">
+                <span class="ssid">${network.ssid}</span>
+                <span class="status">${statusText}</span>
+            </div>
+            <generic-btn class="disconnect-btn">Desconectar</generic-btn>
+        </header>
     `;
     }
 
@@ -322,25 +306,25 @@ export class WifiMenu extends BasePopup {
          <generic-btn class="connect-btn">Conectar</generic-btn>`;
 
         return `
-      <li class="wifi-card">
-        <header>
-          <div class="wifi-icon-wrapper" data-signal="${icon}">
-            <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
-            <img class="wifi-icon-bars" src="../../shared/assets/wifi/${icon}.svg" alt="Barras de señal">
-          </div>
+        <li class="wifi-card">
+            <header>
+            <div class="wifi-icon-wrapper" data-signal="${icon}">
+                <img class="wifi-icon-bg" src="../../shared/assets/wifi/full.svg" alt="Señal base">
+                <img class="wifi-icon-bars" src="../../shared/assets/wifi/${icon}.svg" alt="Barras de señal">
+            </div>
 
-          <div class="wifi-info">
-            <span class="ssid">${network.ssid}</span>
-            <span class="status">${statusText}</span>
-          </div>
-        </header>
+            <div class="wifi-info">
+                <span class="ssid">${network.ssid}</span>
+                <span class="status">${statusText}</span>
+            </div>
+            </header>
 
-        <div class="wifi-options" hidden>
-          <div class="wifi-options-inner">
-            ${optionsInner}
-          </div>
-        </div>
-      </li>
+            <div class="wifi-options" hidden>
+                <div class="wifi-options-inner">
+                    ${optionsInner}
+                </div>
+            </div>
+        </li>
     `;
     }
 
@@ -361,8 +345,7 @@ export class WifiMenu extends BasePopup {
         if (this._activeCard) {
             if (activeNetwork) {
                 this._activeCard.hidden = false;
-                this._activeCard.innerHTML =
-                    this._activeCardHTML(activeNetwork);
+                this._activeCard.innerHTML = this._activeCardHTML(activeNetwork);
             } else {
                 this._activeCard.hidden = true;
                 this._activeCard.innerHTML = "";
@@ -370,9 +353,7 @@ export class WifiMenu extends BasePopup {
         }
 
         if (this._wifiListEl) {
-            this._wifiListEl.innerHTML = availableNetworks
-                .map((network) => this._availableCardHTML(network))
-                .join("");
+            this._wifiListEl.innerHTML = availableNetworks.map((network) => this._availableCardHTML(network)).join("");
         }
 
         this.clearSelection();
@@ -423,8 +404,7 @@ export class WifiMenu extends BasePopup {
 
         requestAnimationFrame(() => {
             const rect = focusEl.getBoundingClientRect();
-            const fullyVisible =
-                rect.top >= 0 && rect.bottom <= window.innerHeight;
+            const fullyVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
             if (!fullyVisible) {
                 focusEl.scrollIntoView({
                     block: "nearest",
@@ -472,9 +452,7 @@ export class WifiMenu extends BasePopup {
                     disconnectBtn.click();
                     disconnectFromNetwork()
                         .then(() => this.loadNetworks())
-                        .catch((error) =>
-                            console.error("Error al desconectar Wi-Fi:", error)
-                        );
+                        .catch((error) => console.error("Error al desconectar Wi-Fi:", error));
                 }
             },
             context
@@ -495,12 +473,7 @@ export class WifiMenu extends BasePopup {
 
             connectToNetwork(ssid, password || null)
                 .then(() => this.loadNetworks())
-                .catch((error) =>
-                    console.error(
-                        `Error al conectar a la red "${ssid}":`,
-                        error
-                    )
-                );
+                .catch((error) => console.error(`Error al conectar a la red "${ssid}":`, error));
 
             if (passwordContainer) {
                 passwordContainer.text = "";

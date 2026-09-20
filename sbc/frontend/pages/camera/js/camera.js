@@ -27,10 +27,7 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
 
     async function startCamera() {
         try {
-            if (
-                !navigator.mediaDevices ||
-                !navigator.mediaDevices.getUserMedia
-            ) {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 console.error("[CAMERA] getUserMedia no está disponible.");
 
                 return;

@@ -254,10 +254,7 @@ player.addEventListener("timeupdate", () => {
 timeTrack.addEventListener("click", (e) => {
     if (!player.duration) return;
     const rect = timeTrack.getBoundingClientRect();
-    const ratio = Math.min(
-        Math.max((e.clientX - rect.left) / rect.width, 0),
-        1
-    );
+    const ratio = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
     player.currentTime = ratio * player.duration;
 });
 

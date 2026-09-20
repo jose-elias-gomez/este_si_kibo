@@ -15,126 +15,151 @@ class SidePanel extends HTMLElement {
 
         const shadow = this.attachShadow({ mode: "open" });
         shadow.innerHTML = `
-      <style>
-        :host {
-          display: contents;
-          font-family: var(--font-body);
-        }
-        .popup-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding-bottom: 16px;
-          flex-shrink: 0; /* Evita que el header se aplaste si hay mucho contenido */
-        }
+        <style>
+            :host { 
+                display: contents;
+                font-family: var(--font-body);
+            }
 
-        .popup-header h1 {
-          margin: 0;
-          font-size: var(--font-size-2xl, 1.5rem);
-          font-weight: 600;
-        }
+            .popup-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding-bottom: 16px;
+                flex-shrink: 0;
+            }
 
-        .overlay {
-          position: fixed;
-          inset: 0;
-          background: var(--overlay-backdrop);
-          opacity: 0;
-          z-index: 999;
-          pointer-events: none;
-          transition:
-            transform var(--duration-medium, 0.2s) var(--ease-panel, ease),
-            opacity var(--duration-medium, 0.2s) var(--ease-panel, ease);
-        }
-        .overlay.is-open {
-          opacity: 1;
-          pointer-events: auto;
-        }
+            .popup-header h1 {
+                margin: 0;
+                font-size: var(--font-size-2xl, 1.5rem);
+                font-weight: 600;
+            }
 
-        .panel {
-          position: fixed;
-          background: var(--color-bg);
-          z-index: 1000;
-          display: flex;
-          flex-direction: column;
-          pointer-events: none;
-          transition:
-            transform var(--duration-medium, 0.2s) var(--ease-panel, ease),
-            opacity var(--duration-medium, 0.2s) var(--ease-panel, ease);
-        }
+            .overlay {
+                position: fixed;
+                inset: 0;
+                background: var(--overlay-backdrop);
+                opacity: 0;
+                z-index: 999;
+                pointer-events: none;
+                transition:
+                    transform var(--duration-medium, 0.2s) var(--ease-panel, ease),
+                    opacity var(--duration-medium, 0.2s) var(--ease-panel, ease);
+            }
 
-        .panel.is-open {
-          pointer-events: auto;
-        }
+            .overlay.is-open {
+                opacity: 1;
+                pointer-events: auto;
+            }
 
-        .header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 1.5rem 1.75rem 0.75rem;
-          font-family: var(--font-ui, sans-serif);
-          flex-shrink: 0;
-        }
-        .title {
-          font-size: 1.1rem;
-          font-weight: 600;
-          margin: 0;
-          color: var(--color-h1);
-          font-size: var(--font-size-xxl);
-          letter-spacing: 0.1rem;
-        }
+            .panel {
+                position: fixed;
+                background: var(--color-bg);
+                z-index: 1000;
+                display: flex;
+                flex-direction: column;
+                pointer-events: none;
+                transition:
+                    transform var(--duration-medium, 0.2s) var(--ease-panel, ease),
+                    opacity var(--duration-medium, 0.2s) var(--ease-panel, ease);
+            }
 
-        .body {
-          padding-top: 0.75rem;
-          overflow-y: auto;
-          flex: 1;
-        }
+            .panel.is-open {
+                pointer-events: auto;
+            }
 
-        .panel.left {
-          top: 0; left: 0; height: 100vh;
-          width: min(420px, 88vw);
-          border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
-          transform: translateX(-105%);
-        }
-        .panel.left.is-open { transform: translateX(0); }
+            .header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 1.5rem 1.75rem 0.75rem;
+                font-family: var(--font-ui, sans-serif);
+                flex-shrink: 0;
+            }
 
-        .panel.right {
-          top: 0; right: 0; height: 100vh;
-          width: min(420px, 88vw);
-          border-radius: var(--radius-xl) 0 0 var(--radius-xl);
-          transform: translateX(105%);
-        }
-        .panel.right.is-open { transform: translateX(0); }
+            .title {
+                font-size: 1.1rem;
+                font-weight: 600;
+                margin: 0;
+                color: var(--color-h1);
+                font-size: var(--font-size-xxl);
+                letter-spacing: 0.1rem;
+            }
 
-        .panel.top {
-          top: 0; left: 0; width: 100vw;
-          height: min(420px, 88vh);
-          border-radius: 0 0 var(--radius-xl) var(--radius-xl);
-          transform: translateY(-105%);
-        }
-        .panel.top.is-open { transform: translateY(0); }
+            .body {
+                padding-top: 0.75rem;
+                overflow-y: auto;
+                flex: 1;
+            }
 
-        .panel.bottom {
-          bottom: 0; left: 0; width: 100vw;
-          height: min(420px, 88vh);
-          border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-          transform: translateY(105%);
-        }
-        .panel.bottom.is-open { transform: translateY(0); }
+            .panel.left {
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: min(420px, 88vw);
+                border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+                transform: translateX(-105%);
+            }
 
-        @media (max-width: 640px) {
-          :host { --radius-xl: 2rem; }
-        }
-      </style>
+            .panel.left.is-open {
+                transform: translateX(0);
+            }
 
-      <div class="overlay" part="overlay"></div>
-      <div class="panel" part="panel">
-        <div class="header">
-          <h2 class="title" part="title"></h2>
+            .panel.right {
+                top: 0;
+                right: 0;
+                height: 100vh;
+                width: min(420px, 88vw);
+                border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+                transform: translateX(105%);
+            }
+
+            .panel.right.is-open {
+                transform: translateX(0);
+            }
+
+            .panel.top {
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: min(420px, 88vh);
+                border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+                transform: translateY(-105%);
+            }
+
+            .panel.top.is-open {
+                transform: translateY(0);
+            }
+
+            .panel.bottom {
+                bottom: 0;
+                left: 0;
+                width: 100vw;
+                height: min(420px, 88vh);
+                border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+                transform: translateY(105%);
+            }
+
+            .panel.bottom.is-open {
+                transform: translateY(0);
+            }
+
+            @media (max-width: 640px) {
+                :host {
+                    --radius-xl: 2rem;
+                }
+            }
+        </style>
+
+        <div class="overlay" part="overlay"></div>
+        <div class="panel" part="panel">
+            <div class="header">
+                <h2 class="title" part="title"></h2>
+            </div>
+            <div class="body" part="body">
+                <slot></slot>
+            </div>
         </div>
-        <div class="body" part="body">
-          <slot></slot>
-        </div>
-      </div>
     `;
 
         this._overlay = shadow.querySelector(".overlay");
@@ -146,7 +171,6 @@ class SidePanel extends HTMLElement {
         this._applySide();
         this._applyTitle();
 
-        // aria + estado inicial: totalmente oculto e inerte para el teclado/lectores
         this._panel.setAttribute("role", "dialog");
         this._panel.setAttribute("aria-modal", "true");
         this._panel.inert = true;
@@ -162,11 +186,7 @@ class SidePanel extends HTMLElement {
     }
 
     _applySide() {
-        const side = ["left", "right", "top", "bottom"].includes(
-            this.getAttribute("side")
-        )
-            ? this.getAttribute("side")
-            : "right";
+        const side = ["left", "right", "top", "bottom"].includes(this.getAttribute("side")) ? this.getAttribute("side") : "right";
         this._panel.classList.remove("left", "right", "top", "bottom");
         this._panel.classList.add(side);
     }

@@ -7,12 +7,7 @@ export class SceneEngine {
         this.container = container;
 
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(
-            45,
-            container.clientWidth / container.clientHeight,
-            0.1,
-            1000
-        );
+        this.camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
         this.camera.position.set(0, 1.5, 3.5);
 
         this.renderer = new THREE.WebGLRenderer({
@@ -28,10 +23,7 @@ export class SceneEngine {
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         container.appendChild(this.renderer.domElement);
 
-        this.controls = new THREE.OrbitControls(
-            this.camera,
-            this.renderer.domElement
-        );
+        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableRotate = false;
         this.controls.enableZoom = false;
         this.controls.enablePan = false;

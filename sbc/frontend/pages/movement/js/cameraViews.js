@@ -98,20 +98,12 @@ export class CameraViewController {
                 break;
             case CameraView.LEFT: {
                 const wheelDistance = this.distance * this.wheelZoomRatio;
-                targetPos.set(
-                    isWheel ? x - wheelDistance : x - this.distance,
-                    isWheel ? y - this.distance * this.wheelHeightDropRatio : y,
-                    z
-                );
+                targetPos.set(isWheel ? x - wheelDistance : x - this.distance, isWheel ? y - this.distance * this.wheelHeightDropRatio : y, z);
                 break;
             }
             case CameraView.RIGHT: {
                 const wheelDistance = this.distance * this.wheelZoomRatio;
-                targetPos.set(
-                    isWheel ? x + wheelDistance : x + this.distance,
-                    isWheel ? y - this.distance * this.wheelHeightDropRatio : y,
-                    z
-                );
+                targetPos.set(isWheel ? x + wheelDistance : x + this.distance, isWheel ? y - this.distance * this.wheelHeightDropRatio : y, z);
                 break;
             }
             default:

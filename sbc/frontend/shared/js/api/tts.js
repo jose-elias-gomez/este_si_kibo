@@ -17,9 +17,7 @@ async function handleResponse(response) {
             // response body wasn't JSON
         }
         const detail = payload?.detail;
-        const message =
-            detail?.message ||
-            `TTS request failed with status ${response.status}`;
+        const message = detail?.message || `TTS request failed with status ${response.status}`;
         throw new TtsApiError(message, detail?.detail);
     }
     return response.json();
@@ -37,9 +35,7 @@ export function speak(text) {
         body: JSON.stringify({ text: text }),
     }).then((response) => {
         if (!response.ok) {
-            throw new Error(
-                `TTS request failed with status ${response.status}`
-            );
+            throw new Error(`TTS request failed with status ${response.status}`);
         }
         return response.json();
     });

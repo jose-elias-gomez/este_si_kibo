@@ -54,10 +54,7 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
             console.log("[TRANSLATOR] Solicitando cámara...");
             if (signalLabel) signalLabel.textContent = "Solicitando acceso…";
 
-            if (
-                !navigator.mediaDevices ||
-                !navigator.mediaDevices.getUserMedia
-            ) {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 throw new Error("getUserMedia no está disponible");
             }
 
@@ -95,8 +92,7 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
                         signalLabel.textContent = "La cámara está siendo usada";
                         break;
                     default:
-                        signalLabel.textContent =
-                            "No se pudo acceder a la cámara";
+                        signalLabel.textContent = "No se pudo acceder a la cámara";
                 }
             }
         }
@@ -114,9 +110,7 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
         canvasContext = canvas.getContext("2d", { alpha: false });
 
         if (!canvasContext) {
-            console.error(
-                "[TRANSLATOR] No se pudo crear el contexto del canvas."
-            );
+            console.error("[TRANSLATOR] No se pudo crear el contexto del canvas.");
             return;
         }
 
@@ -148,10 +142,7 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
                 socket.onerror = null;
                 socket.onclose = null;
 
-                if (
-                    socket.readyState === WebSocket.OPEN ||
-                    socket.readyState === WebSocket.CONNECTING
-                ) {
+                if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
                     socket.close(1000, "Salida del módulo");
                 }
             } catch (error) {
@@ -214,11 +205,7 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
      ========================================================= */
 
     function connectSocket() {
-        if (
-            socket &&
-            (socket.readyState === WebSocket.OPEN ||
-                socket.readyState === WebSocket.CONNECTING)
-        ) {
+        if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
             return;
         }
 
@@ -261,8 +248,7 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
         if (data.type !== "prediction") return;
 
         if (data.prediction) showSign(data.prediction);
-        if (data.confirmed && data.confirmed_letter)
-            showSign(data.confirmed_letter);
+        if (data.confirmed && data.confirmed_letter) showSign(data.confirmed_letter);
         if (typeof data.word === "string") updateWord(data.word);
     }
 
@@ -290,14 +276,7 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
     function sendFrame() {
         if (!sendingFrames) return;
 
-        if (
-            !mediaStream ||
-            !socketReady ||
-            !socket ||
-            socket.readyState !== WebSocket.OPEN ||
-            !canvas ||
-            !canvasContext
-        ) {
+        if (!mediaStream || !socketReady || !socket || socket.readyState !== WebSocket.OPEN || !canvas || !canvasContext) {
             scheduleNextFrame();
             return;
         }
@@ -310,13 +289,7 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
         frameProcessing = true;
 
         try {
-            canvasContext.drawImage(
-                cameraFeed,
-                0,
-                0,
-                FRAME_WIDTH,
-                FRAME_HEIGHT
-            );
+            canvasContext.drawImage(cameraFeed, 0, 0, FRAME_WIDTH, FRAME_HEIGHT);
 
             canvas.toBlob(
                 (blob) => {
@@ -325,18 +298,11 @@ import { input, InputAction } from "../../../shared/js/inputController.js";
                         return;
                     }
 
-                    if (
-                        blob &&
-                        socket &&
-                        socket.readyState === WebSocket.OPEN
-                    ) {
+                    if (blob && socket && socket.readyState === WebSocket.OPEN) {
                         try {
                             socket.send(blob);
                         } catch (error) {
-                            console.error(
-                                "[TRANSLATOR] Error enviando frame:",
-                                error
-                            );
+                            console.error("[TRANSLATOR] Error enviando frame:", error);
                         }
                     }
 

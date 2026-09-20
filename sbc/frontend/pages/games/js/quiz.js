@@ -50,12 +50,7 @@ const QUESTIONS = [
     },
     {
         q: "¿Cuál es el libro más vendido de la historia después de la Biblia?",
-        options: [
-            "El Señor de los Anillos",
-            "Don Quijote de la Mancha",
-            "Harry Potter",
-            "El Principito",
-        ],
+        options: ["El Señor de los Anillos", "Don Quijote de la Mancha", "Harry Potter", "El Principito"],
         correct: 1,
     },
     {
@@ -140,9 +135,7 @@ export function mountQuiz(container, exitToMenu) {
 
     function renderSelection() {
         const opts = optionsEl.querySelectorAll(".quiz-option");
-        opts.forEach((opt, i) =>
-            opt.classList.toggle("selected", i === cursor && !answered)
-        );
+        opts.forEach((opt, i) => opt.classList.toggle("selected", i === cursor && !answered));
     }
 
     function selectAnswer(i) {
@@ -206,10 +199,7 @@ export function mountQuiz(container, exitToMenu) {
         InputAction.DOWN,
         () => {
             if (!answered && !finished) {
-                cursor = Math.min(
-                    cursor + 1,
-                    QUESTIONS[currentQ].options.length - 1
-                );
+                cursor = Math.min(cursor + 1, QUESTIONS[currentQ].options.length - 1);
                 renderSelection();
             }
         },

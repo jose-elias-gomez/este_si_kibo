@@ -27,9 +27,7 @@ async function handleResponse(response) {
             // response body wasn't JSON
         }
         const detail = payload?.detail;
-        const message =
-            detail?.message ||
-            `Wifi request failed with status ${response.status}`;
+        const message = detail?.message || `Wifi request failed with status ${response.status}`;
         throw new WifiApiError(message, detail?.detail);
     }
     return response.json();
@@ -37,21 +35,12 @@ async function handleResponse(response) {
 
 export function listWifiNetworks() {
     if (DEBUG_MODE) {
-        return Promise.resolve([
-            new WifiNetwork("Network 1", 10, "OPEN", false),
-            new WifiNetwork("Network 2", 30, "WPA2-Personal", false),
-            new WifiNetwork("Network 3", 60, "WPA2-Personal", false),
-            new WifiNetwork("Network 4", 90, "WPA3-Personal", true),
-        ]);
+        return Promise.resolve([new WifiNetwork("Network 1", 10, "OPEN", false), new WifiNetwork("Network 2", 30, "WPA2-Personal", false), new WifiNetwork("Network 3", 60, "WPA2-Personal", false), new WifiNetwork("Network 4", 90, "WPA3-Personal", true)]);
     }
 
     return fetch(getApiUrl("networks"))
         .then(handleResponse)
-        .then((networks) =>
-            networks.map(
-                (n) => new WifiNetwork(n.ssid, n.signal, n.security, n.in_use)
-            )
-        )
+        .then((networks) => networks.map((n) => new WifiNetwork(n.ssid, n.signal, n.security, n.in_use)))
         .catch((error) => {
             console.error("Error fetching Wi-Fi networks:", error);
             throw error;
@@ -83,10 +72,7 @@ export function connectToNetwork(ssid, password = null) {
     })
         .then(handleResponse)
         .catch((error) => {
-            console.error(
-                `Error connecting to Wi-Fi network "${ssid}":`,
-                error
-            );
+            console.error(`Error connecting to Wi-Fi network "${ssid}":`, error);
             throw error;
         });
 }

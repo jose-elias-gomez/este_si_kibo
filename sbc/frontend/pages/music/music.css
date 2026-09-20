@@ -241,20 +241,8 @@
     gap: 1.6rem;
     padding: 34vh var(--space-lg);
     scroll-behavior: smooth;
-    -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0%,
-        black 18%,
-        black 82%,
-        transparent 100%
-    );
-    mask-image: linear-gradient(
-        to bottom,
-        transparent 0%,
-        black 18%,
-        black 82%,
-        transparent 100%
-    );
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
 }
 
 .lyrics-stage::-webkit-scrollbar {

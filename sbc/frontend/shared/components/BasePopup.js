@@ -136,11 +136,7 @@ export class BasePopup extends HTMLElement {
     close() {
         if (this.context && this._inputContextActive) {
             this._inputContextActive = false;
-            while (
-                input.contextStack.length > 1 &&
-                (input.activeContext === this.context ||
-                    input.activeContext.startsWith(`${this.context}-`))
-            ) {
+            while (input.contextStack.length > 1 && (input.activeContext === this.context || input.activeContext.startsWith(`${this.context}-`))) {
                 input.popContext();
             }
         }
@@ -149,8 +145,7 @@ export class BasePopup extends HTMLElement {
         this._cancelPendingClose();
 
         this._onCloseEnd = (e) => {
-            if (e.propertyName !== "transform" && e.propertyName !== "opacity")
-                return;
+            if (e.propertyName !== "transform" && e.propertyName !== "opacity") return;
             this.dialog.close();
             this._cancelPendingClose();
         };

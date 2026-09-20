@@ -22,47 +22,48 @@ const template = document.createElement("template");
 template.innerHTML = `
   <style>
     /* :host actúa además como [popover]: usamos el popover API nativo
-       ("manual", controlado a mano vía showPopover()/hidePopover()) para
-       que el navegador promueva el elemento al top layer del documento.
-       Eso lo saca de cualquier stacking context local y garantiza que
-       quede por encima de <dialog> (incluso <dialog> modales), sin
-       tener que pelear con z-index. */
+    ("manual", controlado a mano vía showPopover()/hidePopover()) para
+    que el navegador promueva el elemento al top layer del documento.
+    Eso lo saca de cualquier stacking context local y garantiza que
+    quede por encima de <dialog> (incluso <dialog> modales), sin
+    tener que pelear con z-index. */
+    
     :host {
-      /* Reseteamos los estilos que el UA aplica por default a
-         [popover] (margin: auto, position: fixed centrado, border,
-         etc.) para no pisar nuestro propio layout. */
-      margin: 0;
-      border: none;
-      inset: auto;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      height: 60vh;
-      width: 100%;
-      background-color: #d7d7d7;
-      border-top-left-radius: 3rem;
-      border-top-right-radius: 3rem;
-      padding: 24px 30px;
-      padding-top: 16px;
-      gap: var(--space-xs);
-      box-sizing: border-box;
-      font-family: var(--font-body);
-      font-size: 1.5rem;
-      font-weight: 400;
+        /* Reseteamos los estilos que el UA aplica por default a
+            [popover] (margin: auto, position: fixed centrado, border,
+            etc.) para no pisar nuestro propio layout. */
+        margin: 0;
+        border: none;
+        inset: auto;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 60vh;
+        width: 100%;
+        background-color: #d7d7d7;
+        border-top-left-radius: 3rem;
+        border-top-right-radius: 3rem;
+        padding: 24px 30px;
+        padding-top: 16px;
+        gap: var(--space-xs);
+        box-sizing: border-box;
+        font-family: var(--font-body);
+        font-size: 1.5rem;
+        font-weight: 400;
 
-      --capslock-color: rgba(0, 0, 0, 0.2);
+        --capslock-color: rgba(0, 0, 0, 0.2);
 
-      /* Estado base: siempre arranca corrido fuera de pantalla.
-         Esto es lo que se ve mientras el host no tiene "hidden" pero
-         tampoco tiene la clase "open" (por ejemplo, justo al abrir,
-         durante un frame, antes de animar hacia arriba). */
-      transform: translateY(100%);
+        /* Estado base: siempre arranca corrido fuera de pantalla.
+            Esto es lo que se ve mientras el host no tiene "hidden" pero
+            tampoco tiene la clase "open" (por ejemplo, justo al abrir,
+            durante un frame, antes de animar hacia arriba). */
+        transform: translateY(100%);
 
-      /* Transición para la animación de abrir y cerrar */
-      transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+        /* Transición para la animación de abrir y cerrar */
+        transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
     }
 
     /* Nota: ya NO dependemos de [hidden] para el estado oculto. El
@@ -74,64 +75,64 @@ template.innerHTML = `
        JS ahora tiene cuidado de sacar "hidden" al abrir para que no
        quede compitiendo con la promoción a top layer (ver open()). */
     :host([hidden]) {
-      display: none;
+        display: none;
     }
 
     /* Estado Visible */
     :host(.open) {
-      transform: translateY(0);
+        transform: translateY(0);
     }
 
     /* El contenedor no debería generar caja propia: las filas deben
        comportarse como hijos flex directos del host (mismo layout que
        antes, cuando las filas eran hijas directas de .keyboard). */
     #container {
-      display: contents;
+        display: contents;
     }
 
     .row {
-      display: flex;
-      justify-content: center;
-      align-items: stretch;
-      gap: var(--space-xs);
-      width: 80%;
-      height: 100%;
-      margin: 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        gap: var(--space-xs);
+        width: 80%;
+        height: 100%;
+        margin: 0 auto;
     }
 
     .bottom-row {
-      width: 100%;
-      border-top: 2px solid rgba(0, 0, 0, 0.05);
-      padding-top: 16px;
-      padding-left: 8px;
-      padding-right: 8px;
+        width: 100%;
+        border-top: 2px solid rgba(0, 0, 0, 0.05);
+        padding-top: 16px;
+        padding-left: 8px;
+        padding-right: 8px;
     }
 
     .key {
-      flex: 1;
-      display: flex;
-      align-items: flex-start;
-      background-color: #fafafa;
-      color: #707070;
-      padding-top: 4px;
-      padding-left: 12px;
-      border-radius: 1rem;
-      text-align: left;
-      user-select: none;
-      box-shadow: 0px 4px 0px rgba(0, 0, 0, 0.1);
-      box-sizing: border-box;
-      position: relative;
-      font-size: 1.5rem;
-      cursor: pointer;
+        flex: 1;
+        display: flex;
+        align-items: flex-start;
+        background-color: #fafafa;
+        color: #707070;
+        padding-top: 4px;
+        padding-left: 12px;
+        border-radius: 1rem;
+        text-align: left;
+        user-select: none;
+        box-shadow: 0px 4px 0px rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
+        position: relative;
+        font-size: 1.5rem;
+        cursor: pointer;
 
-      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+        transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     .key.selected {
-      background-color: rgba(0, 0, 0, 0.08);
-      color: #444444;
-      transform: translateY(-4px);
-      z-index: 10;
+        background-color: rgba(0, 0, 0, 0.08);
+        color: #444444;
+        transform: translateY(-4px);
+        z-index: 10;
     }
 
     /* Animación de presión: se dispara al agregar la clase "pressed"
@@ -143,46 +144,46 @@ template.innerHTML = `
        + transition sobre la misma propiedad es lo que producía el
        flicker al cambiar de tecla/página). */
     .key.pressed {
-      transform: scale(0.8);
-      background-color: rgba(0, 0, 0, 0.3);
-      box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.4);
+        transform: scale(0.8);
+        background-color: rgba(0, 0, 0, 0.3);
+        box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.4);
     }
 
     /* Si la tecla presionada también está "seleccionada" (navegación
        por mando), combinamos su desplazamiento hacia arriba con el
        escalado, en vez de que uno pise al otro. */
     .key.selected.pressed {
-      transform: translateY(-4px) scale(0.8);
+        transform: translateY(-4px) scale(0.8);
     }
 
     .space {
-      flex: 4 !important;
+        flex: 4 !important;
     }
 
     .capslock,
     .enter {
-      flex: 2 !important;
+        flex: 2 !important;
     }
 
     .delete {
-      flex: 1.5 !important;
+        flex: 1.5 !important;
     }
 
     /* Tecla de alternar página (letras <-> números/símbolos) */
     .page-toggle {
-      flex: 1.4 !important;
-      font-weight: bold;
+        flex: 1.4 !important;
+        font-weight: bold;
     }
 
     .capslock::after {
-      content: "";
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 10px;
-      height: 10px;
-      background-color: var(--capslock-color);
-      border-radius: 50%;
+        content: "";
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 10px;
+        height: 10px;
+        background-color: var(--capslock-color);
+        border-radius: 50%;
     }
   </style>
   <div id="container"></div>
@@ -250,9 +251,7 @@ export class VirtualKeyboard extends HTMLElement {
     }
 
     clearSelection() {
-        this.keyMatrix
-            .flat()
-            .forEach((el) => el && el.classList.remove("selected"));
+        this.keyMatrix.flat().forEach((el) => el && el.classList.remove("selected"));
     }
 
     applySelection() {
@@ -306,25 +305,13 @@ export class VirtualKeyboard extends HTMLElement {
         if (deltaCol !== 0) {
             const row = this.keyMatrix[this.selectedRow];
             if (!row) return;
-            this.selectedCol = this.clamp(
-                this.selectedCol + deltaCol,
-                0,
-                row.length - 1
-            );
+            this.selectedCol = this.clamp(this.selectedCol + deltaCol, 0, row.length - 1);
         }
 
         if (deltaRow !== 0) {
-            const newRow = this.clamp(
-                this.selectedRow + deltaRow,
-                0,
-                this.keyMatrix.length - 1
-            );
+            const newRow = this.clamp(this.selectedRow + deltaRow, 0, this.keyMatrix.length - 1);
             if (newRow !== this.selectedRow) {
-                this.selectedCol = this.proportionalCol(
-                    this.selectedRow,
-                    newRow,
-                    this.selectedCol
-                );
+                this.selectedCol = this.proportionalCol(this.selectedRow, newRow, this.selectedCol);
                 this.selectedRow = newRow;
             }
         }
@@ -454,8 +441,7 @@ export class VirtualKeyboard extends HTMLElement {
         // hidePopover() (que equivale a "display: none") cortaría la
         // transición a mitad de camino y se vería un salto.
         this._onTransitionEnd = (event) => {
-            if (event.target !== this || event.propertyName !== "transform")
-                return;
+            if (event.target !== this || event.propertyName !== "transform") return;
             this.removeEventListener("transitionend", this._onTransitionEnd);
             this._onTransitionEnd = null;
             this.hidePopoverSafe();
@@ -506,10 +492,7 @@ export class VirtualKeyboard extends HTMLElement {
                 // En la página de letras respetamos el estado de Mayúsculas activo.
                 const rawChar = layout[i][j];
                 const isLetter = this.page === 0 && /[a-zA-ZñÑ]/.test(rawChar);
-                key.textContent =
-                    isLetter && this.isCapsLockOn
-                        ? rawChar.toUpperCase()
-                        : rawChar;
+                key.textContent = isLetter && this.isCapsLockOn ? rawChar.toUpperCase() : rawChar;
 
                 key.addEventListener("click", () => {
                     this.flashKey(key);
@@ -540,29 +523,18 @@ export class VirtualKeyboard extends HTMLElement {
             const capslockKey = document.createElement("div");
             capslockKey.classList.add("key", "capslock");
             capslockKey.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" style="width:25px;height:25px;fill:#707070;shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 200 200"><path d="M61.8 148.97l76.4 0c6,0 10.91,4.9 10.91,10.9l0 27.24c0,5.99 -4.91,10.89 -10.91,10.89l-76.4 0c-6,0 -10.91,-4.9 -10.91,-10.89l0 -27.24c0,-6 4.91,-10.9 10.91,-10.9zm105.7 -60.38l-18.39 0 0 37.36c0,5.99 -4.91,10.89 -10.91,10.89l-76.4 0c-6,0 -10.91,-4.9 -10.91,-10.89l0 -37.36 -18.39 0c-2.65,0 -4.91,-1.47 -5.97,-3.89 -1.07,-2.42 -0.63,-5.08 1.16,-7.02l67.5 -73.57c1.28,-1.39 2.91,-2.11 4.81,-2.11 1.9,0 3.53,0.72 4.81,2.11l67.5 73.57c1.79,1.94 2.23,4.6 1.16,7.02 -1.06,2.42 -3.32,3.89 -5.97,3.89z"></path></svg>`;
-            capslockKey.style.setProperty(
-                "--capslock-color",
-                this.isCapsLockOn ? "#5decaa" : "rgba(0, 0, 0, 0.2)"
-            );
+            capslockKey.style.setProperty("--capslock-color", this.isCapsLockOn ? "#5decaa" : "rgba(0, 0, 0, 0.2)");
             bottomRow.appendChild(capslockKey);
             bottomRowKeys.push(capslockKey);
             capslockKey.addEventListener("click", () => {
                 this.flashKey(capslockKey);
                 this.isCapsLockOn = !this.isCapsLockOn;
-                capslockKey.style.setProperty(
-                    "--capslock-color",
-                    this.isCapsLockOn ? "#5decaa" : "rgba(0, 0, 0, 0.2)"
-                );
+                capslockKey.style.setProperty("--capslock-color", this.isCapsLockOn ? "#5decaa" : "rgba(0, 0, 0, 0.2)");
 
                 const keys = this.container.querySelectorAll(".key");
                 keys.forEach((key) => {
-                    if (
-                        key.textContent.length === 1 &&
-                        /[a-zA-ZñÑ]/.test(key.textContent)
-                    ) {
-                        key.textContent = this.isCapsLockOn
-                            ? key.textContent.toUpperCase()
-                            : key.textContent.toLowerCase();
+                    if (key.textContent.length === 1 && /[a-zA-ZñÑ]/.test(key.textContent)) {
+                        key.textContent = this.isCapsLockOn ? key.textContent.toUpperCase() : key.textContent.toLowerCase();
                     }
                 });
             });

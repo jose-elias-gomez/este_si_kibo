@@ -1,51 +1,47 @@
 <!doctype html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Musica</title>
-        <link rel="stylesheet" href="../../shared/css/global.css" />
-        <link rel="stylesheet" href="music.css" />
-        <script src="js/music-player.js" type="module" defer></script>
-    </head>
-    <body>
-        <div id="app">
-            <section id="carousel-view" class="view is-active">
-                <div class="carousel-stage">
-                    <div class="carousel-track" id="carouselTrack"></div>
-                </div>
-            </section>
 
-            <section id="player-view" class="view">
-                <div class="karaoke">
-                    <div class="karaoke-header">
-                        <img
-                            id="playerCover"
-                            class="mini-cover"
-                            src=""
-                            alt=""
-                        />
-                        <div class="mini-meta">
-                            <div id="playerTitle" class="mini-title"></div>
-                            <div id="playerAuthor" class="mini-author"></div>
-                        </div>
-                    </div>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Musica</title>
+    <link rel="stylesheet" href="../../shared/css/global.css" />
+    <link rel="stylesheet" href="music.css" />
+    <script src="js/music-player.js" type="module" defer></script>
+</head>
 
-                    <div class="lyrics-stage" id="lyricsStage"></div>
+<body>
+    <div id="app">
+        <section id="carousel-view" class="view is-active">
+            <div class="carousel-stage">
+                <div class="carousel-track" id="carouselTrack"></div>
+            </div>
+        </section>
 
-                    <div class="time-bar">
-                        <span id="curTime" class="time-label">0:00</span>
-                        <div class="time-track" id="timeTrack">
-                            <div class="time-fill" id="timeFill"></div>
-                        </div>
-                        <span id="durTime" class="time-label time-label--end"
-                            >0:00</span
-                        >
+        <section id="player-view" class="view">
+            <div class="karaoke">
+                <div class="karaoke-header">
+                    <img id="playerCover" class="mini-cover" src="" alt="" />
+                    <div class="mini-meta">
+                        <div id="playerTitle" class="mini-title"></div>
+                        <div id="playerAuthor" class="mini-author"></div>
                     </div>
                 </div>
 
-                <audio id="player"></audio>
-            </section>
-        </div>
-    </body>
+                <div class="lyrics-stage" id="lyricsStage"></div>
+
+                <div class="time-bar">
+                    <span id="curTime" class="time-label">0:00</span>
+                    <div class="time-track" id="timeTrack">
+                        <div class="time-fill" id="timeFill"></div>
+                    </div>
+                    <span id="durTime" class="time-label time-label--end">0:00</span>
+                </div>
+            </div>
+
+            <audio id="player"></audio>
+        </section>
+    </div>
+</body>
+
 </html>

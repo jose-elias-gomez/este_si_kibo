@@ -5,12 +5,7 @@ body {
     height: 100%;
     overflow: hidden;
 
-    background: radial-gradient(
-        circle at center,
-        #102027 0%,
-        #071015 45%,
-        #020607 100%
-    );
+    background: radial-gradient(circle at center, #102027 0%, #071015 45%, #020607 100%);
 
     font-family: "Fredoka", sans-serif;
     color: white;
@@ -170,11 +165,7 @@ canvas {
     border: 1px solid rgba(100, 230, 220, 0.45);
     border-radius: 16px;
 
-    background: linear-gradient(
-        135deg,
-        rgba(50, 160, 160, 0.18),
-        rgba(30, 80, 90, 0.1)
-    );
+    background: linear-gradient(135deg, rgba(50, 160, 160, 0.18), rgba(30, 80, 90, 0.1));
 
     color: white;
 
