@@ -4,7 +4,11 @@ import {
 } from "../../../shared/js/inputController.js";
 
 import {
-  DEBUG_MODE,
+  PACKET_ID,
+  onPacket
+} from "../../../shared/js/api/client.js";
+
+import {
   getApiUrl
 } from "../../../shared/js/api/common.js";
 
@@ -20,6 +24,19 @@ import {
 
   const CONTEXT = "ASSISTANT";
 
+  // Debe coincidir con MAX_RECORD_SECONDS del backend (AssistantRecorder).
+  const MAX_RECORD_SECONDS = 10;
+
+  /*
+   * El backend responde "processing" apenas encola el pipeline
+   * (STT -> LLM -> TTS); todavia no hay un endpoint/aviso de cuando
+   * termina. Este timeout es solo una red de seguridad para que el
+   * micro no quede bloqueado para siempre si algo falla.
+   * TODO: reemplazar por polling a un endpoint de estado o por un
+   * evento (websocket/SSE) que avise cuando el TTS termino de hablar.
+   */
+  const PROCESSING_SAFETY_TIMEOUT_MS = 20000;
+
 
   /* =========================================================
      ELEMENTOS
@@ -34,6 +51,9 @@ import {
   const voiceLabel =
     document.getElementById("voiceLabel");
 
+  const voiceHint =
+    document.getElementById("voiceHint");
+
   const conversation =
     document.getElementById("conversation");
 
@@ -43,18 +63,28 @@ import {
   const statusText =
     document.getElementById("statusText");
 
+  const recordTimerBar =
+    document.getElementById("recordTimerBar");
+
 
   /* =========================================================
      ESTADO
      ========================================================= */
 
-  let mediaRecorder = null;
-  let mediaStream = null;
-  let audioChunks = [];
+  // "idle" | "starting" | "recording" | "processing"
+  let state = "idle";
 
-  let isRecording = false;
-  let isProcessing = false;
-  let isStarting = false;
+  let autoStopTimeoutId = null;
+  let processingSafetyTimeoutId = null;
+
+  onPacket(
+    PACKET_ID.ASSISTANT_RESPONSE,
+    (data) => {
+      console.log("[ASSISTANT] Respuesta del asistente:", data);
+      setState("idle");
+      addMessage(data.text, "assistant");
+    }
+  );
 
 
   /* =========================================================
@@ -66,7 +96,8 @@ import {
     !micButton ||
     !voiceLabel ||
     !conversation ||
-    !statusText
+    !statusText ||
+    !recordTimerBar
   ) {
 
     console.error(
@@ -79,39 +110,12 @@ import {
 
 
   /* =========================================================
-     SOPORTE DEL MICRÓFONO
-     ========================================================= */
-
-  if (
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices.getUserMedia
-  ) {
-
-    statusText.textContent =
-      "No disponible";
-
-    voiceLabel.textContent =
-      "El navegador no permite usar el micrófono.";
-
-    micButton.disabled = true;
-
-    return;
-
-  }
-
-
-  /* =========================================================
      TOGGLE GRABACIÓN
      ========================================================= */
 
   function toggleRecording() {
 
-    /*
-     * Si está procesando la respuesta del asistente,
-     * no hacemos nada.
-     */
-
-    if (isProcessing) {
+    if (state === "processing") {
 
       console.log(
         "[ASSISTANT] Todavía procesando..."
@@ -121,40 +125,23 @@ import {
 
     }
 
-
-    /*
-     * Si todavía está solicitando el micrófono,
-     * ignoramos otro Enter/click.
-     */
-
-    if (isStarting) {
+    if (state === "starting") {
 
       console.log(
-        "[ASSISTANT] Esperando micrófono..."
+        "[ASSISTANT] Esperando confirmación de inicio..."
       );
 
       return;
 
     }
 
-
-    /*
-     * Si está grabando, el mismo botón/Enter
-     * detiene la grabación.
-     */
-
-    if (isRecording) {
+    if (state === "recording") {
 
       stopRecording();
 
       return;
 
     }
-
-
-    /*
-     * Si no está grabando, comienza.
-     */
 
     startRecording();
 
@@ -213,14 +200,11 @@ import {
 
     () => {
 
-      if (isRecording) {
+      if (state === "recording") {
 
         stopRecording();
 
       }
-
-
-      stopMediaTracks();
 
 
       input.popContext();
@@ -242,217 +226,71 @@ import {
 
   async function startRecording() {
 
-    if (
-      isProcessing ||
-      isStarting ||
-      isRecording
-    ) {
+    if (state !== "idle") {
 
       return;
 
     }
 
-
-    isStarting = true;
-
+    setState("starting");
 
     try {
 
       console.log(
-        "[ASSISTANT] Solicitando micrófono..."
+        "[ASSISTANT] Iniciando grabación..."
       );
 
+      const response =
+        await fetch(
+          getApiUrl("assistant/start-recording"),
+          {
+            method: "POST"
+          }
+        );
 
-      mediaStream =
-        await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: false
-        });
+      if (!response.ok) {
 
-
-      audioChunks = [];
-
-
-      /* =====================================================
-         MIME TYPE
-         ===================================================== */
-
-      let mimeType = "";
-
-
-      if (
-        MediaRecorder.isTypeSupported(
-          "audio/webm;codecs=opus"
-        )
-      ) {
-
-        mimeType =
-          "audio/webm;codecs=opus";
-
-      } else if (
-        MediaRecorder.isTypeSupported(
-          "audio/webm"
-        )
-      ) {
-
-        mimeType =
-          "audio/webm";
-
-      } else if (
-        MediaRecorder.isTypeSupported(
-          "audio/ogg;codecs=opus"
-        )
-      ) {
-
-        mimeType =
-          "audio/ogg;codecs=opus";
+        throw new Error(
+          `HTTP ${response.status}`
+        );
 
       }
 
-
-      /* =====================================================
-         MEDIA RECORDER
-         ===================================================== */
-
-      mediaRecorder = mimeType
-        ? new MediaRecorder(
-            mediaStream,
-            {
-              mimeType
-            }
-          )
-        : new MediaRecorder(
-            mediaStream
-          );
-
-
-      /* =====================================================
-         DATOS DEL AUDIO
-         ===================================================== */
-
-      mediaRecorder.ondataavailable =
-        (event) => {
-
-          if (
-            event.data &&
-            event.data.size > 0
-          ) {
-
-            audioChunks.push(
-              event.data
-            );
-
-          }
-
-        };
-
-
-      /* =====================================================
-         STOP
-         ===================================================== */
-
-      mediaRecorder.onstop =
-        async () => {
-
-          console.log(
-            "[ASSISTANT] MediaRecorder terminó."
-          );
-
-
-          stopMediaTracks();
-
-
-          const actualMimeType =
-            mediaRecorder.mimeType ||
-            "audio/webm";
-
-
-          const audioBlob =
-            new Blob(
-              audioChunks,
-              {
-                type: actualMimeType
-              }
-            );
-
-
-          console.log(
-            "[ASSISTANT] Audio grabado:",
-            audioBlob.size,
-            "bytes"
-          );
-
-
-          /*
-           * Ya no necesitamos mantener el recorder.
-           */
-
-          mediaRecorder = null;
-
-
-          if (audioBlob.size === 0) {
-
-            isProcessing = false;
-
-            setIdle();
-
-            return;
-
-          }
-
-
-          await sendAudio(
-            audioBlob
-          );
-
-        };
-
-
-      /* =====================================================
-         START
-         ===================================================== */
-
-      mediaRecorder.start();
-
-
-      isRecording = true;
-      isStarting = false;
-
-
-      assistant.classList.add(
-        "is-listening"
-      );
-
-
-      statusText.textContent =
-        "Escuchando";
-
-
-      voiceLabel.textContent =
-        "Hablá... tocá nuevamente para terminar";
-
+      const data =
+        await response.json();
 
       console.log(
-        "[ASSISTANT] Grabación iniciada"
+        "[ASSISTANT] start-recording:",
+        data
       );
 
+      if (
+        data.status &&
+        data.status !== "recording"
+      ) {
+
+        // p. ej. "already_recording": alguien más ya inició una grabación.
+        throw new Error(
+          data.status
+        );
+
+      }
+
+      setState("recording");
 
     } catch (error) {
 
       console.error(
-        "[ASSISTANT] Error de micrófono:",
+        "[ASSISTANT] Error al iniciar grabación:",
         error
       );
 
+      addMessage(
+        "No pude iniciar la grabación.",
+        "assistant"
+      );
 
-      stopMediaTracks();
-
-
-      isRecording = false;
-      isStarting = false;
-
-
-      setIdle();
+      setState("idle");
 
     }
 
@@ -463,258 +301,80 @@ import {
      DETENER GRABACIÓN
      ========================================================= */
 
-  function stopRecording() {
+  async function stopRecording() {
 
-    if (!mediaRecorder) {
-
+    if (state !== "recording") {
       return;
-
     }
 
-
-    if (
-      mediaRecorder.state === "inactive"
-    ) {
-
-      return;
-
-    }
-
-
-    /*
-     * BLOQUEAMOS INMEDIATAMENTE.
-     *
-     * Antes isProcessing se activaba recién cuando
-     * sendAudio() comenzaba. Ahora queda bloqueado
-     * desde el mismo Enter que detiene la grabación.
-     */
-
-    isRecording = false;
-    isProcessing = true;
-
-
-    assistant.classList.remove(
-      "is-listening"
-    );
-
-
-    statusText.textContent =
-      "Procesando";
-
-
-    voiceLabel.textContent =
-      "Procesando tu mensaje...";
-
-
-    console.log(
-      "[ASSISTANT] Grabación detenida"
-    );
-
-
-    /*
-     * Detenemos el MediaRecorder.
-     *
-     * Esto dispara onstop(), que después enviará
-     * el audio al backend.
-     */
-
-    mediaRecorder.stop();
-
-  }
-
-
-  /* =========================================================
-     DETENER TRACKS
-     ========================================================= */
-
-  function stopMediaTracks() {
-
-    if (!mediaStream) {
-
-      return;
-
-    }
-
-
-    mediaStream
-      .getTracks()
-      .forEach(
-        (track) => {
-
-          track.stop();
-
-        }
-      );
-
-
-    mediaStream = null;
-
-  }
-
-
-  /* =========================================================
-     ENVIAR AUDIO
-     ========================================================= */
-
-  async function sendAudio(
-    audioBlob
-  ) {
-
-    /*
-     * isProcessing ya se activa en stopRecording().
-     */
-
-    isProcessing = true;
-
+    // Bloqueamos de inmediato para evitar dobles clicks.
+    setState("processing");
 
     try {
 
-      const formData =
-        new FormData();
-
-
-      formData.append(
-        "audio",
-        audioBlob,
-        "voice.webm"
-      );
-
-
-      const apiUrl =
-        getApiUrl(
-          "assistant/talk"
-        );
-
-
       console.log(
-        "[ASSISTANT] Enviando audio a:",
-        apiUrl
+        "[ASSISTANT] Deteniendo grabación..."
       );
-
 
       const response =
         await fetch(
-          apiUrl,
+          getApiUrl("assistant/stop-recording"),
           {
-            method: "POST",
-            body: formData
+            method: "POST"
           }
         );
-
-
-      console.log(
-        "[ASSISTANT] Respuesta HTTP:",
-        response.status
-      );
-
 
       if (!response.ok) {
 
-        let errorMessage =
-          "Error procesando el audio.";
-
-
-        try {
-
-          const errorData =
-            await response.json();
-
-
-          if (
-            typeof errorData.detail ===
-            "string"
-          ) {
-
-            errorMessage =
-              errorData.detail;
-
-          } else if (
-            errorData.detail?.message
-          ) {
-
-            errorMessage =
-              errorData.detail.message;
-
-          }
-
-        } catch (_) {}
-
-
         throw new Error(
-          errorMessage
+          `HTTP ${response.status}`
         );
 
       }
-
 
       const data =
         await response.json();
 
-
       console.log(
-        "[ASSISTANT] Respuesta backend:",
+        "[ASSISTANT] stop-recording:",
         data
       );
 
-
-      /* =====================================================
-         TRANSCRIPCIÓN
-         ===================================================== */
-
-      if (
-        data.transcription
-      ) {
-
-        addMessage(
-          data.transcription,
-          "user"
-        );
-
-      }
-
-
-      /* =====================================================
-         RESPUESTA
-         ===================================================== */
-
-      if (
-        data.reply
-      ) {
-
-        addMessage(
-          data.reply,
-          "assistant"
-        );
-
-      }
-
-
-      setIdle();
-
+      // El pipeline STT -> LLM -> TTS corre en un thread aparte del
+      // backend; por ahora solo confirmamos que quedó encolado.
+      // El propio TTS es el que reproduce la respuesta.
 
     } catch (error) {
 
       console.error(
-        "[ASSISTANT] Error:",
+        "[ASSISTANT] Error al detener grabación:",
         error
       );
 
-
       addMessage(
-        error.message ||
-        "No pude procesar tu mensaje.",
+        "No pude enviar tu mensaje para procesarlo.",
         "assistant"
       );
 
+      setState("idle");
 
-      setIdle();
-
-
-    } finally {
-
-      isProcessing = false;
+      return;
 
     }
+
+    // Red de seguridad: si nunca sabemos que terminó, volvemos a "idle".
+    processingSafetyTimeoutId = setTimeout(
+      () => {
+
+        if (state === "processing") {
+
+          setState("idle");
+
+        }
+
+      },
+      PROCESSING_SAFETY_TIMEOUT_MS
+    );
 
   }
 
@@ -784,43 +444,239 @@ import {
 
 
   /* =========================================================
-     ESTADO IDLE
+     MÁQUINA DE ESTADOS VISUAL
      ========================================================= */
 
-  function setIdle() {
+  function setState(next) {
 
-    isRecording = false;
-    isProcessing = false;
-    isStarting = false;
+    state = next;
 
+    clearAutoStopTimer();
+
+    if (next !== "processing") {
+
+      clearProcessingSafetyTimer();
+
+    }
 
     assistant.classList.remove(
-      "is-listening"
+      "is-listening",
+      "is-processing"
     );
 
+    micButton.disabled = false;
 
-    statusText.textContent =
-      "Listo";
+    switch (next) {
 
+      case "starting": {
 
-    voiceLabel.textContent =
-      "Tocá para hablar";
+        statusText.textContent =
+          "Conectando";
+
+        voiceLabel.textContent =
+          "Activando micrófono...";
+
+        micButton.disabled = true;
+
+        break;
+
+      }
+
+      case "recording": {
+
+        assistant.classList.add(
+          "is-listening"
+        );
+
+        statusText.textContent =
+          "Escuchando";
+
+        voiceLabel.textContent =
+          "Hablá... tocá nuevamente para terminar";
+
+        startAutoStopTimer();
+
+        break;
+
+      }
+
+      case "processing": {
+
+        assistant.classList.add(
+          "is-processing"
+        );
+
+        statusText.textContent =
+          "Procesando";
+
+        voiceLabel.textContent =
+          "Procesando tu mensaje...";
+
+        micButton.disabled = true;
+
+        resetTimerBar();
+
+        break;
+
+      }
+
+      default: {
+
+        statusText.textContent =
+          "Listo";
+
+        voiceLabel.textContent =
+          "Tocá para hablar";
+
+        if (voiceHint) {
+
+          voiceHint.textContent =
+            "Voz · máx. 10s";
+
+        }
+
+        resetTimerBar();
+
+        break;
+
+      }
+
+    }
 
   }
 
 
   /* =========================================================
-     LIMPIAR AL SALIR
+     LÍMITE DE 10s (auto-stop + barra visual)
      ========================================================= */
 
-  window.addEventListener(
-    "beforeunload",
-    () => {
+  function startAutoStopTimer() {
 
-      stopMediaTracks();
+    resetTimerBar();
+
+    // Fuerza reflow para que la transición de scaleX(1) -> scaleX(0) corra.
+    void recordTimerBar.offsetWidth;
+
+    recordTimerBar.classList.add(
+      "is-counting"
+    );
+
+    let secondsLeft = MAX_RECORD_SECONDS;
+
+    if (voiceHint) {
+
+      voiceHint.textContent =
+        `Se corta en ${secondsLeft}s`;
 
     }
-  );
+
+    const tick = setInterval(
+      () => {
+
+        secondsLeft -= 1;
+
+        if (voiceHint && secondsLeft > 0) {
+
+          voiceHint.textContent =
+            `Se corta en ${secondsLeft}s`;
+
+        }
+
+        if (secondsLeft <= 0) {
+
+          clearInterval(tick);
+
+        }
+
+      },
+      1000
+    );
+
+    autoStopTimeoutId = setTimeout(
+      () => {
+
+        clearInterval(tick);
+
+        console.log(
+          "[ASSISTANT] Límite de 10s alcanzado, deteniendo automáticamente"
+        );
+
+        stopRecording();
+
+      },
+      MAX_RECORD_SECONDS * 1000
+    );
+
+    // Guardamos el interval para poder limpiarlo si se corta antes.
+    autoStopTimeoutId = {
+      timeout: autoStopTimeoutId,
+      interval: tick
+    };
+
+  }
+
+  function clearAutoStopTimer() {
+
+    if (!autoStopTimeoutId) {
+
+      return;
+
+    }
+
+    if (typeof autoStopTimeoutId === "object") {
+
+      clearTimeout(autoStopTimeoutId.timeout);
+      clearInterval(autoStopTimeoutId.interval);
+
+    } else {
+
+      clearTimeout(autoStopTimeoutId);
+
+    }
+
+    autoStopTimeoutId = null;
+
+  }
+
+  function clearProcessingSafetyTimer() {
+
+    if (processingSafetyTimeoutId) {
+
+      clearTimeout(processingSafetyTimeoutId);
+
+      processingSafetyTimeoutId = null;
+
+    }
+
+  }
+
+  function resetTimerBar() {
+
+    recordTimerBar.classList.remove(
+      "is-counting"
+    );
+
+    // Vuelve a llenar la barra instantáneamente para la próxima grabación.
+    recordTimerBar.style.transition = "none";
+    recordTimerBar.style.transform = "scaleX(1)";
+
+    // Restauramos la transición en el próximo frame.
+    requestAnimationFrame(
+      () => {
+
+        recordTimerBar.style.transition = "";
+
+      }
+    );
+
+  }
+
+
+  /* =========================================================
+     ESTADO INICIAL
+     ========================================================= */
+
+  setState("idle");
 
 
   /* =========================================================

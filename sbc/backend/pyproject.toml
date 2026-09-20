@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kibo-backend"
+version = "0.1.0"
+description = "Backend del asistente de voz Kibo"
+requires-python = ">=3.11"
+
+dependencies = [
+    # Audio / TTS
+    "piper-tts",
+    "sounddevice",
+
+    # Web / Server
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "numpy",
+    "scipy",
+    "scipy-stubs",
+    "python-multipart",
+
+    # General
+    "python-dotenv",
+    "scipy-stubs",
+
+    # IA
+    "groq",
+    "opencv-python",
+
+    # Transports
+    "pyserial",
+
+    # Hardware
+    "screen_brightness_control",
+    "pynput",
+    "pycaw>=20230407; sys_platform == 'win32'",
+    "evdev; sys_platform == 'linux'" # Joystick
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["kibo/routers*", "kibo/services*", "kibo/transports*"]

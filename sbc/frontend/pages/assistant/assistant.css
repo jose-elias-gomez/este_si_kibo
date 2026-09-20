@@ -519,14 +519,17 @@
 
 
 /* =========================================================
-   ESTADO ESCUCHANDO
+   ESTADO ESCUCHANDO (grabando)
    ========================================================= */
 
 .assistant.is-listening
 .assistant__mic {
 
   border-color:
-    var(--color-enabled);
+    var(--color-recording, var(--color-enabled));
+
+  color:
+    var(--color-recording, var(--color-enabled));
 
   background:
     var(--overlay-first-selected);
@@ -534,6 +537,15 @@
   animation:
     microphone-pulse 1.4s
     ease-in-out infinite;
+
+}
+
+
+.assistant.is-listening
+.assistant__status-dot {
+
+  background:
+    var(--color-recording, var(--color-enabled));
 
 }
 
@@ -556,6 +568,158 @@
       rgba(255, 255, 255, 0);
 
   }
+
+}
+
+
+/* =========================================================
+   ESTADO PROCESANDO
+   ========================================================= */
+
+.assistant.is-processing
+.assistant__mic {
+
+  border-color:
+    var(--color-processing, #f2a93b);
+
+  color:
+    var(--color-processing, #f2a93b);
+
+  background:
+    var(--overlay-first-selected);
+
+  cursor:
+    not-allowed;
+
+  animation:
+    microphone-processing 1s
+    ease-in-out infinite;
+
+}
+
+
+.assistant.is-processing
+.assistant__mic:hover {
+
+  background:
+    var(--overlay-first-selected);
+
+}
+
+
+.assistant.is-processing
+.assistant__status-dot {
+
+  background:
+    var(--color-processing, #f2a93b);
+
+  animation:
+    status-pulse 0.6s
+    ease-in-out infinite;
+
+}
+
+
+@keyframes microphone-processing {
+
+  0%,
+  100% {
+
+    opacity: 0.55;
+
+    box-shadow:
+      0 0 0 0
+      rgba(242, 169, 35, 0.25);
+
+  }
+
+  50% {
+
+    opacity: 1;
+
+    box-shadow:
+      0 0 0 12px
+      rgba(242, 169, 35, 0);
+
+  }
+
+}
+
+
+/* =========================================================
+   TEMPORIZADOR (limite de 10s de grabacion)
+   ========================================================= */
+
+.assistant__timer {
+
+  width: 140px;
+  height: 4px;
+
+  margin-top:
+    var(--space-sm);
+
+  overflow: hidden;
+
+  border-radius:
+    var(--radius-pill);
+
+  background:
+    var(--overlay-first);
+
+  opacity: 0;
+
+  transition:
+    opacity var(--duration-fast) ease;
+
+}
+
+
+.assistant.is-listening
+.assistant__timer {
+
+  opacity: 1;
+
+}
+
+
+.assistant__timer-bar {
+
+  width: 100%;
+  height: 100%;
+
+  border-radius:
+    var(--radius-pill);
+
+  background:
+    var(--color-recording, var(--color-enabled));
+
+  transform-origin: left;
+
+  transform: scaleX(1);
+
+}
+
+
+.assistant__timer-bar.is-counting {
+
+  transition:
+    transform 10s linear;
+
+  transform: scaleX(0);
+
+}
+
+
+/* =========================================================
+   MIC DESHABILITADO (procesando)
+   ========================================================= */
+
+.assistant__mic:disabled {
+
+  cursor:
+    not-allowed;
+
+  opacity: 0.85;
 
 }
 

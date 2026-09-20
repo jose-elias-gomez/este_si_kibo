@@ -31,8 +31,8 @@ export function speak(text) {
 
   return fetch(getApiUrl('speak'), {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: text,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ "text": text })
   }).then((response) => {
     if (!response.ok) {
       throw new Error(`TTS request failed with status ${response.status}`);
