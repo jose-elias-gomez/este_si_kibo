@@ -22,5 +22,5 @@ class AssistantService:
         return recorder.start_recording()
 
     @staticmethod
-    def stop_recording() -> bool:
-        return recorder.stop_recording()
+    def stop_recording(process: bool = True) -> bool:
+        return recorder.stop_recording(process=process)

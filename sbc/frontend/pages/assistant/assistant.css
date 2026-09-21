@@ -1,515 +1,304 @@
-/* =========================================================
-   ASISTENTE AI
-   Utiliza exclusivamente el sistema visual de global.css
-   ========================================================= */
+body {
+    background-color: var(--color-bg);
+}
 
-.assistant {
+#inactive-background {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 48px;
+
+    pointer-events: none;
+}
+
+#inactive-background.visible {
+    display: flex;
+    animation: inactive-appear 1000ms ease-out;
+}
+
+@keyframes inactive-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.expression-img {
+    width: 256px;
+    height: 256px;
+    object-fit: contain;
+    opacity: 0.9;
+}
+
+.inactive-text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: #fff;
+}
+
+.inactive-text strong {
+    font-size: 2.5rem;
+    font-weight: 600;
+}
+
+.inactive-text p {
+    margin: 0;
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+#inactive-background.expression-change .expression-img,
+#inactive-background.expression-change .inactive-text {
+    animation: expression-change 450ms ease-out;
+}
+
+@keyframes expression-change {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 0.9;
+        transform: translateY(0);
+    }
+}
+
+.history {
     position: relative;
+    z-index: 1;
 
-    display: flex;
-
-    width: 100%;
-    height: 100dvh;
-
-    flex-direction: column;
-
-    overflow: hidden;
-
-    background: var(--color-bg);
-
-    color: var(--color-text);
-}
-
-/* =========================================================
-   HEADER
-   ========================================================= */
-
-.assistant__header {
-    display: flex;
-
-    align-items: center;
-    justify-content: space-between;
-
-    width: 100%;
-
-    padding: var(--space-md);
-
-    border-bottom: 1px solid var(--color-border);
-
-    background: var(--color-bg);
-}
-
-/* =========================================================
-   IDENTIDAD
-   ========================================================= */
-
-.assistant__identity {
-    display: flex;
-
-    align-items: center;
-
-    gap: var(--space-sm);
-}
-
-.assistant__avatar {
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    width: 44px;
-    height: 44px;
-
-    flex-shrink: 0;
-
-    border: 1px solid var(--color-border);
-
-    border-radius: var(--radius-md);
-
-    background: var(--overlay-first);
-
-    color: var(--color-text);
-
-    font-family: var(--font-heading);
-
-    font-size: var(--font-size-lg);
-
-    font-weight: 700;
-}
-
-.assistant__identity-text {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 2px;
-}
-
-.assistant__identity-text h1 {
-    margin: 0;
-
-    color: var(--color-text);
-
-    font-family: var(--font-heading);
-
-    font-size: var(--font-size-xl);
-
-    font-weight: 600;
-
-    letter-spacing: 0;
-}
-
-.assistant__identity-text p {
-    color: var(--color-h2);
-
-    font-family: var(--font-body);
-
-    font-size: var(--font-size-sm);
-}
-
-/* =========================================================
-   ESTADO
-   ========================================================= */
-
-.assistant__status {
-    display: flex;
-
-    align-items: center;
-
-    gap: var(--space-xs);
-
-    padding: var(--space-xs) var(--space-sm);
-
-    border: 1px solid var(--color-border);
-
-    border-radius: var(--radius-pill);
-
-    background: var(--overlay-first);
-
-    color: var(--color-h2);
-
-    font-family: var(--font-ui);
-
-    font-size: var(--font-size-sm);
-}
-
-.assistant__status-dot {
-    width: 7px;
-    height: 7px;
-
-    border-radius: 50%;
-
-    background: var(--color-enabled);
-}
-
-.assistant.is-listening .assistant__status-dot {
-    animation: status-pulse 1s ease-in-out infinite;
-}
-
-@keyframes status-pulse {
-    0%,
-    100% {
-        opacity: 0.35;
-    }
-
-    50% {
-        opacity: 1;
-    }
-}
-
-/* =========================================================
-   CONVERSACIÓN
-   ========================================================= */
-
-.assistant__conversation {
-    flex: 1;
-
-    width: 100%;
-
+    height: 100vh;
     overflow-y: auto;
+    scroll-behavior: smooth;
 
-    padding: var(--space-md);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+@keyframes inactive-bottom-animation {
+    0%,
+    100% {
+        font-size: large;
+    }
+    50% {
+        font-size: larger;
+    }
 }
 
-.assistant__welcome {
-    display: flex;
+.history::-webkit-scrollbar {
+    display: none;
+}
 
+.card {
+    display: flex;
     flex-direction: column;
+    gap: 0.5rem;
+    width: fit-content;
+    background-color: var(--overlay-first);
+    margin: 16px;
 
-    align-items: center;
+    padding-left: 32px;
+    padding-right: 32px;
+    padding-top: 8px;
+    padding-bottom: 16px;
 
-    justify-content: center;
-
-    min-height: 100%;
-
-    text-align: center;
+    border-radius: var(--radius-xl);
 }
 
-.assistant__welcome-icon {
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    width: 64px;
-    height: 64px;
-
-    margin-bottom: var(--space-sm);
-
-    border: 1px solid var(--color-border);
-
-    border-radius: var(--radius-lg);
-
-    background: var(--overlay-first);
-
-    color: var(--color-h1);
-
-    font-size: var(--font-size-xxxl);
+.card.user {
+    margin-left: auto;
+    background-color: rgba(72, 112, 168, 0.65);
 }
 
-.assistant__welcome h2 {
-    margin: 0;
-
-    color: var(--color-text);
-
-    font-family: var(--font-heading);
-
-    font-size: var(--font-size-xxl);
-
-    font-weight: 600;
-}
-
-.assistant__welcome p {
-    margin-top: var(--space-xs);
-
-    color: var(--color-h2);
-
-    font-size: var(--font-size-md);
-}
-
-/* =========================================================
-   MENSAJES
-   ========================================================= */
-
-.message {
-    display: flex;
-
-    width: 100%;
-
-    margin-bottom: var(--space-sm);
-}
-
-.message--user {
-    justify-content: flex-end;
-}
-
-.message--assistant {
-    justify-content: flex-start;
-}
-
-.message__bubble {
-    max-width: 75%;
-
-    padding: var(--space-sm);
-
-    border: 1px solid var(--color-border);
-
-    border-radius: var(--radius-lg);
-
-    font-family: var(--font-body);
-
-    font-size: var(--font-size-lg);
-
-    line-height: 1.4;
-}
-
-.message--user .message__bubble {
-    background: var(--overlay-first-selected);
-
-    color: var(--color-text);
-
-    border-bottom-right-radius: var(--radius-sm);
-}
-
-.message--assistant .message__bubble {
-    background: var(--overlay-first);
-
-    color: var(--color-text);
-
-    border-bottom-left-radius: var(--radius-sm);
-}
-
-/* =========================================================
-   CONTROL DE VOZ
-   ========================================================= */
-
-.assistant__voice {
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    justify-content: center;
-
-    padding: var(--space-sm) var(--space-md) var(--space-md);
-
-    border-top: 1px solid var(--color-border);
-
-    background: var(--color-bg);
-}
-
-.assistant__voice-label {
-    min-height: 20px;
-
-    margin-bottom: var(--space-xs);
-
-    color: var(--color-h2);
-
-    font-family: var(--font-ui);
-
+.card-time {
     font-size: var(--font-size-sm);
+    color: var(--color-enabled);
 }
 
-.assistant__mic {
-    display: flex;
+.record-btn {
+    z-index: 1;
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+}
 
-    align-items: center;
-    justify-content: center;
+.record-btn.clicked {
+    animation: record-btn-press 180ms ease-in-out;
+}
 
-    width: 76px;
-    height: 76px;
+@keyframes record-btn-press {
+    0% {
+        transform: translateX(-50%) scale(1);
+    }
+    50% {
+        transform: translateX(-50%) scale(0.85);
+    }
+    100% {
+        transform: translateX(-50%) scale(1);
+    }
+}
 
-    padding: 0;
+.record-icon {
+    width: fit-content;
+    height: 128px;
+    stroke-width: 2px;
+    padding: var(--space-md);
 
-    border: 1px solid var(--color-border);
-
+    background-color: var(--overlay-first);
     border-radius: 50%;
 
-    background: var(--overlay-first);
-
-    color: var(--color-text);
-
-    cursor: pointer;
-
-    transition:
-        transform var(--duration-fast) ease,
-        background-color var(--duration-medium) ease,
-        border-color var(--duration-medium) ease;
+    transition: scale var(--duration-fast) ease-in-out;
 }
 
-.assistant__mic:hover {
-    background: var(--overlay-first-selected);
-}
-
-.assistant__mic:active {
-    transform: scale(0.94);
-}
-
-.assistant__mic-icon {
-    width: 30px;
-    height: 30px;
-}
-
-/* =========================================================
-   ESTADO ESCUCHANDO (grabando)
-   ========================================================= */
-
-.assistant.is-listening .assistant__mic {
-    border-color: var(--color-recording, var(--color-enabled));
-
-    color: var(--color-recording, var(--color-enabled));
-
-    background: var(--overlay-first-selected);
-
-    animation: microphone-pulse 1.4s ease-in-out infinite;
-}
-
-.assistant.is-listening .assistant__status-dot {
-    background: var(--color-recording, var(--color-enabled));
-}
-
-@keyframes microphone-pulse {
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.08);
-    }
-
-    50% {
-        box-shadow: 0 0 0 14px rgba(255, 255, 255, 0);
-    }
-}
-
-/* =========================================================
-   ESTADO PROCESANDO
-   ========================================================= */
-
-.assistant.is-processing .assistant__mic {
-    border-color: var(--color-processing, #f2a93b);
-
-    color: var(--color-processing, #f2a93b);
-
-    background: var(--overlay-first-selected);
-
-    cursor: not-allowed;
-
-    animation: microphone-processing 1s ease-in-out infinite;
-}
-
-.assistant.is-processing .assistant__mic:hover {
-    background: var(--overlay-first-selected);
-}
-
-.assistant.is-processing .assistant__status-dot {
-    background: var(--color-processing, #f2a93b);
-
-    animation: status-pulse 0.6s ease-in-out infinite;
-}
-
-@keyframes microphone-processing {
-    0%,
-    100% {
-        opacity: 0.55;
-
-        box-shadow: 0 0 0 0 rgba(242, 169, 35, 0.25);
-    }
-
-    50% {
-        opacity: 1;
-
-        box-shadow: 0 0 0 12px rgba(242, 169, 35, 0);
-    }
-}
-
-/* =========================================================
-   TEMPORIZADOR (limite de 10s de grabacion)
-   ========================================================= */
-
-.assistant__timer {
-    width: 140px;
-    height: 4px;
-
-    margin-top: var(--space-sm);
-
+dialog {
+    background-color: #000;
+    border: none;
+    color: #fff;
+    position: relative;
+    /* contexto de posicionamiento para el canvas absolute */
     overflow: hidden;
-
-    border-radius: var(--radius-pill);
-
-    background: var(--overlay-first);
-
-    opacity: 0;
-
-    transition: opacity var(--duration-fast) ease;
 }
 
-.assistant.is-listening .assistant__timer {
+dialog[open] {
     opacity: 1;
-}
-
-.assistant__timer-bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
     width: 100%;
     height: 100%;
-
-    border-radius: var(--radius-pill);
-
-    background: var(--color-recording, var(--color-enabled));
-
-    transform-origin: left;
-
-    transform: scaleX(1);
+    max-width: none;
+    max-height: none;
+    box-sizing: border-box;
 }
 
-.assistant__timer-bar.is-counting {
-    transition: transform 10s linear;
-
-    transform: scaleX(0);
-}
-
-/* =========================================================
-   MIC DESHABILITADO (procesando)
-   ========================================================= */
-
-.assistant__mic:disabled {
-    cursor: not-allowed;
-
-    opacity: 0.85;
-}
-
-/* =========================================================
-   HINT
-   ========================================================= */
-
-.assistant__voice-hint {
-    margin-top: var(--space-xs);
-
-    color: var(--color-h2);
-
-    font-family: var(--font-ui);
-
-    font-size: var(--font-size-sm);
-}
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 560px) {
-    .assistant__header {
-        padding: var(--space-sm);
+@starting-style {
+    dialog[open] {
+        opacity: 0;
     }
 
-    .assistant__conversation {
-        padding: var(--space-sm);
+    dialog[open]::backdrop {
+        opacity: 0;
     }
+}
 
-    .message__bubble {
-        max-width: 85%;
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+}
 
-        font-size: var(--font-size-md);
+dialog::backdrop {
+    background-color: #000;
+}
+
+.wave-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.mic-visualizer {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.recording-icon {
+    width: 128px;
+    height: fit-content;
+    border: none;
+    position: relative;
+    z-index: 1;
+
+    transform: scale(calc(1 + var(--intensity, 0) * 0.35));
+    fill: rgba(255, 255, 255, min(1, calc(0.4 + var(--intensity, 0) * 0.45)));
+}
+
+.dialog-info {
+    position: relative;
+    z-index: 1;
+    margin-left: 48px;
+    display: flex;
+    flex-direction: column;
+}
+
+.up-info {
+    position: absolute;
+    top: 16px;
+    font-size: x-large;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.dialog-header {
+    color: #fff;
+    font-size: 4rem;
+}
+
+.dialog-content {
+    font-size: 2rem;
+    p {
+        color: rgba(255, 255, 255, 0.6);
     }
+}
 
-    .assistant__mic {
-        width: 68px;
-        height: 68px;
+.loader,
+.loader:before,
+.loader:after {
+    border-radius: 50%;
+    width: 2.5em;
+    height: 2.5em;
+    animation-fill-mode: both;
+    animation: bblFadInOut 1.8s infinite ease-in-out;
+}
+.loader {
+    --color-1: #fff;
+    --size: 2px;
+
+    color: var(--color-1);
+    font-size: calc(7 * var(--size));
+    position: relative;
+    text-indent: -9999em;
+    transform: translateZ(0);
+    animation-delay: -0.16s;
+    margin-right: 64px;
+}
+.loader:before,
+.loader:after {
+    content: "";
+    position: absolute;
+    top: 0;
+}
+.loader:before {
+    left: -3.5em;
+    animation-delay: -0.32s;
+}
+.loader:after {
+    left: 3.5em;
+}
+
+@keyframes bblFadInOut {
+    0%,
+    80%,
+    100% {
+        box-shadow: 0 2.5em 0 -1.3em;
+    }
+    40% {
+        box-shadow: 0 2.5em 0 0;
     }
 }

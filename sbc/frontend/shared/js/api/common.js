@@ -3,13 +3,10 @@ export const getApiUrl = (path) => `http://${API_BASE_URL}/api/${path}`;
 
 export const DEBUG_MODE = await (async () => {
     try {
-        await fetch(getApiUrl("ping"), {
-            signal: AbortSignal.timeout(500),
-        });
+        await fetch(getApiUrl("ping"), { signal: AbortSignal.timeout(500) });
         return false;
     } catch (error) {
         console.log(error);
-        // Si no responde o falla la red, activa debug_mode (true).
         return true;
     }
 })();

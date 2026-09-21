@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
 
@@ -18,10 +18,16 @@ async def start_recording() -> RecordingStatusResponse:
 
 
 @Router.post("/stop-recording", response_model=RecordingStatusResponse)
-async def stop_recording() -> RecordingStatusResponse:
+async def stop_recording(
+    process: bool = Query(
+        True,
+        description="Si es False, detiene la grabación e ignora/cancela el audio sin procesarlo."
+    )
+) -> RecordingStatusResponse:
     from kibo.services.assistant import AssistantService
 
-    # The heavy STT -> LLM -> TTS pipeline runs on a background worker thread,
-    # so this responds immediately with "processing" instead of blocking.
-    stopped = AssistantService.stop_recording()
-    return RecordingStatusResponse(status="processing" if stopped else "not_recording")
+    stopped = AssistantService.stop_recording(process=process)
+    if not stopped:
+        return RecordingStatusResponse(status="not_recording")
+
+    return RecordingStatusResponse(status="processing" if process else "stopped")

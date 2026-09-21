@@ -1,5 +1,3 @@
-import { onPacket, PACKET_ID } from "./api/client.js";
-
 export const InputAction = Object.freeze({
     UP: "UP",
     DOWN: "DOWN",

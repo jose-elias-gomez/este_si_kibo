@@ -1,85 +1,74 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8" />
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>Asistente AI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente Virtual</title>
 
     <link rel="stylesheet" href="../../shared/css/global.css" />
+    <link rel="stylesheet" href="assistant.css" />
 
-    <link rel="stylesheet" href="./assistant.css" />
-
-    <script type="module" src="./js/assistant.js"></script>
+    <script src="js/inactive.js" type="module"></script>
+    <script src="js/processing.js" type="module"></script>
+    <script src="js/recording.js" type="module"></script>
 </head>
 
 <body>
-    <main class="assistant" id="assistant">
-        <!-- =====================================================
-         ENCABEZADO
-         ===================================================== -->
+    <div id="inactive-background">
+        <img class="expression-img" src="../../shared/assets/expressions/happy.svg" alt="" />
+        <div class="inactive-text">
+            <strong>¿Qué esperas?</strong>
+            <p>Presiona el botón para hablar</p>
+        </div>
+    </div>
 
-        <header class="assistant__header">
-            <div class="assistant__identity">
-                <div class="assistant__avatar">AI</div>
+    <div class="history"></div>
 
-                <div class="assistant__identity-text">
-                    <h1>Asistente</h1>
+    <button class="record-btn">
+        <svg class="record-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#fff"
+            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-microphone" viewBox="0 0 24 24">
+            <path fill="none" stroke="none" d="M0 0h24v24H0z" />
+            <path d="M9 5a3 3 0 0 1 3-3 3 3 0 0 1 3 3v5a3 3 0 0 1-3 3 3 3 0 0 1-3-3z" />
+            <path d="M5 10a7 7 0 0 0 14 0M8 21h8m-4-4v4" />
+        </svg>
+    </button>
 
-                    <p>Estoy para ayudarte</p>
-                </div>
+    <dialog id="recording-dialog">
+
+        <p class="up-info">Presiona de vuelta para detener</p>
+
+        <canvas class="wave-canvas"></canvas>
+
+        <div class="mic-visualizer">
+            <svg class="recording-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff"
+                viewBox="0 0 24 24">
+                <path fill="none" d="M0 0h24v24H0z" />
+                <path
+                    d="M19 9a1 1 0 0 1 1 1 8 8 0 0 1-6.999 7.938L13 20h3a1 1 0 0 1 0 2H8a1 1 0 0 1 0-2h3v-2.062A8 8 0 0 1 4 10a1 1 0 1 1 2 0 6 6 0 0 0 12 0 1 1 0 0 1 1-1m-7-8a4 4 0 0 1 4 4v5a4 4 0 1 1-8 0V5a4 4 0 0 1 4-4" />
+            </svg>
+        </div>
+        <div class="dialog-info">
+            <strong class="dialog-header">Grabando</strong>
+            <div class="dialog-content">
+                <p id="timer"></p>
             </div>
+        </div>
+    </dialog>
 
-            <div class="assistant__status" id="assistantStatus">
-                <span class="assistant__status-dot" id="statusDot"></span>
+    <dialog id="processing-dialog">
+        <p class="up-info">Puede tardar si el internet es lento</p>
 
-                <span id="statusText">Listo</span>
+        <strong class="loader"></strong>
+
+        <div class="dialog-info">
+            <strong class="dialog-header">Procesando</strong>
+            <div class="dialog-content">
+                <p id="timer">Espera un poco</p>
             </div>
-        </header>
-
-        <!-- =====================================================
-         CONVERSACIÓN
-         ===================================================== -->
-
-        <section class="assistant__conversation" id="conversation" aria-live="polite">
-            <div class="assistant__welcome" id="welcome">
-                <div class="assistant__welcome-icon">✦</div>
-
-                <h2>¿En qué puedo ayudarte?</h2>
-
-                <p>Tocá el micrófono y hablá.</p>
-            </div>
-        </section>
-
-        <!-- =====================================================
-         CONTROL DE VOZ
-         ===================================================== -->
-
-        <footer class="assistant__voice">
-            <div class="assistant__voice-label" id="voiceLabel">Tocá para hablar</div>
-
-            <button class="assistant__mic" id="micButton" type="button" aria-label="Hablar con el asistente">
-                <svg class="assistant__mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="9" y="2" width="6" height="13" rx="3" />
-
-                    <path d="M5 10a7 7 0 0 0 14 0" />
-
-                    <path d="M12 19v3" />
-
-                    <path d="M8 22h8" />
-                </svg>
-            </button>
-
-            <div class="assistant__timer" id="recordTimer">
-                <div class="assistant__timer-bar" id="recordTimerBar"></div>
-            </div>
-
-            <div class="assistant__voice-hint" id="voiceHint">Voz &middot; máx. 10s</div>
-        </footer>
-    </main>
+        </div>
+    </dialog>
 </body>
 
 </html>

@@ -266,3 +266,8 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+sbc/backend/.idea/inspectionProfiles/Project_Default.xml
+.gitignore
+sbc/backend/.idea/modules.xml
+sbc/backend/.idea/kibo-backend.iml
+sbc/backend/.idea/vcs.xml

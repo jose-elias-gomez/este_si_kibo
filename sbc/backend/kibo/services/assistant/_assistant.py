@@ -103,8 +103,12 @@ class AssistantRecorder:
         logger.info("Max recording duration reached, stopping automatically")
         self.stop_recording()
 
-    def stop_recording(self) -> bool:
-        """Stops capturing and queues the recorded audio for processing.
+    def stop_recording(self, process: bool = True) -> bool:
+        """Stops capturing and optionally queues the recorded audio for processing.
+
+        Args:
+            process (bool): If True, puts the recorded audio into the pipeline queue.
+                            If False, stops the mic and drops/cancels the audio.
 
         Returns:
             bool: False if there was no active recording to stop.
@@ -132,8 +136,12 @@ class AssistantRecorder:
             )
             self._frames = []
 
-        self._job_queue.put(audio)
-        logger.info("Recording stopped, queued for processing")
+        if process:
+            self._job_queue.put(audio)
+            logger.info("Recording stopped, queued for processing")
+        else:
+            logger.info("Recording stopped and cancelled (audio discarded)")
+
         return True
 
     def _process_loop(self):
@@ -141,8 +149,8 @@ class AssistantRecorder:
             audio = self._job_queue.get()
             try:
                 self._run_pipeline(audio)
-            except Exception:
-                logger.exception("Assistant pipeline failed")
+            except Exception as ex:
+                logger.exception("Assistant pipeline failed %s", ex)
             finally:
                 self._job_queue.task_done()
 
@@ -166,7 +174,7 @@ class AssistantRecorder:
 
         TTSService.push_message(reply)
 
-        packet = {"id": PacketId.ASSISTANT_RESPONSE.value, "text": reply}
+        packet = {"id": PacketId.ASSISTANT_RESPONSE.value, "transcribe": text, "reply": reply}
         if self._loop and self._loop.is_running():
             asyncio.run_coroutine_threadsafe(broadcast(packet), self._loop)
         else:
