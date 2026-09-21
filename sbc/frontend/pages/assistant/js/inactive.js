@@ -127,5 +127,6 @@ input.on(InputAction.UP, () => historyContainer.scrollBy({ top: -SCROLL_STEP_PX,
 input.on(InputAction.DOWN, () => historyContainer.scrollBy({ top: SCROLL_STEP_PX, behavior: "smooth" }));
 
 input.on(InputAction.CONFIRM, startRecording);
+input.on(InputAction.BACK, () => (window.location.href = "../home/home.html"));
 
 updateInactiveBackground();
