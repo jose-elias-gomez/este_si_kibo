@@ -1,12 +1,12 @@
 import { API_BASE_URL, DEBUG_MODE } from "./common.js";
 
-export const PACKET_ID = {
+export const PACKET_ID = Object.freeze({
     PING: 0,
     SYSTEM_OPTION: 1,
     GET_PARTS: 2,
     MOVE_PART: 3,
     ASSISTANT_RESPONSE: 4,
-};
+});
 
 let socket = null;
 let reconnectTimer = null;

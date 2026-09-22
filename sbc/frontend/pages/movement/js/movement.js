@@ -2,6 +2,7 @@ import { SceneEngine } from "./sceneEngine.js";
 import { CameraViewController, CameraView } from "./cameraViews.js";
 import { loadGltfModel } from "./modelLoader.js";
 import { WrappedMovementPartController } from "./partsController.js";
+import { FaceScreenController } from "./faceScreen.js";
 import { AnimationBuilder, buildAnimation } from "../../../shared/js/movement/animationBuilder.js";
 const MODEL_URL = "assets/kibo_model.glb";
 const modelCenter = new THREE.Vector3(0, 0.8, 0);
@@ -10,6 +11,7 @@ let cameraDistance = 3.5;
 let sceneEngine = null;
 let cameraViewController = null;
 let partsController = null;
+let faceScreenController = null;
 
 /**
  * Punto de entrada. Crea el motor 3D, carga el modelo y deja listo
@@ -39,9 +41,15 @@ async function init3D() {
 
     partsController = new WrappedMovementPartController(modelRoot, () => sceneEngine.requestRender());
 
+    // Controla la expresión dibujada con canvas en el nodo Screen
+    // (Head > Pivot > Screen). Si ese nodo no existe en el modelo,
+    // FaceScreenController lo detecta solo y queda como no-op (ver
+    // faceScreen.js) — no rompe el resto de la escena.
+    faceScreenController = new FaceScreenController(modelRoot, () => sceneEngine.requestRender());
+
     fitCameraToModel(modelRoot);
 
-    return { sceneEngine, cameraViewController, partsController };
+    return { sceneEngine, cameraViewController, partsController, faceScreenController };
 }
 
 /**
@@ -110,9 +118,10 @@ export function stopMotor(partName) {
     partsController?.stopMotor(partName);
 }
 
-/** Restaura todas las piezas a su posición inicial. */
+/** Restaura todas las piezas a su posición inicial y apaga la expresión facial activa. */
 export function resetParts() {
     partsController?.resetAll();
+    faceScreenController?.stop();
 }
 
 /**
@@ -134,13 +143,27 @@ export function animate(followWithCamera = false) {
  *
  *   await playAnimation('confusion');
  *
+ * Si `animationName` tiene una expresión facial asociada (ver
+ * ANIMATION_EXPRESSIONS en faceScreen.js), la muestra en la pantalla
+ * del robot mientras dura la animación y la apaga al terminar. SAFETY
+ * CHECK: no todas las animaciones tienen gesto de cara (p.ej. 'run' y
+ * 'dance' son puramente corporales) — si no hay una asociada, esto
+ * simplemente no toca la pantalla.
  * @param {string} animationName - clave dentro de ANIMATIONS
  * @param {boolean} [followWithCamera=false] - si true, cada paso también mueve la cámara a una vista acorde a la pieza
  * @returns {Promise<void>} resuelve cuando termina toda la secuencia
  */
 export function playAnimation(animationName, followWithCamera = false) {
     const builder = buildAnimation(partsController, animationName, followWithCamera ? cameraViewController : null);
-    return builder.execute();
+
+    faceScreenController?.playForAnimation(animationName);
+
+    return builder.execute().finally(() => {
+        // Se ejecuta tanto si la animación termina bien como si se corta
+        // por cualquier motivo — la pantalla nunca queda "trabada" en un
+        // gesto a mitad de ejecución.
+        faceScreenController?.stop();
+    });
 }
 
 export { CameraView };

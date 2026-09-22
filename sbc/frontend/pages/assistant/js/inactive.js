@@ -1,11 +1,11 @@
 import { InputAction, input } from "../../../shared/js/inputController.js";
+import { EXPRESSIONS_TYPE, displayAnimation } from "../../../shared/js/expressions/expressions.js"
 import { startRecording } from "./recording.js";
 
 const historyContainer = document.querySelector(".history");
 const recordBtn = document.querySelector(".record-btn");
 const inactiveBackground = document.getElementById("inactive-background");
 const expressionImg = inactiveBackground.querySelector(".expression-img");
-const inactiveText = inactiveBackground.querySelector(".inactive-text");
 const inactiveTitle = inactiveBackground.querySelector(".inactive-text strong");
 const inactiveSubtitle = inactiveBackground.querySelector(".inactive-text p");
 
@@ -128,5 +128,7 @@ input.on(InputAction.DOWN, () => historyContainer.scrollBy({ top: SCROLL_STEP_PX
 
 input.on(InputAction.CONFIRM, startRecording);
 input.on(InputAction.BACK, () => (window.location.href = "../home/home.html"));
-
+input.on(InputAction.LEFT, () => {
+    displayAnimation(EXPRESSIONS_TYPE.CONFUSION);
+});
 updateInactiveBackground();
