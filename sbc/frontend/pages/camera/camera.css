@@ -1,7 +1,6 @@
-/* =========================================================
-   TRADUCTOR — CÁMARA
-   ========================================================= */
-
+body {
+    background: var(--color-bg);
+}
 .camera {
     position: relative;
 
@@ -9,13 +8,7 @@
     height: 100dvh;
 
     overflow: hidden;
-
-    background: var(--color-bg);
 }
-
-/* =========================================================
-   CÁMARA
-   ========================================================= */
 
 .camera-feed {
     position: absolute;
@@ -29,11 +22,18 @@
 
     object-fit: cover;
 
-    /*
-   * Efecto espejo.
-   * El usuario ve sus manos como en un espejo.
-   */
-
     transform: scaleX(-1);
     transform: rotate(180deg);
+}
+
+.camera-not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+
+    strong {
+        font-size: 4rem;
+        color: var(--color-text);
+    }
 }

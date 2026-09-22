@@ -2,35 +2,34 @@ export const EXPRESSIONS_TYPE = Object.freeze({
     CONFUSION: {
         id: "confusion",
         duration: 1000,
-        repeat: 2
+        repeat: 2,
     },
 
     SAD: {
         id: "sad",
         duration: 2000,
-        repeat: 1
+        repeat: 1,
     },
 
     NO: {
         id: "no",
         duration: 1000,
-        repeat: 1
-    }
-})
+        repeat: 1,
+    },
+});
 
 export function getExpressionSvgUrl(type = EXPRESSIONS_TYPE.CONFUSION) {
-    return "../../../shared/assets/expressions/animated/" + type.id.toLocaleLowerCase() + ".svg";
+    return "../../shared/assets/expressions/animated/" + type.id.toLocaleLowerCase() + ".svg";
 }
-
 
 export function displayAnimation(type = EXPRESSIONS_TYPE.CONFUSION) {
     const dialog = getDialog();
     dialog.showModal();
-    
+
     const image = document.createElement("img");
     image.src = getExpressionSvgUrl(type);
     image.className = "expression-image";
-    dialog.innerHTML = '';
+    dialog.innerHTML = "";
 
     if (type == EXPRESSIONS_TYPE.CONFUSION) {
         // svgator no te voy a pagar pa, sorry brother uwu nya
