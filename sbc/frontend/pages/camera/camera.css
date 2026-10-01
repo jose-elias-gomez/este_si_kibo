@@ -1,6 +1,3 @@
-body {
-    background: var(--color-bg);
-}
 .camera {
     position: relative;
 
@@ -24,16 +21,4 @@ body {
 
     transform: scaleX(-1);
     transform: rotate(180deg);
-}
-
-.camera-not-found {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-
-    strong {
-        font-size: 4rem;
-        color: var(--color-text);
-    }
 }
