@@ -3,9 +3,13 @@ import { API_BASE_URL, DEBUG_MODE } from "./common.js";
 export const PACKET_ID = Object.freeze({
     PING: 0,
     SYSTEM_OPTION: 1,
-    GET_PARTS: 2,
-    MOVE_PART: 3,
-    ASSISTANT_RESPONSE: 4,
+    ASSISTANT_RESPONSE: 2,
+    GET_PARTS: 3,
+    MOVE_PART: 4,
+    MOVE_PART_LAST: 5,
+    RESET_MOVEMENT: 6,
+    TOUCH_PART: 7,
+    RELEASE_TOUCH_PART: 8,
 });
 
 let socket = null;
@@ -32,7 +36,7 @@ function stopHeartbeat() {
 }
 
 function scheduleReconnect() {
-    if (reconnectTimer || DEBUG_MODE) return;
+    if (reconnectTimer) return;
 
     reconnectTimer = setTimeout(() => {
         reconnectTimer = null;
@@ -72,12 +76,12 @@ function connect() {
             return;
         }
 
-        console.log("[WS CLIENT] MENSAJE RECIBIDO:", data);
-
         if (data.error) {
             console.error("[WS CLIENT] Error del servidor:", data.error);
             return;
         }
+
+        console.log("[WS CLIENT] MENSAJE RECIBIDO:", data);
 
         if (data.id !== undefined && pendingRequests.has(data.id)) {
             const { resolve } = pendingRequests.get(data.id);

@@ -84,7 +84,6 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 data_to_return = decode(data)
             except Exception as error:
-                logger.error("Error on decode: %s", error)
 
                 try:
                     await websocket.send_json({"error": str(error)})

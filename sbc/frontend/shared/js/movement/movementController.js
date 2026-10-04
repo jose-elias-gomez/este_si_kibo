@@ -12,12 +12,9 @@ const PART_FIELD = {
     RightWheel: "right_wheel",
 };
 
-// Comando de motor DC que espera movement_connector.py para las ruedas.
-// STOP no tiene "sentido" (adelante/atrás), por eso no está en
-// MotorDirection: es un tercer estado propio de las ruedas.
 const WheelCommand = Object.freeze({
-    LEFT: "LEFT",
-    RIGHT: "RIGHT",
+    FORWARD: "FORWARD",
+    BACKWARD: "BACKWARD",
     STOP: "STOP",
 });
 
@@ -34,7 +31,7 @@ function isWheelPart(partName) {
  * servidor real) resultan en el mismo sentido físico de giro.
  * @param {string} partName - 'LeftWheel' | 'RightWheel'
  * @param {string} direction - MotorDirection.FORWARD | .BACKWARD
- * @returns {string} WheelCommand.LEFT | .RIGHT
+ * @returns {string} WheelCommand.FORWARD | .BACKWARD
  */
 function toWheelCommand(partName, direction) {
     const motorConfig = WHEEL_MOTOR_CONFIG[partName];
@@ -42,7 +39,7 @@ function toWheelCommand(partName, direction) {
     const directionSign = direction === MotorDirection.BACKWARD ? -1 : 1;
     const signedDirection = forwardSign * directionSign;
 
-    return signedDirection >= 0 ? WheelCommand.LEFT : WheelCommand.RIGHT;
+    return signedDirection >= 0 ? WheelCommand.FORWARD : WheelCommand.BACKWARD;
 }
 
 class MovementController {
@@ -108,8 +105,9 @@ class MovementController {
      * rechaza un ángulo en los campos left_wheel/right_wheel.
      * @param {string} partName - 'Head' | 'LeftArm' | 'RightArm'
      * @param {number} angleDegrees
+     * @param {boolean} processLast - si es true, se manda el packet MOVE_PART_LAST en vez de MOVE_PART
      */
-    setAngleForPart(partName, angleDegrees) {
+    setAngleForPart(partName, angleDegrees, processLast = false) {
         if (isWheelPart(partName)) {
             console.warn(`setAngleForPart no aplica a ${partName}: es un motor DC, usar runMotor/stopMotor`);
             return;
@@ -137,7 +135,6 @@ class MovementController {
             const min = config.min;
             const max = config.max;
 
-            // Aseguramos no dividir por cero en caso de mala configuración
             const range = max - min;
             if (range !== 0) {
                 // Mapea proporcionalmente el ángulo ingresado a 0 -> 180
@@ -148,8 +145,9 @@ class MovementController {
         // Clamp de seguridad para garantizar que el HAL nunca reciba valores fuera de 0 -> 180
         halAngle = Math.max(0, Math.min(180, halAngle));
         sendPacket({
-            id: PACKET_ID.MOVE_PART,
-            [field]: Math.round(halAngle),
+            id: processLast ? PACKET_ID.MOVE_PART_LAST : PACKET_ID.MOVE_PART,
+            partName: field.toUpperCase(),
+            angle: Math.round(halAngle),
         });
     }
 
@@ -161,11 +159,7 @@ class MovementController {
      * @param {string} [direction] - MotorDirection.FORWARD (default) o .BACKWARD
      */
     runMotor(partName, direction = MotorDirection.FORWARD) {
-        const field = PART_FIELD[partName];
-        if (!field || !isWheelPart(partName)) {
-            console.warn(`runMotor no aplica a ${partName}`);
-            return;
-        }
+        if (!isWheelPart(partName)) return;
 
         this._runningMotors.add(partName);
 
@@ -173,7 +167,8 @@ class MovementController {
 
         sendPacket({
             id: PACKET_ID.MOVE_PART,
-            [field]: toWheelCommand(partName, direction),
+            partName: partName,
+            command: toWheelCommand(partName, direction),
         });
     }
 
@@ -182,8 +177,7 @@ class MovementController {
      * @param {string} partName - 'LeftWheel' | 'RightWheel'
      */
     stopMotor(partName) {
-        const field = PART_FIELD[partName];
-        if (!field || !isWheelPart(partName)) return;
+        if (!isWheelPart(partName)) return;
 
         if (!this._runningMotors.has(partName)) return;
         this._runningMotors.delete(partName);
@@ -192,7 +186,8 @@ class MovementController {
 
         sendPacket({
             id: PACKET_ID.MOVE_PART,
-            [field]: WheelCommand.STOP,
+            partName: partName,
+            command: WheelCommand.STOP,
         });
     }
 

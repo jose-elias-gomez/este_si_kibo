@@ -1,8 +1,6 @@
 #include "touch.h"
 #include "pins.h"
 
-using namespace Pins;
-
 int TouchSensors::readFiltered(uint8_t pin) const {
     int samples[SAMPLES_PER_READ];
 
@@ -26,10 +24,15 @@ int TouchSensors::readFiltered(uint8_t pin) const {
     return samples[SAMPLES_PER_READ / 2];
 }
 
+void TouchSensors::updateLevels(uint8_t piece) {
+    threshold_[piece] = baseline_[piece] * (1.0f + THRESHOLD_PERCENT);
+    releaseLevel_[piece] = baseline_[piece] * (1.0f + RELEASE_PERCENT);
+}
+
 void TouchSensors::begin() {
-    pins_[static_cast<uint8_t>(TouchPiece::Piece1)] = LEFT_ARM_TOUCH;
-    pins_[static_cast<uint8_t>(TouchPiece::Piece2)] = HEAD_TOUCH;
-    pins_[static_cast<uint8_t>(TouchPiece::Piece3)] = RIGHT_ARM_TOUCH;
+    pins_[static_cast<uint8_t>(TouchPiece::Head)] = Pins::HEAD_TOUCH;
+    pins_[static_cast<uint8_t>(TouchPiece::LeftArm)] = Pins::LEFT_ARM_TOUCH;
+    pins_[static_cast<uint8_t>(TouchPiece::RightArm)] = Pins::RIGHT_ARM_TOUCH;
 
     float sum[NUM_PIECES] = {0, 0, 0};
 
@@ -42,8 +45,7 @@ void TouchSensors::begin() {
 
     for (uint8_t p = 0; p < NUM_PIECES; p++) {
         baseline_[p] = sum[p] / CALIBRATION_SAMPLES;
-        threshold_[p] = baseline_[p] * (1.0f + THRESHOLD_PERCENT);
-        releaseLevel_[p] = baseline_[p] * (1.0f + RELEASE_PERCENT);
+        updateLevels(p);
         touched_[p] = false;
         lastChangeTime_[p] = 0;
     }
@@ -74,6 +76,10 @@ uint8_t TouchSensors::update(TouchChange* changes) {
                 changes[numChanges].event = TouchEvent::Released;
                 numChanges++;
             }
+        } else if (!touched_[p] && value < releaseLevel_[p]) {
+            // Reposo claro: seguir la deriva (temperatura, humedad) lentamente.
+            baseline_[p] += BASELINE_ALPHA * (value - baseline_[p]);
+            updateLevels(p);
         }
     }
 

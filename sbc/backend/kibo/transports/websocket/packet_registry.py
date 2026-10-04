@@ -3,9 +3,13 @@ from enum import Enum
 class PacketId(Enum):
     PING = 0
     SYSTEM_OPTION = 1
-    GET_PARTS = 2
-    MOVE_PART = 3
-    ASSISTANT_RESPONSE = 4
+    ASSISTANT_RESPONSE = 2
+    GET_PARTS = 3
+    MOVE_PART = 4
+    MOVE_PART_LAST = 5
+    RESET_MOVEMENT = 6
+    TOUCH_PART = 7
+    RELEASE_TOUCH_PART = 8
 
 DECODERS = {}
 

@@ -97,8 +97,6 @@ export class WrappedMovementPartController {
         pivotMesh.rotation.copy(baseRotation);
         pivotMesh.rotation[config.axis] = baseRotation[config.axis] + radiansOffset;
 
-        // movementController es ahora la única fuente de verdad del
-        // ángulo de cada pieza (ver nota en el constructor).
         movementController.setAngleForPart(partName, angleDegrees);
 
         // Si la pieza afectada es la actualmente seleccionada, mantener

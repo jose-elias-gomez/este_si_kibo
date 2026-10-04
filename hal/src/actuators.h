@@ -21,4 +21,7 @@ private:
 
     void setLeftWheel(MotorCommand command);
     void setRightWheel(MotorCommand command);
+
+    static void driveWheel(uint8_t enablePin, uint8_t inA, uint8_t inB,
+                           MotorCommand command, bool invert);
 };

@@ -43,8 +43,8 @@ bool isValidServoValue(uint8_t value) {
 
 bool isValidMotorValue(uint8_t value) {
     switch (static_cast<MotorCommand>(value)) {
-        case MotorCommand::Left:
-        case MotorCommand::Right:
+        case MotorCommand::Forward:
+        case MotorCommand::Backward:
         case MotorCommand::Stop:
             return true;
 
@@ -53,16 +53,21 @@ bool isValidMotorValue(uint8_t value) {
     }
 }
 
+uint8_t computeChecksum(const uint8_t* data, uint8_t length) {
+    uint8_t sum = 0;
+    for (uint8_t i = 0; i < length; i++) {
+        sum ^= data[i];
+    }
+    return sum;
+}
+
 DecodeStatus decodePacket(
     const uint8_t* buffer,
     uint8_t length,
     ProtocolPacket& outPacket
 ) {
-    if (buffer == nullptr) {
-        return DecodeStatus::ErrorBufferTooShort;
-    }
-
-    if (length < 1) {
+    // Mínimo: parts + checksum.
+    if (buffer == nullptr || length < 2) {
         return DecodeStatus::ErrorBufferTooShort;
     }
 
@@ -76,10 +81,14 @@ DecodeStatus decodePacket(
         return DecodeStatus::ErrorTooManyParts;
     }
 
-    const uint8_t expectedLength = 1 + (parts * 2);
+    const uint8_t expectedLength = 2 + (parts * 2);
 
     if (length != expectedLength) {
         return DecodeStatus::ErrorInvalidSerialized;
+    }
+
+    if (computeChecksum(buffer, length - 1) != buffer[length - 1]) {
+        return DecodeStatus::ErrorBadChecksum;
     }
 
     ProtocolPacket packet;
@@ -105,10 +114,8 @@ DecodeStatus decodePacket(
             return DecodeStatus::ErrorInvalidValue;
         }
 
-        packet.commands[i] = ProtocolCommand {
-            .type = part,
-            .value = value
-        };
+        packet.commands[i].type  = part;
+        packet.commands[i].value = value;
     }
 
     outPacket = packet;

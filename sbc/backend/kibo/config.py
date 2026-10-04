@@ -7,6 +7,7 @@ load_dotenv()
 PROJECT_ROOT = Path(__file__).resolve().parent
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+SERIAL_PORT = os.getenv("SERIAL_PORT") or "/dev/ttyACM0"
 
 MODELS_DIR = PROJECT_ROOT / "models"
 TTS_MODEL_PATH = MODELS_DIR / "es_ES-carlfm-x_low.onnx"

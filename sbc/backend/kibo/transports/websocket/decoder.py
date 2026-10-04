@@ -1,10 +1,12 @@
 import logging
 
 from kibo.transports.websocket.packet_registry import MIN_PACKET_ID, MAX_PACKET_ID, DECODERS, register_decoder, PacketId
+from kibo.transports.websocket.serial_connector import register_decoders as register_serial_decoders
 
 logger = logging.getLogger(__name__)
 
 register_decoder(PacketId.PING, lambda packet: "pong")
+register_serial_decoders()
 
 class PacketDecodeError(Exception):
     pass

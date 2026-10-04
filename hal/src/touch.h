@@ -3,10 +3,11 @@
 #include <Arduino.h>
 
 // Identifica cuál de las 3 piezas táctiles cambió de estado.
+// Mismos valores que PartId (LeftArm=0, RightArm=1, Head=2) para evitar confusiones.
 enum class TouchPiece : uint8_t {
-    Piece1 = 0,
-    Piece2 = 1,
-    Piece3 = 2,
+    LeftArm = 0,
+    RightArm = 1,
+    Head = 2,
 };
 
 // Tipo de evento de una pieza táctil.
@@ -30,6 +31,9 @@ public:
     // umbral relativo por pieza, histéresis y debounce).
     // Llena 'changes' (capacidad mínima 3) con los cambios detectados en
     // esta llamada y devuelve cuántos hubo (0 a 3).
+    //
+    // NOTA: la lógica asume ESP32-S3, donde touchRead() SUBE al tocar.
+    // En un ESP32 clásico el valor BAJA al tocar y habría que invertirla.
     uint8_t update(TouchChange* changes);
 
 private:
@@ -45,6 +49,9 @@ private:
     static constexpr float THRESHOLD_PERCENT = 0.15f;
     static constexpr float RELEASE_PERCENT = 0.08f;
 
+    // Velocidad de adaptación de la baseline (solo sin tocar). ~6 s de constante de tiempo.
+    static constexpr float BASELINE_ALPHA = 0.002f;
+
     static constexpr unsigned long DEBOUNCE_MS = 60;
 
     uint8_t pins_[NUM_PIECES];
@@ -55,4 +62,5 @@ private:
     unsigned long lastChangeTime_[NUM_PIECES] = {0, 0, 0};
 
     int readFiltered(uint8_t pin) const;
+    void updateLevels(uint8_t piece);
 };

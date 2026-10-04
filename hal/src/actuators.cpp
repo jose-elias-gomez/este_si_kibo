@@ -1,12 +1,20 @@
 #include "pins.h"
-using namespace Pins;
-
 #include "actuators.h"
 
 void RobotActuators::begin() {
-    head.attach(Pins::HEAD_SERVO);
-    leftArm.attach(Pins::LEFT_ARM_SERVO);
-    rightArm.attach(Pins::RIGHT_ARM_SERVO);
+    ESP32PWM::allocateTimer(0);
+    ESP32PWM::allocateTimer(1);
+    ESP32PWM::allocateTimer(2);
+    ESP32PWM::allocateTimer(3);
+
+    head.setPeriodHertz(50);
+    leftArm.setPeriodHertz(50);
+    rightArm.setPeriodHertz(50);
+
+    // 500-2400 us es el rango habitual de un SG90; ajústalo a tu servo.
+    head.attach(Pins::HEAD_SERVO, 500, 2400);
+    leftArm.attach(Pins::LEFT_ARM_SERVO, 500, 2400);
+    rightArm.attach(Pins::RIGHT_ARM_SERVO, 500, 2400);
 
     pinMode(Pins::ENA, OUTPUT);
     pinMode(Pins::IN1, OUTPUT);
@@ -37,9 +45,8 @@ void RobotActuators::handleCommand(const ProtocolCommand& command) {
     }
 }
 
+// decodePacket ya garantiza angle <= 180.
 void RobotActuators::handleServo(PartId part, uint8_t angle) {
-    angle = constrain(angle, 0, 180);
-
     switch (part) {
         case PartId::LeftArm:
             leftArm.write(angle);
@@ -73,50 +80,31 @@ void RobotActuators::handleWheel(PartId part, MotorCommand command) {
     }
 }
 
-void RobotActuators::setLeftWheel(MotorCommand command) {
-    switch (command) {
-        case MotorCommand::Left:
-            digitalWrite(Pins::ENA, HIGH);
-            digitalWrite(Pins::IN1, LOW);
-            digitalWrite(Pins::IN2, HIGH);
-            break;
-
-        case MotorCommand::Right:
-            digitalWrite(Pins::ENA, HIGH);
-            digitalWrite(Pins::IN1, HIGH);
-            digitalWrite(Pins::IN2, LOW);
-            break;
-
-        case MotorCommand::Stop:
-        default:
-            digitalWrite(Pins::ENA, LOW);
-            digitalWrite(Pins::IN1, LOW);
-            digitalWrite(Pins::IN2, LOW);
-            break;
+// Mapeo eléctrico original conservado: Forward = (inA LOW, inB HIGH).
+// Si una rueda gira al revés, usa INVERT_*_WHEEL en pins.h.
+void RobotActuators::driveWheel(uint8_t enablePin, uint8_t inA, uint8_t inB, MotorCommand command, bool invert) {
+    if (command == MotorCommand::Stop) {
+        digitalWrite(enablePin, LOW);
+        digitalWrite(inA, LOW);
+        digitalWrite(inB, LOW);
+        return;
     }
+
+    const bool forward = (command == MotorCommand::Forward) != invert;
+
+    // Primero la dirección y al final el enable, para evitar un pulso
+    // en sentido contrario al cambiar de dirección.
+    digitalWrite(inA, forward ? LOW : HIGH);
+    digitalWrite(inB, forward ? HIGH : LOW);
+    digitalWrite(enablePin, HIGH);
+}
+
+void RobotActuators::setLeftWheel(MotorCommand command) {
+    driveWheel(Pins::ENA, Pins::IN1, Pins::IN2, command, Pins::INVERT_LEFT_WHEEL);
 }
 
 void RobotActuators::setRightWheel(MotorCommand command) {
-    switch (command) {
-        case MotorCommand::Left:
-            digitalWrite(Pins::ENB, HIGH);
-            digitalWrite(Pins::IN3, LOW);
-            digitalWrite(Pins::IN4, HIGH);
-            break;
-
-        case MotorCommand::Right:
-            digitalWrite(Pins::ENB, HIGH);
-            digitalWrite(Pins::IN3, HIGH);
-            digitalWrite(Pins::IN4, LOW);
-            break;
-
-        case MotorCommand::Stop:
-        default:
-            digitalWrite(Pins::ENB, LOW);
-            digitalWrite(Pins::IN3, LOW);
-            digitalWrite(Pins::IN4, LOW);
-            break;
-    }
+    driveWheel(Pins::ENB, Pins::IN3, Pins::IN4, command, Pins::INVERT_RIGHT_WHEEL);
 }
 
 void RobotActuators::stopAllMotors() {

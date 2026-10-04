@@ -1,3 +1,5 @@
+import { onPacket, PACKET_ID } from "./api/client.js";
+
 export const InputAction = Object.freeze({
     UP: "UP",
     DOWN: "DOWN",
@@ -6,6 +8,10 @@ export const InputAction = Object.freeze({
     CONFIRM: "CONFIRM",
     BACK: "BACK",
     RELOAD: "RELOAD",
+
+    TOUCH_HEAD: "TOUCH_HEAD",
+    TOUCH_LEFT_ARM: "TOUCH_LEFT_ARM",
+    TOUCH_RIGHT_ARM: "TOUCH_RIGHT_ARM",
 });
 
 const KEY_BINDINGS = Object.freeze({
@@ -35,6 +41,7 @@ class InputManager {
         this.eventhandlers = new Map();
         this.contextStack = ["GLOBAL"];
         this._initKeyboard();
+        this._initTouchSensors();
     }
 
     get activeContext() {
@@ -91,6 +98,22 @@ class InputManager {
                 this._emit(action);
             }
         });
+    }
+
+    _initTouchSensors() {
+        function handleTouchSensorEvents(payload) {
+            const partName = payload.part;
+            if (partName == "LEFT_ARM") {
+                this._emit(InputAction.TOUCH_LEFT_ARM);
+            } else if (partName == "RIGHT_ARM") {
+                this._emit(InputAction.TOUCH_RIGHT_ARM);
+            } else if (partName == "HEAD") {
+                this._emit(InputAction.TOUCH_HEAD);
+            }
+        }
+
+        onPacket(PACKET_ID.RELEASE_TOUCH_PART, handleTouchSensorEvents);
+        onPacket(PACKET_ID.TOUCH_PART, handleTouchSensorEvents);
     }
 }
 
