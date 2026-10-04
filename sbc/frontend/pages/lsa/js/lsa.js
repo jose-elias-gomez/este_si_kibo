@@ -232,7 +232,7 @@ export function initLsaPage({ onExit } = {}) {
             if (typeof onExit === "function") {
                 onExit();
             } else {
-                window.location.href = "index.html";
+                window.location.href = "../home/home.html";
             }
         },
     });
