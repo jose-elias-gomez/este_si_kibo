@@ -33,7 +33,7 @@ async def lifespan(fastapi: FastAPI):
     WifiService.register(fastapi)
 
     fastapi.include_router(WebSocketRouter, prefix=API_ROUTE)
-    fastapi.mount("/", StaticFiles(directory="../../frontend", html=True), "frontend")
+    fastapi.mount("/", StaticFiles(directory="../frontend", html=True), "frontend")
 
     yield
 

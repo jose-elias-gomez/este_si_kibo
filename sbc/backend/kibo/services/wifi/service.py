@@ -8,15 +8,20 @@ from kibo.services.wifi._wifi_endpoint import Router
 from kibo.services.wifi.wifi_base import BaseWifiBackend, WifiError
 
 backend: BaseWifiBackend | None = None
+
 system = platform.system()
+
 if system == "Linux":
     from kibo.services.wifi._wifi_linux_backend import LinuxWifiBackend
     backend = LinuxWifiBackend()
-if system == "Windows":
+
+elif system == "Windows":
     from kibo.services.wifi._wifi_windows_backend import WindowsWifiBackend
     backend = WindowsWifiBackend()
+
 else:
     raise WifiError(f"Unsupported operating system: {system}")
+
 
 class WifiService:
 
