@@ -101,7 +101,7 @@ class InputManager {
     }
 
     _initTouchSensors() {
-        function handleTouchSensorEvents(payload) {
+        const handleTouchSensorEvents = (payload) => {
             const partName = payload.part;
             if (partName == "LEFT_ARM") {
                 this._emit(InputAction.TOUCH_LEFT_ARM);
@@ -110,7 +110,7 @@ class InputManager {
             } else if (partName == "HEAD") {
                 this._emit(InputAction.TOUCH_HEAD);
             }
-        }
+        };
 
         onPacket(PACKET_ID.RELEASE_TOUCH_PART, handleTouchSensorEvents);
         onPacket(PACKET_ID.TOUCH_PART, handleTouchSensorEvents);
