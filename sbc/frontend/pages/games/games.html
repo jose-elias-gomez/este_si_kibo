@@ -1,29 +1,29 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Game Hub</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+
     <link rel="stylesheet" href="../../shared/css/global.css" />
-    <link rel="stylesheet" href="games.css" />
+    <link rel="stylesheet" href="quiz.css" />
+
+    <script src="js/data.js" type="module"></script>
+    <script src="js/category-selector.js" type="module"></script>
+    <script src="js/difficulty-selector.js" type="module"></script>
 </head>
 
 <body>
-    <div id="app"></div>
-    <script type="module">
-        import { mountGameHub } from "./js/app.js";
+    <div id="category-viewport">
+        <ul id="category-list"></ul>
+    </div>
 
-        const app = document.getElementById("app");
-
-        // Acá es donde vuelve al home de tu app. Mismo patrón que usás en
-        // tus otras páginas (ej. la del asistente de voz): frenar cualquier
-        // recurso propio de esta página (el hub ya limpia sus timers e
-        // input contexts solo) y después navegar.
-        mountGameHub(app, () => {
-            window.location.href = "../home/home.html";
-        });
-    </script>
+    <dialog id="difficulty-selector">
+        <strong class="difficulty-header">Seleccionando dificultad</strong>
+        <div id="difficulty-container"></div>
+        <strong class="difficulty-bottom">Puedes saltearlo usando el mando</strong>
+    </dialog>
 </body>
 
 </html>
