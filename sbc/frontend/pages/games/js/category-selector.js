@@ -1,7 +1,8 @@
-import { CATEGORIES, getRandomCategory } from "./data.js";
+import { CATEGORIES, getRandomCategory, getRandomQuestion } from "./data.js";
 import { input, InputAction } from "../../../shared/js/inputController.js";
 import { speak } from "../../../shared/js/api/tts.js";
 import { selectDifficulty } from "./difficulty-selector.js";
+import { handleQuestionInput } from "./questions-handler.js";
 
 const VISIBLE = 3; // visible cards at once (odd is better: there's a center one)
 const STRIP_LENGTH = 40; // total cards each spin goes through
@@ -99,17 +100,26 @@ function spin(winner) {
 renderStrip(visibleNames);
 setPosition(HALF);
 
+input.on(InputAction.BACK, () => (window.location.href = "../home/home.html"));
 input.on(InputAction.CONFIRM, async () => {
     if (spinning) return;
-    spinning = true;
+    spinning = true; // se mantiene hasta terminar toda la ronda para que no se pueda girar de nuevo
 
-    speak("A ver que toca");
-    const category = getRandomCategory();
-    await spin(category);
-    speak("Pues ha tocado " + category);
+    try {
+        speak("A ver que toca");
+        const category = getRandomCategory();
+        await spin(category);
+        speak("Pues ha tocado " + category);
 
-    spinning = false;
+        const difficulty = await selectDifficulty();
+        const question = getRandomQuestion(category, difficulty);
+        if (!question) {
+            console.warn(`No hay preguntas para ${category} / ${difficulty}`);
+            return;
+        }
 
-    const difficulty = await selectDifficulty();
-    console.log(difficulty);
+        await handleQuestionInput(question, difficulty);
+    } finally {
+        spinning = false;
+    }
 });

@@ -1,7 +1,9 @@
 import { getRandomDifficulty } from "./data.js";
 import { speak } from "../../../shared/js/api/tts.js";
+import { input, InputAction } from "../../../shared/js/inputController.js";
 
 const TRANSITION_MS = 300; // debe coincidir con la transición de #difficulty-container en el CSS
+const INPUT_CONTEXT = "difficulty-selector";
 
 const CONTENT = {
     facil: { src: "../../shared/assets/expressions/happy.svg", label: "Fácil" },
@@ -26,14 +28,15 @@ function showDifficulty(difficulty) {
     difficultyContainer.replaceChildren(img, text);
 }
 
-async function changeTo(difficulty) {
+async function changeTo(difficulty, waitOrSkip) {
     difficultyContainer.classList.add("is-changing");
-    await wait(TRANSITION_MS);
+    if (await waitOrSkip(TRANSITION_MS)) return false;
 
     showDifficulty(difficulty);
 
     difficultyContainer.classList.remove("is-changing");
-    await wait(TRANSITION_MS);
+    if (await waitOrSkip(TRANSITION_MS)) return false;
+    return true;
 }
 
 export async function selectDifficulty() {
@@ -44,23 +47,54 @@ export async function selectDifficulty() {
 
     difficultySelector.showModal();
 
-    await wait(500);
-    speak("¿Dificultad fácil?");
+    input.pushContext(INPUT_CONTEXT);
 
-    if (target === "media" || target === "dificil") {
-        await wait(2000);
-        speak("Mentira, es mediana");
-        await changeTo("media");
+    let skipRequested = false;
+    let resolveSkip;
+
+    const skipPromise = new Promise((resolve) => {
+        resolveSkip = resolve;
+    });
+
+    input.onEveryAction(() => {
+        if (skipRequested) return;
+        skipRequested = true;
+        resolveSkip();
+    }, INPUT_CONTEXT);
+
+    const waitOrSkip = (ms) => {
+        if (skipRequested) return Promise.resolve(true);
+        return Promise.race([wait(ms).then(() => false), skipPromise.then(() => true)]);
+    };
+
+    const finishSkipped = () => {
+        difficultyContainer.classList.remove("is-changing");
+        showDifficulty(target);
+        difficultySelector.close();
+        return target;
+    };
+
+    try {
+        if (await waitOrSkip(500)) return finishSkipped();
+        speak("¿Dificultad fácil?");
+
+        if (target === "media" || target === "dificil") {
+            if (await waitOrSkip(2000)) return finishSkipped();
+            speak("Mentira, es mediana");
+            if (!(await changeTo("media", waitOrSkip))) return finishSkipped();
+        }
+
+        if (target === "dificil") {
+            if (await waitOrSkip(1500)) return finishSkipped();
+            speak("JA JA, dificil y bancatela");
+            if (!(await changeTo("dificil", waitOrSkip))) return finishSkipped();
+        }
+
+        if (await waitOrSkip(2000)) return finishSkipped();
+        difficultySelector.close();
+
+        return target;
+    } finally {
+        input.popContext();
     }
-
-    if (target === "dificil") {
-        await wait(1500);
-        speak("JA JA, dificil y bancatela");
-        await changeTo("dificil");
-    }
-
-    await wait(2000);
-    difficultySelector.close();
-
-    return target;
 }

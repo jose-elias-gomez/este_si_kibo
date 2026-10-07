@@ -8,10 +8,13 @@
 
     <link rel="stylesheet" href="../../shared/css/global.css" />
     <link rel="stylesheet" href="quiz.css" />
+    <script src="../movement/libs/gsap.min.js"></script>
 
     <script src="js/data.js" type="module"></script>
     <script src="js/category-selector.js" type="module"></script>
     <script src="js/difficulty-selector.js" type="module"></script>
+    <script src="js/questions-handler.js" type="module"></script>
+
 </head>
 
 <body>
@@ -23,6 +26,16 @@
         <strong class="difficulty-header">Seleccionando dificultad</strong>
         <div id="difficulty-container"></div>
         <strong class="difficulty-bottom">Puedes saltearlo usando el mando</strong>
+    </dialog>
+
+    <dialog id="question-dialog">
+        <header class="question-header">
+            <div id="question-timer"><span id="question-time">15</span><small>s</small></div>
+            <strong id="question-difficulty"></strong>
+        </header>
+        <strong id="question-text"></strong>
+        <ul id="question-options"></ul>
+        <strong class="question-bottom">Toca la pieza para responder</strong>
     </dialog>
 </body>
 

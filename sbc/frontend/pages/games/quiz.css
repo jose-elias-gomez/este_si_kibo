@@ -1,5 +1,7 @@
 :root {
     --card-h: 150px;
+    --color-correct: #2f9e5b;
+    --color-wrong: #d64545;
 }
 
 body {
@@ -42,7 +44,6 @@ li[data-category]::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: #000;
     opacity: var(--dim, 0);
     pointer-events: none;
 }
@@ -79,7 +80,7 @@ dialog[open] {
     max-width: none;
     max-height: none;
     box-sizing: border-box;
-    animation: optional-info 0.45s ease-out both;
+    animation: dialog-fade 0.45s ease-out both;
 }
 
 @starting-style {
@@ -89,6 +90,15 @@ dialog[open] {
 
     dialog[open]::backdrop {
         opacity: 0;
+    }
+}
+
+@keyframes dialog-fade {
+    from {
+        opacity: 0%;
+    }
+    to {
+        opacity: 100%;
     }
 }
 
@@ -143,4 +153,156 @@ dialog::backdrop {
         opacity: 0.8;
         transform: translateY(0px) scale(1);
     }
+}
+
+#question-dialog[open] {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md) var(--space-lg);
+}
+
+.question-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+#question-timer {
+    --progress: 1;
+    --ring: var(--color-enabled);
+    width: 4.5rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(closest-side, var(--color-bg) 82%, transparent 84%), conic-gradient(var(--ring) calc(var(--progress) * 360deg), var(--overlay-first) 0);
+    font-size: var(--font-size-xxl);
+    line-height: 1;
+}
+
+#question-timer small {
+    font-size: var(--font-size-md);
+    color: var(--color-h1);
+}
+
+#question-timer.is-low {
+    --ring: var(--color-wrong);
+    color: var(--color-wrong);
+}
+
+#question-difficulty {
+    position: absolute;
+    right: 0;
+    top: 0;
+    font-size: var(--font-size-xxl);
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+    color: var(--color-h1);
+}
+
+#question-text {
+    flex-shrink: 0;
+    text-align: center;
+    font-size: var(--font-size-xxl);
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+    color: var(--color-text);
+}
+
+#question-options {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#question-options li {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-xs) var(--space-md);
+    background-color: var(--overlay-first);
+    border: 2px solid transparent;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition:
+        background-color var(--duration-base) ease,
+        border-color var(--duration-base) ease,
+        opacity var(--duration-base) ease,
+        transform var(--duration-base) var(--ease-slide);
+}
+
+#question-options li img {
+    height: 100%;
+    max-height: 5.5rem;
+    width: 5.5rem;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.option-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.option-label {
+    font-size: var(--font-size-md);
+    font-weight: 500;
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+    color: var(--color-h2);
+}
+
+.option-answer {
+    font-size: var(--font-size-xxxl);
+    font-weight: 500;
+    line-height: 1.15;
+    color: var(--color-text);
+}
+
+#question-options li.is-selected {
+    background-color: var(--color-highlight);
+    border-color: var(--color-border);
+}
+
+#question-options li.is-correct {
+    background-color: var(--color-correct);
+    border-color: var(--color-enabled);
+    transform: scale(1.02);
+}
+
+#question-options li.is-wrong {
+    background-color: var(--color-wrong);
+}
+
+#question-options li.is-dim {
+    opacity: 0.35;
+}
+
+#question-options li.is-correct .option-label,
+#question-options li.is-wrong .option-label {
+    color: var(--color-enabled);
+}
+
+.question-bottom {
+    flex-shrink: 0;
+    text-align: center;
+    font-weight: 400;
+    font-size: var(--font-size-md);
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+    color: var(--color-h2);
+    animation: optional-info 3s ease-out both infinite;
 }

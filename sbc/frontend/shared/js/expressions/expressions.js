@@ -14,7 +14,7 @@ export const EXPRESSIONS_TYPE = Object.freeze({
     NO: {
         id: "no",
         duration: 1000,
-        repeat: 1,
+        repeat: 2,
     },
 });
 

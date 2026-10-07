@@ -181,6 +181,7 @@ dialog[open] {
     max-width: none;
     max-height: none;
     box-sizing: border-box;
+    animation: dialog-fade 0.45s ease-out both;
 }
 
 @starting-style {
@@ -190,6 +191,15 @@ dialog[open] {
 
     dialog[open]::backdrop {
         opacity: 0;
+    }
+}
+
+@keyframes dialog-fade {
+    from {
+        opacity: 0%;
+    }
+    to {
+        opacity: 100%;
     }
 }
 

@@ -78,6 +78,12 @@ class InputManager {
         listeners.push(callback);
     }
 
+    onEveryAction(callback, context = "GLOBAL") {
+        for (const action of Object.values(InputAction)) {
+            this.on(action, callback, context);
+        }
+    }
+
     _emit(action) {
         const eventhandler = this.eventhandlers.get(this.activeContext);
         if (eventhandler) {
