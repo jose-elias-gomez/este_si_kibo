@@ -16,6 +16,6 @@ EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
 EMAIL_DEFAULT_TO = os.environ.get("EMAIL_DEFAULT_TO", "tpfinal8@gmail.com")
 
 MODELS_DIR = PROJECT_ROOT / "models"
-TTS_MODEL_PATH = MODELS_DIR / "es_ES-carlfm-x_low.onnx"
+TTS_MODEL_PATH = MODELS_DIR / "es_AR-daniela-high.onnx"
 
 API_ROUTE = "/api"

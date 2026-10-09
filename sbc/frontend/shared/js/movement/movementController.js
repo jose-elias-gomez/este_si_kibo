@@ -12,6 +12,19 @@ const PART_FIELD = {
     RightWheel: "right_wheel",
 };
 
+/**
+ * Remapeo SOLO del packet que se manda al robot: cuando se mueve la pieza
+ * de la izquierda, el packet sale con el nombre de la de la derecha.
+ * El resto (modelo 3D, ángulo guardado, límites min/max) sigue usando la
+ * pieza original, así el brazo recorre todo su rango y se traduce a 0 -> 180
+ * del servo de destino.
+ *
+ * Para desactivarlo: dejar el objeto vacío ({}).
+ */
+const SEND_AS = {
+    RightArm: "Head",
+};
+
 const WheelCommand = Object.freeze({
     FORWARD: "FORWARD",
     BACKWARD: "BACKWARD",
@@ -24,11 +37,8 @@ function isWheelPart(partName) {
 
 /**
  * Traduce un MotorDirection (FORWARD/BACKWARD, "qué sentido se pidió")
- * al comando real LEFT/RIGHT que espera el server, combinándolo con qué
- * es "adelante" para esa rueda en particular (WHEEL_MOTOR_CONFIG),
- * exactamente con la misma lógica que ya usa PartsController.runMotor
- * para el giro simulado — así ambos caminos (simulación local vs
- * servidor real) resultan en el mismo sentido físico de giro.
+ * al comando real que espera el server, combinándolo con qué es "adelante"
+ * para esa rueda en particular (WHEEL_MOTOR_CONFIG).
  * @param {string} partName - 'LeftWheel' | 'RightWheel'
  * @param {string} direction - MotorDirection.FORWARD | .BACKWARD
  * @returns {string} WheelCommand.FORWARD | .BACKWARD
@@ -69,10 +79,8 @@ class MovementController {
                         const min = config.min;
                         const max = config.max;
 
-                        // Mapea proporcionalmente el valor del HAL [0, 180] al rango [min, max]
                         degrees = min + (value / 180) * (max - min);
 
-                        // Clamp de seguridad para asegurar que no quede fuera de los límites de la config
                         const lower = Math.min(min, max);
                         const upper = Math.max(min, max);
                         degrees = Math.max(lower, Math.min(upper, degrees));
@@ -99,10 +107,9 @@ class MovementController {
 
     /**
      * Mueve un servo a un ángulo objetivo real, vía el packet MOVE_PART.
-     * No usar con ruedas (ver runMotor/stopMotor para eso) — movement_connector
-     * Como el HAL del robot funciona con algulo 0->180 tenemos que mapear esto
+     * No usar con ruedas (ver runMotor/stopMotor para eso).
+     * Como el HAL del robot funciona con ángulo 0 -> 180, se mapea [min, max] a ese rango.
      *
-     * rechaza un ángulo en los campos left_wheel/right_wheel.
      * @param {string} partName - 'Head' | 'LeftArm' | 'RightArm'
      * @param {number} angleDegrees
      * @param {boolean} processLast - si es true, se manda el packet MOVE_PART_LAST en vez de MOVE_PART
@@ -131,30 +138,33 @@ class MovementController {
 
         // Mapeo dinámico: transforma [min, max] de la config al rango del HAL [0, 180]
         let halAngle = angleDegrees;
-        if (config && typeof config.min === "number" && typeof config.max === "number") {
+        if (typeof config.min === "number" && typeof config.max === "number") {
             const min = config.min;
             const max = config.max;
 
             const range = max - min;
             if (range !== 0) {
-                // Mapea proporcionalmente el ángulo ingresado a 0 -> 180
                 halAngle = ((angleDegrees - min) / range) * 180;
             }
         }
 
         // Clamp de seguridad para garantizar que el HAL nunca reciba valores fuera de 0 -> 180
         halAngle = Math.max(0, Math.min(180, halAngle));
+
+        // Remapeo: el packet sale con el nombre de la pieza de destino.
+        const targetPart = SEND_AS[partName] || partName;
+        const targetField = PART_FIELD[targetPart];
+
         sendPacket({
             id: processLast ? PACKET_ID.MOVE_PART_LAST : PACKET_ID.MOVE_PART,
-            partName: field.toUpperCase(),
+            partName: targetField.toUpperCase(),
             angle: Math.round(halAngle),
         });
     }
 
     /**
-     * Arranca el motor DC de una rueda mandando el comando real
-     * (LEFT/RIGHT) por el packet MOVE_PART. A diferencia de un servo, esto
-     * nunca lleva ángulo — el motor gira sin parar hasta stopMotor().
+     * Arranca el motor DC de una rueda mandando el comando real por el
+     * packet MOVE_PART. Nunca lleva ángulo — gira hasta stopMotor().
      * @param {string} partName - 'LeftWheel' | 'RightWheel'
      * @param {string} [direction] - MotorDirection.FORWARD (default) o .BACKWARD
      */

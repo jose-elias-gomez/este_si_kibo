@@ -6,7 +6,6 @@ from kibo.transports.websocket.serial_connector import register_decoders as regi
 logger = logging.getLogger(__name__)
 
 register_decoder(PacketId.PING, lambda packet: "pong")
-register_serial_decoders()
 
 class PacketDecodeError(Exception):
     pass

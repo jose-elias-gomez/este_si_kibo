@@ -1,3 +1,4 @@
+import json
 import logging
 import asyncio
 
@@ -19,9 +20,20 @@ Router = APIRouter(
 clients = set()
 clients_lock = asyncio.Lock()
 
+# Event loop principal de FastAPI. Se guarda para poder hacer broadcast
+# desde otros hilos (por ejemplo, el callback del SerialClient).
+main_loop = None
+
+
+def set_main_loop(loop):
+    global main_loop
+    main_loop = loop
+
+
 async def add_client(websocket):
     async with clients_lock:
         clients.add(websocket)
+
 
 async def remove_client(websocket):
     async with clients_lock:
@@ -51,14 +63,27 @@ async def broadcast(packet):
             for client in disconnected:
                 clients.discard(client)
 
+
+def broadcast_threadsafe(packet):
+    """Se puede llamar desde cualquier hilo."""
+    if main_loop is None:
+        logger.warning("No hay event loop disponible para el broadcast.")
+        return
+
+    asyncio.run_coroutine_threadsafe(broadcast(packet), main_loop)
+
+
 @Router.websocket("")
 async def websocket_endpoint(websocket: WebSocket):
+    # Respaldo: si no se configuró en el startup, se guarda al conectar.
+    if main_loop is None:
+        set_main_loop(asyncio.get_running_loop())
+
     await websocket.accept()
     await add_client(websocket)
 
     try:
         while True:
-
             try:
                 raw_data = await websocket.receive()
             except WebSocketDisconnect:
@@ -75,7 +100,6 @@ async def websocket_endpoint(websocket: WebSocket):
                 continue
 
             try:
-                import json
                 data = json.loads(raw_data["text"])
             except Exception as error:
                 logger.warning("Invalid JSON: %s", error)
@@ -84,12 +108,10 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 data_to_return = decode(data)
             except Exception as error:
-
                 try:
                     await websocket.send_json({"error": str(error)})
                 except (WebSocketDisconnect, RuntimeError, ConnectionError):
                     break
-
                 continue
 
             if data_to_return is None:
@@ -104,6 +126,6 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         return
     except Exception as error:
-        logger.error("Error on broadcast: %s", error)
+        logger.error("Error on websocket: %s", error)
     finally:
         await remove_client(websocket)

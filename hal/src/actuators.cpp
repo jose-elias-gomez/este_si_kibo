@@ -1,30 +1,29 @@
 #include "pins.h"
 #include "actuators.h"
 
-void RobotActuators::begin() {
-    ESP32PWM::allocateTimer(0);
-    ESP32PWM::allocateTimer(1);
-    ESP32PWM::allocateTimer(2);
-    ESP32PWM::allocateTimer(3);
+#include "pins.h"
+#include "actuators.h"
 
+void RobotActuators::begin() {
     head.setPeriodHertz(50);
     leftArm.setPeriodHertz(50);
     rightArm.setPeriodHertz(50);
 
-    // 500-2400 us es el rango habitual de un SG90; ajústalo a tu servo.
     head.attach(Pins::HEAD_SERVO, 500, 2400);
     leftArm.attach(Pins::LEFT_ARM_SERVO, 500, 2400);
     rightArm.attach(Pins::RIGHT_ARM_SERVO, 500, 2400);
 
-    pinMode(Pins::ENA, OUTPUT);
-    pinMode(Pins::IN1, OUTPUT);
-    pinMode(Pins::IN2, OUTPUT);
+    headCurrent = 90;
+    leftArmCurrent = 90;
+    rightArmCurrent = 90;
 
-    pinMode(Pins::ENB, OUTPUT);
-    pinMode(Pins::IN3, OUTPUT);
-    pinMode(Pins::IN4, OUTPUT);
+    headTarget = 90;
+    leftArmTarget = 90;
+    rightArmTarget = 90;
 
-    stopAllMotors();
+    head.write(90);
+    leftArm.write(90);
+    rightArm.write(90);
 }
 
 void RobotActuators::handlePacket(const ProtocolPacket& packet) {
@@ -49,15 +48,18 @@ void RobotActuators::handleCommand(const ProtocolCommand& command) {
 void RobotActuators::handleServo(PartId part, uint8_t angle) {
     switch (part) {
         case PartId::LeftArm:
-            leftArm.write(angle);
+            leftArmTarget = constrain(angle, LEFT_ARM_MIN, LEFT_ARM_MAX);
             break;
 
         case PartId::RightArm:
-            rightArm.write(angle);
+            rightArmTarget = constrain(angle, RIGHT_ARM_MIN, RIGHT_ARM_MAX);
+
+            // PRUEBA
+            rightArm.write(rightArmTarget);
             break;
 
         case PartId::Head:
-            head.write(angle);
+            headTarget = constrain(angle, HEAD_MIN, HEAD_MAX);
             break;
 
         default:
@@ -110,4 +112,44 @@ void RobotActuators::setRightWheel(MotorCommand command) {
 void RobotActuators::stopAllMotors() {
     setLeftWheel(MotorCommand::Stop);
     setRightWheel(MotorCommand::Stop);
+}
+
+void RobotActuators::updateServos() {
+    uint32_t now = millis();
+
+    if (now - lastServoUpdate < SERVO_STEP_INTERVAL) {
+        return;
+    }
+
+    lastServoUpdate = now;
+
+    // Brazo izquierdo
+    if (leftArmCurrent < leftArmTarget) {
+        leftArmCurrent++;
+        leftArm.write(leftArmCurrent);
+    }
+    else if (leftArmCurrent > leftArmTarget) {
+        leftArmCurrent--;
+        leftArm.write(leftArmCurrent);
+    }
+
+    // Brazo derecho
+    if (rightArmCurrent < rightArmTarget) {
+        rightArmCurrent++;
+        rightArm.write(rightArmCurrent);
+    }
+    else if (rightArmCurrent > rightArmTarget) {
+        rightArmCurrent--;
+        rightArm.write(rightArmCurrent);
+    }
+
+    // Cabeza
+    if (headCurrent < headTarget) {
+        headCurrent++;
+        head.write(headCurrent);
+    }
+    else if (headCurrent > headTarget) {
+        headCurrent--;
+        head.write(headCurrent);
+    }
 }

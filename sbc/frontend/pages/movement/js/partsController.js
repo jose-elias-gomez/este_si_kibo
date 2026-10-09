@@ -2,6 +2,23 @@ import { PARTS_CONFIG, DEFAULT_PART_CONFIG, WHEEL_MOTOR_CONFIG, WHEEL_MOTOR_SPEE
 import { findPivotInNode } from "./modelLoader.js";
 import { movementController } from "../../../shared/js/movement/movementController.js";
 
+/**
+ * Remapeo de piezas SOLO para el envío al robot / estado de movementController.
+ * Cuando se mueve la pieza de la izquierda en el modelo 3D, los datos se
+ * mandan como si fuera la pieza de la derecha. El modelo 3D sigue moviendo
+ * la pieza original (el brazo se ve moviéndose igual).
+ *
+ * Para desactivarlo, vaciá el objeto: {}
+ */
+const SEND_AS = {
+    RightArm: "Head",
+};
+
+/** @param {string} partName @returns {string} pieza que se usa para hablar con movementController */
+function hwPart(partName) {
+    return SEND_AS[partName] || partName;
+}
+
 export class WrappedMovementPartController {
     /**
      * @param {THREE.Object3D} modelRoot - raíz del modelo ya cargado en escena
@@ -14,38 +31,21 @@ export class WrappedMovementPartController {
         /** @type {Record<string, THREE.Euler>} rotación inicial de cada pivote, tal como viene del GLTF */
         this.initialRotations = {};
 
-        // El ángulo "actual" de cada pieza ya no se guarda acá: es
-        // movementController (shared/js/movement/movementController.js)
-        // quien lleva ese estado, tanto en debug (valores locales) como
-        // contra el robot real (sincronizado vía GET_PARTS/MOVE_PART).
-        // Esta clase solo se encarga de reflejar ese ángulo en el pivote
-        // 3D — no de guardarlo por su cuenta.
+        // El ángulo "actual" de cada pieza lo lleva movementController.
+        // Esta clase solo refleja ese ángulo en el pivote 3D.
 
-        // Caché de pivotes ya resueltos: findPivotInNode() hace dos
-        // traverse() completos del árbol del modelo, así que resolverlo
-        // en cada click/frame es caro sin necesidad — el pivote de una
-        // pieza no cambia una vez cargado el modelo.
         /** @type {Record<string, THREE.Object3D>} */
         this._pivotCache = {};
 
         this.selectedPartName = null;
         this.activePivotMesh = null;
 
-        // Tweens de gsap en loop infinito para los motores DC de rueda
-        // (ver runMotor/stopMotor), indexados por partName. A diferencia
-        // de un tween de AnimationBuilder (que termina solo), estos hay
-        // que matarlos explícitamente con stopMotor() o nunca paran.
         /** @type {Record<string, gsap.core.Tween>} */
         this._motorTweens = {};
 
         this._captureInitialRotations();
     }
 
-    /**
-     * Resuelve el pivote de una pieza, usando la caché si ya se buscó antes.
-     * @param {string} partName
-     * @returns {THREE.Object3D|null}
-     */
     _getPivot(partName) {
         if (!this._pivotCache[partName]) {
             const pivotMesh = findPivotInNode(this.modelRoot, partName);
@@ -74,17 +74,32 @@ export class WrappedMovementPartController {
     }
 
     /**
+     * Envía el ángulo a movementController usando la pieza remapeada
+     * (si la hay), limitado al rango de esa pieza de destino para no
+     * pasarse de los límites del servo real.
+     * @param {string} partName - pieza original (la del modelo 3D)
+     * @param {number} angleDegrees
+     */
+    _sendAngle(partName, angleDegrees) {
+        const target = hwPart(partName);
+        let angle = angleDegrees;
+
+        if (target !== partName) {
+            const { min, max } = this.getConfig(target);
+            if (typeof min === "number") angle = Math.max(min, angle);
+            if (typeof max === "number") angle = Math.min(max, angle);
+        }
+
+        movementController.setAngleForPart(target, angle);
+    }
+
+    /**
      * Aplica un ángulo (en grados) a una pieza puntual, sin depender de
-     * ni afectar la selección activa (this.selectedPartName). Pensado
-     * para animar varias piezas en paralelo sin que se pisen entre sí.
+     * ni afectar la selección activa.
      * @param {string} partName
      * @param {number} angleDegrees
      */
     setAngleForPart(partName, angleDegrees) {
-        // Si esta pieza es una rueda con el motor DC corriendo (ver
-        // runMotor), hay que frenarlo antes: si no, el tween infinito del
-        // motor y este set puntual pelean por escribir el mismo
-        // pivotMesh.rotation en el mismo frame.
         this.stopMotor(partName);
 
         const pivotMesh = this._getPivot(partName);
@@ -97,10 +112,8 @@ export class WrappedMovementPartController {
         pivotMesh.rotation.copy(baseRotation);
         pivotMesh.rotation[config.axis] = baseRotation[config.axis] + radiansOffset;
 
-        movementController.setAngleForPart(partName, angleDegrees);
+        this._sendAngle(partName, angleDegrees);
 
-        // Si la pieza afectada es la actualmente seleccionada, mantener
-        // activePivotMesh sincronizado para que setAngle() siga funcionando bien.
         if (this.selectedPartName === partName) {
             this.activePivotMesh = pivotMesh;
         }
@@ -109,7 +122,7 @@ export class WrappedMovementPartController {
     }
 
     getPivotAngle(partName) {
-        return movementController.getAngleForPart(partName);
+        return movementController.getAngleForPart(hwPart(partName));
     }
 
     /**
@@ -118,13 +131,13 @@ export class WrappedMovementPartController {
      * @returns {number}
      */
     getAngleForPart(partName) {
-        return movementController.getAngleForPart(partName);
+        return movementController.getAngleForPart(hwPart(partName));
     }
 
     /**
      * Marca una pieza como activa para poder rotarla con setAngle().
      * @param {string} partName
-     * @returns {{config: object, currentAngle: number}} info útil para actualizar cualquier UI
+     * @returns {{config: object, currentAngle: number}}
      */
     selectPart(partName) {
         this.selectedPartName = partName;
@@ -132,20 +145,18 @@ export class WrappedMovementPartController {
 
         return {
             config: this.getConfig(partName),
-            currentAngle: movementController.getAngleForPart(partName),
+            currentAngle: movementController.getAngleForPart(hwPart(partName)),
         };
     }
 
     /**
-     * Aplica un ángulo (en grados) a la pieza actualmente seleccionada,
-     * rotando únicamente sobre el eje configurado para esa pieza y
-     * partiendo siempre de su rotación inicial del GLTF.
+     * Aplica un ángulo (en grados) a la pieza actualmente seleccionada.
      * @param {number} angleDegrees
      */
     setAngle(angleDegrees) {
         if (!this.activePivotMesh || !this.selectedPartName) return;
 
-        this.stopMotor(this.selectedPartName); // ver nota en setAngleForPart
+        this.stopMotor(this.selectedPartName);
 
         const config = this.getConfig(this.selectedPartName);
         const baseRotation = this.initialRotations[this.selectedPartName] || new THREE.Euler(0, 0, 0);
@@ -154,22 +165,16 @@ export class WrappedMovementPartController {
         this.activePivotMesh.rotation.copy(baseRotation);
         this.activePivotMesh.rotation[config.axis] = baseRotation[config.axis] + radiansOffset;
 
-        movementController.setAngleForPart(this.selectedPartName, angleDegrees);
+        this._sendAngle(this.selectedPartName, angleDegrees);
 
         this.requestRender();
     }
 
     /**
-     * Arranca el motor DC de una rueda: a diferencia de un servo, no va
-     * "hacia un ángulo" — gira sin parar en un sentido hasta que se llama
-     * a stopMotor(). Se simula con un proxy que gsap empuja +/-360° por
-     * vuelta con repeat infinito; cada vuelta es una tween nueva relativa
-     * a la anterior, por lo que el giro es perfectamente continuo (sin
-     * salto al "reiniciar" la vuelta). Si ya está corriendo, no hace nada
-     * (para invertir el sentido en caliente hay que stopMotor() primero).
+     * Arranca el motor DC de una rueda (giro continuo hasta stopMotor()).
      * @param {string} partName - 'LeftWheel' | 'RightWheel'
      * @param {string} [direction] - MotorDirection.FORWARD (default) o .BACKWARD
-     * @param {number} [speedDegPerSec] - velocidad angular del motor
+     * @param {number} [speedDegPerSec]
      */
     runMotor(partName, direction = MotorDirection.FORWARD, speedDegPerSec = WHEEL_MOTOR_SPEED_DEG_PER_SEC) {
         if (this._motorTweens[partName]) return;
@@ -182,17 +187,8 @@ export class WrappedMovementPartController {
         const motorConfig = WHEEL_MOTOR_CONFIG[partName];
         const forwardSign = motorConfig ? motorConfig.direction : 1;
         const directionSign = direction === MotorDirection.BACKWARD ? -1 : 1;
-
-        // Signo final aplicado al pivote: combina "qué es adelante para
-        // esta rueda" (forwardSign, fijo en config) con "qué sentido se
-        // pidió ahora" (directionSign, forward/backward).
         const signedDirection = forwardSign * directionSign;
 
-        // Arranca desde el ángulo actual reportado por movementController
-        // (si venía de una posición manual, por ejemplo). Para ruedas
-        // movementController.getAngleForPart() siempre devuelve 0 (no
-        // tiene sentido un "ángulo real" en un motor DC — ver ese
-        // archivo), así que en la práctica esto siempre arranca en 0.
         const proxy = { angle: movementController.getAngleForPart(partName) };
 
         const tween = gsap.to(proxy, {
@@ -203,11 +199,6 @@ export class WrappedMovementPartController {
             onUpdate: () => {
                 pivotMesh.rotation.copy(baseRotation);
                 pivotMesh.rotation[config.axis] = baseRotation[config.axis] + THREE.MathUtils.degToRad(proxy.angle);
-
-                // No se persiste proxy.angle en movementController: para
-                // ruedas ese ángulo no tiene un correlato real (es un
-                // motor DC, no un servo), así que el giro visual queda
-                // como estado puramente local de este tween.
                 this.requestRender();
             },
         });
@@ -216,10 +207,7 @@ export class WrappedMovementPartController {
     }
 
     /**
-     * Frena el motor DC de una rueda, dejándola en el ángulo en el que
-     * haya quedado (un motor real no "asienta" a una posición, a
-     * diferencia del SETTLE_TIME_MS de los servos SG90). No hace nada si
-     * esa pieza no tiene el motor corriendo.
+     * Frena el motor DC de una rueda.
      * @param {string} partName
      */
     stopMotor(partName) {
@@ -232,7 +220,7 @@ export class WrappedMovementPartController {
 
     /**
      * @param {string} partName
-     * @returns {boolean} true si el motor DC de esa pieza está corriendo
+     * @returns {boolean}
      */
     isMotorRunning(partName) {
         return !!this._motorTweens[partName];
@@ -244,12 +232,12 @@ export class WrappedMovementPartController {
      */
     resetAll() {
         Object.keys(PARTS_CONFIG).forEach((partName) => {
-            this.stopMotor(partName); // no tiene sentido resetear una rueda que sigue girando
+            this.stopMotor(partName);
 
-            // Para ruedas, movementController.setAngleForPart() sólo
-            // loguea un warning y no hace nada (ver ese archivo) — no
-            // hace falta filtrarlas acá aparte.
-            movementController.setAngleForPart(partName, 0);
+            // Para ruedas, movementController.setAngleForPart() solo loguea
+            // un warning. Para piezas remapeadas (brazos) se manda 0 al
+            // destino, que de todas formas se resetea con su propia entrada.
+            movementController.setAngleForPart(hwPart(partName), 0);
 
             const pivotMesh = this._getPivot(partName);
             if (pivotMesh && this.initialRotations[partName]) {

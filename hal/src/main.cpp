@@ -149,4 +149,6 @@ void loop() {
     processSerialPacket();
     processFailsafe();
     processTouchSensors();
+
+    robot.updateServos();
 }
