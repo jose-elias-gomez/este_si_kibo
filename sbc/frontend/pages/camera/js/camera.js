@@ -1,116 +1,113 @@
-import { input, InputAction } from "../../../shared/js/inputController.js";
+import { addPhoto, getPhotoCount } from "./photo-storage.js";
+import { initUI, showToast, flashScreen } from "./ui.js";
 
-(() => {
-    "use strict";
+// localStorage is limited (~5 MB): photos are downscaled so several fit.
+const MAX_WIDTH = 800;
+const JPEG_QUALITY = 0.7;
 
-    // =========================================================
-    // CONTEXTO
-    // =========================================================
+const cameraFeed = document.getElementById("cameraFeed");
 
-    const CONTEXT = "CAMERA";
+let mediaStream = null;
 
-    // =========================================================
-    // ELEMENTOS
-    // =========================================================
+export async function startCamera() {
+    try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error("[CAMERA] getUserMedia is not available.");
 
-    const cameraFeed = document.getElementById("cameraFeed");
-
-    // =========================================================
-    // ESTADO
-    // =========================================================
-
-    let mediaStream = null;
-
-    // =========================================================
-    // INICIAR CÁMARA
-    // =========================================================
-
-    async function startCamera() {
-        try {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                console.error("[CAMERA] getUserMedia no está disponible.");
-
-                return;
-            }
-
-            console.log("[CAMERA] Solicitando acceso a la cámara...");
-
-            mediaStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: "user",
-                },
-
-                audio: false,
-            });
-
-            cameraFeed.srcObject = mediaStream;
-
-            cameraFeed.muted = true;
-            cameraFeed.autoplay = true;
-            cameraFeed.playsInline = true;
-
-            await cameraFeed.play();
-
-            console.log("[CAMERA] Cámara iniciada.");
-        } catch (error) {
-            console.error("[CAMERA] No se pudo acceder a la cámara:", error);
-        }
-    }
-
-    // =========================================================
-    // DETENER CÁMARA
-    // =========================================================
-
-    function stopCamera() {
-        if (!mediaStream) {
             return;
         }
 
-        mediaStream.getTracks().forEach((track) => {
-            track.stop();
+        console.log("[CAMERA] Requesting camera access...");
+
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "user",
+            },
+
+            audio: false,
         });
 
-        mediaStream = null;
+        cameraFeed.srcObject = mediaStream;
 
-        cameraFeed.srcObject = null;
+        cameraFeed.muted = true;
+        cameraFeed.autoplay = true;
+        cameraFeed.playsInline = true;
 
-        console.log("[CAMERA] Cámara detenida.");
+        await cameraFeed.play();
+
+        console.log("[CAMERA] Camera started.");
+    } catch (error) {
+        console.error("[CAMERA] Could not access the camera:", error);
+    }
+}
+
+export function stopCamera() {
+    if (!mediaStream) {
+        return;
     }
 
-    // =========================================================
-    // ESCAPE / BACK
-    // =========================================================
+    mediaStream.getTracks().forEach((track) => {
+        track.stop();
+    });
 
-    function handleBack() {
-        console.log("[CAMERA] BACK");
+    mediaStream = null;
 
-        // Detener cámara
-        stopCamera();
+    cameraFeed.srcObject = null;
 
-        // Salir del contexto actual
-        input.popContext();
+    console.log("[CAMERA] Camera stopped.");
+}
 
-        // Volver al Home
-        window.location.href = "../home/home.html";
+/** @returns {boolean} true if the video feed is running and has frames. */
+export function isCameraReady() {
+    return mediaStream !== null && cameraFeed.videoWidth > 0;
+}
+
+/**
+ * Grabs the current frame as a downscaled JPEG.
+ * The feed is rotated 180° by CSS, so the frame is rotated the same way
+ * to match what the user sees on screen.
+ * @returns {string | null} JPEG data URL, or null if the camera is not ready.
+ */
+export function captureFrame() {
+    if (!isCameraReady()) {
+        return null;
     }
 
-    // =========================================================
-    // INPUT CONTROLLER
-    // =========================================================
+    const scale = Math.min(1, MAX_WIDTH / cameraFeed.videoWidth);
+    const width = Math.round(cameraFeed.videoWidth * scale);
+    const height = Math.round(cameraFeed.videoHeight * scale);
 
-    input.pushContext(CONTEXT);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
 
-    input.on(InputAction.BACK, handleBack, CONTEXT);
+    const ctx = canvas.getContext("2d");
+    ctx.translate(width, height);
+    ctx.rotate(Math.PI);
+    ctx.drawImage(cameraFeed, 0, 0, width, height);
 
-    // =========================================================
-    // INICIO
-    // =========================================================
+    return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+}
 
-    startCamera();
+function takePhoto() {
+    const dataUrl = captureFrame();
 
-    // =========================================================
-    // LIMPIEZA
-    // =========================================================
+    if (!dataUrl) {
+        showToast("La cámara no está lista");
+        return;
+    }
 
-    window.addEventListener("beforeunload", stopCamera);
-})();
+    if (!addPhoto(dataUrl)) {
+        showToast("No se pudo guardar la foto");
+        return;
+    }
+
+    flashScreen();
+    showToast(`Foto guardada (${getPhotoCount()})`);
+}
+
+initUI({ onTakePhoto: takePhoto, onExit: stopCamera });
+
+startCamera();
+
+window.addEventListener("beforeunload", stopCamera);

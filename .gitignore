@@ -1,5 +1,4 @@
 *.gguf
-*.onnx
 
 ### Python ###
 

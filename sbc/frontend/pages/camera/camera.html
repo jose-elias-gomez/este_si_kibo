@@ -10,13 +10,44 @@
     <link rel="stylesheet" href="../../shared/css/global.css" />
     <link rel="stylesheet" href="camera.css" />
 
+    <script type="module" src="../../shared/components/TextContainer.js"></script>
+    <script type="module" src="../../shared/components/Keyboard.js"></script>
     <script type="module" src="./js/camera.js"></script>
+
 </head>
 
 <body>
+    <virtual-keyboard id="virtual-keyboard"></virtual-keyboard>
+
+    <dialog id="gallery" class="gallery">
+        <img id="galleryImage" alt="Camera photo" />
+        <h1 id="galleryDate"></h1>
+        <p id="galleryCounter" class="gallery-counter"></p>
+        <p id="galleryStatus" class="gallery-status" aria-live="polite"></p>
+        <p class="gallery-hint">◀ ▶ navegar &nbsp;·&nbsp; ▲ enviar por email &nbsp;·&nbsp; ▼ borrar</p>
+    </dialog>
+
+    <dialog id="emailDialog" class="email-dialog" autofocus>
+        <h1>Enviar por email</h1>
+
+        <text-container id="emailTitle" label="Título" max-length="100"></text-container>
+        <text-container id="emailSubject" label="Asunto" max-length="150"></text-container>
+        <text-container id="emailRecipient" label="Destinatario" max-length="254"></text-container>
+
+        <p id="emailStatus" class="gallery-status" aria-live="polite"></p>
+
+        <button id="emailSend" class="email-send" type="button">Enviar</button>
+
+        <p class="gallery-hint">▲ ▼ moverse &nbsp;·&nbsp; Enter editar / enviar &nbsp;·&nbsp; Esc volver</p>
+    </dialog>
 
     <main class="camera" id="translator">
         <video id="cameraFeed" class="camera-feed" autoplay playsinline muted></video>
+
+        <div id="flash" class="flash"></div>
+        <p id="toast" class="toast" aria-live="polite"></p>
+
+        <button id="shutterButton" class="shutter" type="button" aria-label="Tomar foto"></button>
     </main>
 </body>
 

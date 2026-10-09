@@ -1,3 +1,3 @@
-from kibo.services.stt.service import STTService
+from kibo.services.translator.service import TranslatorService
 
-__all__ = ["STTService"]
+__all__ = ["TranslatorService"]

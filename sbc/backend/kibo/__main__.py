@@ -7,11 +7,13 @@ from starlette.staticfiles import StaticFiles
 
 from kibo.config import API_ROUTE, SERIAL_PORT
 from kibo.services.assistant import AssistantService
+from kibo.services.email import EmailService
 from kibo.services.groq.service import GroqClient
 from kibo.services.joystick import JoystickService
 from kibo.services.llm import LLMService
 from kibo.services.stt import STTService
 from kibo.services.system_options import SystemOptionsService
+from kibo.services.translator import TranslatorService
 from kibo.services.tts import TTSService
 from kibo.services.wifi import WifiService
 from kibo import __webserverstartup__ as webserver
@@ -36,6 +38,8 @@ async def lifespan(fastapi: FastAPI):
     LLMService.start(fastapi)
     STTService.start(fastapi)
     AssistantService.start(fastapi)
+    TranslatorService.start(fastapi)
+    EmailService.start(fastapi)
     WifiService.register(fastapi)
 
     fastapi.include_router(WebSocketRouter, prefix=API_ROUTE)

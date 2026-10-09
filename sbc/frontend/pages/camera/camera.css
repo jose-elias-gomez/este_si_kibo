@@ -1,3 +1,7 @@
+body {
+    background-color: var(--color-bg);
+}
+
 .camera {
     position: relative;
 
@@ -19,6 +23,229 @@
 
     object-fit: cover;
 
-    transform: scaleX(-1);
+    /* Se mantiene la rotación original (la 2da declaración pisaba al scaleX).
+       Si cambias esto, cambia también la rotación al capturar en camera.js. */
     transform: rotate(180deg);
+}
+
+.shutter {
+    position: absolute;
+    left: 50%;
+    bottom: 32px;
+    z-index: 2;
+
+    width: 76px;
+    height: 76px;
+
+    border: 4px solid #fff;
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.35);
+
+    transform: translateX(-50%);
+
+    cursor: pointer;
+
+    transition: transform 0.1s ease;
+}
+
+.shutter:active {
+    transform: translateX(-50%) scale(0.9);
+}
+
+.flash {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+
+    background: #fff;
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+.flash.active {
+    animation: flash 0.25s ease-out;
+}
+
+@keyframes flash {
+    from {
+        opacity: 0.8;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.toast {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    z-index: 4;
+
+    padding: 10px 20px;
+
+    border-radius: 999px;
+
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+
+    transform: translateX(-50%);
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: opacity 0.2s ease;
+}
+
+.toast.visible {
+    opacity: 1;
+}
+
+.gallery {
+    width: min(92vw, 900px);
+    max-height: 94dvh;
+
+    padding: 16px;
+
+    border: none;
+    outline: none;
+
+    background: var(--color-bg);
+    border-radius: var(--radius-xl);
+
+    text-align: center;
+}
+
+.gallery::backdrop {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.gallery img {
+    display: block;
+
+    max-width: 100%;
+    max-height: 64dvh;
+
+    margin: 0 auto;
+
+    border-radius: 8px;
+
+    object-fit: contain;
+}
+
+.gallery h1 {
+    margin: 12px 0 4px;
+
+    font-size: 1.4rem;
+}
+
+.gallery-counter {
+    margin: 0;
+
+    opacity: 0.7;
+}
+
+.gallery-status {
+    min-height: 1.4em;
+
+    margin: 8px 0 0;
+
+    font-weight: 600;
+}
+
+.gallery-status.ok {
+    color: #5ee08a;
+}
+.gallery-status.error {
+    color: #ff7a7a;
+}
+
+.gallery-hint {
+    margin: 8px 0 0;
+
+    font-size: 0.85rem;
+    opacity: 0.6;
+}
+
+/* ---------- Email dialog ---------- */
+
+.email-dialog {
+    width: min(92vw, 700px);
+    max-height: 94dvh;
+
+    /* Pegado arriba: el teclado virtual ocupa el 60% inferior de la pantalla. */
+    margin: 4dvh auto auto;
+    padding: 20px;
+
+    border: none;
+    outline: none;
+
+    background: var(--color-bg);
+    border-radius: var(--radius-xl);
+}
+
+.email-dialog[open] {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    overflow-y: auto;
+}
+
+/* Que ningún hijo se achique: si no entran, el dialog hace scroll. */
+.email-dialog > * {
+    flex-shrink: 0;
+}
+
+.email-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.email-dialog h1 {
+    margin: 0 0 4px;
+
+    font-size: 1.4rem;
+    text-align: center;
+}
+
+.email-dialog text-container {
+    height: auto;
+    min-height: 7rem;
+}
+
+.email-dialog .gallery-status,
+.email-dialog .gallery-hint {
+    text-align: center;
+}
+
+/* Mientras se escribe, se muestra solo el campo activo para que el
+   teclado virtual no lo tape. */
+.email-dialog.editing > :not(.selected) {
+    display: none;
+}
+
+.email-send {
+    padding: 14px 20px;
+
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    outline: none;
+
+    background: transparent;
+    color: var(--color-text);
+
+    font-family: var(--font-body);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background-color var(--duration-fast, 0.3s) ease;
+}
+
+.email-send.hovered {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: transparent;
 }
