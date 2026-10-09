@@ -17,6 +17,7 @@ from kibo.services.wifi import WifiService
 from kibo import __webserverstartup__ as webserver
 from kibo.transports.serial.client import SerialClient
 from kibo.transports.websocket.server import Router as WebSocketRouter
+from kibo.transports.websocket.serial_connector import register_decoders
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +26,14 @@ async def lifespan(fastapi: FastAPI):
     logger.info("Starting Kibo")
 
     try:
-        SerialClient.instance(SERIAL_PORT).start()
+        SerialClient.instance(
+            SERIAL_PORT,
+            reset_on_start=False
+        ).start()
+
+        register_decoders()
     except Exception as e:
-        logger.error(e)
+        logger.exception("Error iniciando SerialClient")
 
     GroqClient.start(fastapi)
     SystemOptionsService.start()
@@ -39,7 +45,7 @@ async def lifespan(fastapi: FastAPI):
     WifiService.register(fastapi)
 
     fastapi.include_router(WebSocketRouter, prefix=API_ROUTE)
-    fastapi.mount("/", StaticFiles(directory="../../frontend", html=True), "frontend")
+    fastapi.mount("/", StaticFiles(directory="../frontend", html=True), "frontend")
 
     yield
 

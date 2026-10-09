@@ -4,7 +4,7 @@ import threading
 import wave
 
 # Factor de aceleracion aplicado a la reproduccion (no al pitch de sintesis).
-PLAYBACK_SPEEDUP = 1.2
+PLAYBACK_SPEEDUP = 1.0
 
 from collections import OrderedDict
 from typing import Iterator

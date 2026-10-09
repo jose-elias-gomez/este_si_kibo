@@ -357,14 +357,17 @@ class SerialClient:
             self._resolve(pending.future, result=status)
         else:
             self._resolve(pending.future, exc=PacketRejected(status))
-
     def _on_touch(self, raw_part: int, raw_event: int) -> None:
+        print(f"[TOUCH DEBUG] part={raw_part} event={raw_event}")
+
         try:
             part = TouchPart(raw_part)
             event = TouchEvent(raw_event)
         except ValueError:
-            log.warning("Invalid touch event: part=%d event=%d", raw_part, raw_event)
+            print(f"[TOUCH DEBUG] INVALIDO part={raw_part} event={raw_event}")
             return
+
+        print(f"[TOUCH DEBUG] {part.name} -> {event.name}")
 
         for callback in list(self._touch_callbacks):
             try:
