@@ -23,12 +23,12 @@ struct TouchChange {
 
 class TouchSensors {
 public:
-    // Calibra la baseline de cada pieza. Debe llamarse una vez en setup(),
-    // sin tocar ningún sensor mientras se ejecuta.
+    // Calibra la baseline y el ruido de cada pieza. Debe llamarse una vez en
+    // setup(), sin tocar ningún sensor mientras se ejecuta.
     void begin();
 
     // Lee las 3 piezas y detecta cambios de estado (con filtrado de ruido,
-    // umbral relativo por pieza, histéresis y debounce).
+    // umbral adaptado a cada pieza, histéresis y debounce).
     // Llena 'changes' (capacidad mínima 3) con los cambios detectados en
     // esta llamada y devuelve cuántos hubo (0 a 3).
     //
@@ -45,9 +45,16 @@ private:
     // Muestras tomadas durante la calibración inicial.
     static constexpr uint16_t CALIBRATION_SAMPLES = 50;
 
-    // % sobre la baseline para considerar "tocado" / para considerar "liberado".
-    static constexpr float THRESHOLD_PERCENT = 0.15f;
-    static constexpr float RELEASE_PERCENT = 0.08f;
+    // Umbral de toque (delta sobre la baseline) = ruido * NOISE_MULT,
+    // limitado entre un piso y un techo expresados como % de la baseline.
+    // El techo debe quedar por debajo de la variación del sensor más débil
+    // (~8% en tu caso: 4000 sobre 50000).
+    static constexpr float NOISE_MULT = 8.0f;
+    static constexpr float MIN_DELTA_PERCENT = 0.015f;  // piso: 1.5%
+    static constexpr float MAX_DELTA_PERCENT = 0.06f;   // techo: 6%
+
+    // El nivel de liberación es este porcentaje del delta de toque (histéresis).
+    static constexpr float RELEASE_RATIO = 0.5f;
 
     // Velocidad de adaptación de la baseline (solo sin tocar). ~6 s de constante de tiempo.
     static constexpr float BASELINE_ALPHA = 0.002f;
@@ -56,6 +63,8 @@ private:
 
     uint8_t pins_[NUM_PIECES];
     float baseline_[NUM_PIECES] = {0, 0, 0};
+    float noise_[NUM_PIECES] = {0, 0, 0};
+    float delta_[NUM_PIECES] = {0, 0, 0};
     float threshold_[NUM_PIECES] = {0, 0, 0};
     float releaseLevel_[NUM_PIECES] = {0, 0, 0};
     bool touched_[NUM_PIECES] = {false, false, false};
